@@ -5,21 +5,15 @@ import org.flywaydb.core.Flyway
 import javax.sql.DataSource
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration as createDataSource
 
-internal class DataSourceBuilder(private val env: Map<String, String>) {
-    private val databaseName =
-        requireNotNull(env["DATABASE_NAME"]) { "database name must be set if jdbc url is not provided" }
-    private val databaseHost =
-        requireNotNull(env["DATABASE_HOST"]) { "database host must be set if jdbc url is not provided" }
-    private val databasePort =
-        requireNotNull(env["DATABASE_PORT"]) { "database port must be set if jdbc url is not provided" }
-    private val vaultMountPath = env["VAULT_MOUNTPATH"]
+internal class DataSourceBuilder(env: Map<String, String>) {
+    private val databaseName = requireNotNull(env["DATABASE_NAME"]) { "database name must be set" }
+    private val databaseHost = requireNotNull(env["DATABASE_HOST"]) { "database host must be set" }
+    private val databasePort = requireNotNull(env["DATABASE_PORT"]) { "database port must be set" }
+    private val vaultMountPath = requireNotNull(env["VAULT_MOUNTPATH"]) { "vault mount path must be set" }
+
 
     private val hikariConfig = HikariConfig().apply {
-        jdbcUrl = env["DATABASE_JDBC_URL"] ?: String.format(
-            "jdbc:postgresql://%s:%s/%s", databaseHost, databasePort,
-            databaseName
-        )
-
+        jdbcUrl = "jdbc:postgresql://$databaseHost:$databasePort/$databaseName"
         maximumPoolSize = 3
         minimumIdle = 1
         idleTimeout = 10001
@@ -31,16 +25,16 @@ internal class DataSourceBuilder(private val env: Map<String, String>) {
         createDataSource(hikariConfig, vaultMountPath, role.asRole(databaseName))
 
     fun migrate() {
-        runMigration(getDataSource(Role.Admin), "SET ROLE \"${Role.Admin.asRole(databaseName)}\"")
+        runMigration(getDataSource(Role.Admin), """SET ROLE "${Role.Admin.asRole(databaseName)}"""")
     }
 
-    private fun runMigration(dataSource: DataSource, initSql: String? = null) =
-        Flyway.configure()
+    private fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
+        return Flyway.configure()
             .dataSource(dataSource)
-            .placeholders(mapOf("spesialist_oid" to requireNotNull(env["SPESIALIST_OID"])))
             .initSql(initSql)
             .load()
             .migrate()
+    }
 
     enum class Role {
         Admin, User, ReadOnly;
