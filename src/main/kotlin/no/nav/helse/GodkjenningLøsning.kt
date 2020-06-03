@@ -35,10 +35,10 @@ class GodkjenningLøsning(
         ).register()
 
         val årsakCounter = Counter.build(
-            "vedtaksperioder_avvist_årsak",
+            "vedtaksperioder_avvist_arsak",
             "Antall avviste vedtaksperioder"
         )
-            .labelNames("årsak")
+            .labelNames("arsak")
             .register()
 
         val begrunnelserCounter = Counter.build(
