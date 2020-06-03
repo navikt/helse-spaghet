@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.prometheus.client.Counter
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
@@ -28,6 +29,25 @@ class GodkjenningLøsning(
             }.register(this)
         }
 
+        val godkjentCounter = Counter.build(
+            "vedtaksperioder_godkjent",
+            "Antall godkjente vedtaksperioder"
+        ).register()
+
+        val årsakCounter = Counter.build(
+            "vedtaksperioder_avvist_årsak",
+            "Antall avviste vedtaksperioder"
+        )
+            .labelNames("årsak")
+            .register()
+
+        val begrunnelserCounter = Counter.build(
+            "vedtaksperioder_avvist_begrunnelser",
+            "Antall avviste vedtaksperioder"
+        )
+            .labelNames("begrunnelse")
+            .register()
+
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
             val løsning = GodkjenningLøsning(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
@@ -45,6 +65,13 @@ class GodkjenningLøsning(
                     )
                 }
             )
+
+            if (løsning.godkjenning.godkjent) {
+                godkjentCounter.inc()
+            } else {
+                årsakCounter.labels(løsning.godkjenning.årsak).inc()
+                løsning.godkjenning.begrunnelser?.forEach { begrunnelserCounter.labels(it).inc() }
+            }
 
             dataSource.insertGodkjenning(løsning)
         }
