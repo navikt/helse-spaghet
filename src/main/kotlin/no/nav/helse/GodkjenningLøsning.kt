@@ -23,8 +23,8 @@ class GodkjenningLøsning(
                 validate {
                     it.demandAll("@behov", listOf("Godkjenning"))
                     it.demandValue("@final", true)
-                    it.requireKey("@løsning")
-                    it.interestedIn("warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
+                    it.require("@løsning.Godkjenning", ::tilGodkjenning)
+                    it.requireKey("warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
                 }
             }.register(this)
         }
@@ -54,16 +54,7 @@ class GodkjenningLøsning(
                 fødselsnummer = packet["fødselsnummer"].asText(),
                 aktørId = packet["aktørId"].asText(),
                 warnings = packet["warnings"].warnings(),
-                godkjenning = packet["@løsning"]["Godkjenning"].let {
-                    Godkjenning(
-                        godkjent = it["godkjent"].asBoolean(),
-                        saksbehandlerIdent = it["saksbehandlerIdent"].asText(),
-                        godkjentTidspunkt = it["godkjenttidspunkt"].asLocalDateTime(),
-                        årsak = it.optional("årsak")?.asText(),
-                        begrunnelser = it.optional("begrunnelser")?.map(JsonNode::asText),
-                        kommentar = it.optional("kommentar")?.asText()
-                    )
-                }
+                godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
             if (løsning.godkjenning.godkjent) {
@@ -75,6 +66,15 @@ class GodkjenningLøsning(
 
             dataSource.insertGodkjenning(løsning)
         }
+
+        private fun tilGodkjenning(jsonNode: JsonNode) = Godkjenning(
+            godkjent = jsonNode["godkjent"].asBoolean(),
+            saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asText(),
+            godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
+            årsak = jsonNode.optional("årsak")?.asText(),
+            begrunnelser = jsonNode.optional("begrunnelser")?.map(JsonNode::asText),
+            kommentar = jsonNode.optional("kommentar")?.asText()
+        )
 
         private fun JsonNode.optional(name: String) = takeIf { hasNonNull(name) }?.get(name)
 
