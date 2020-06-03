@@ -78,7 +78,7 @@ class GodkjenningLøsning(
 
         private fun JsonNode.optional(name: String) = takeIf { hasNonNull(name) }?.get(name)
 
-        private fun JsonNode.warnings() = this["aktiviteter"].map { it["melding"].asText() }
+        private fun JsonNode.warnings() = this.optional("aktiviteter")?.map { it["melding"].asText() } ?: emptyList()
     }
 
     data class Godkjenning(
