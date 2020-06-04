@@ -17,7 +17,7 @@ dependencies {
     implementation("no.nav:vault-jdbc:1.3.7")
     implementation("org.flywaydb:flyway-core:6.2.4")
     implementation("com.github.seratch:kotliquery:1.3.1")
-    implementation("io.ktor:ktor-client-cio:1.3.2")
+    implementation("io.ktor:ktor-client-apache:1.3.2")
     implementation("io.ktor:ktor-client-jackson:1.3.2")
 
     testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
