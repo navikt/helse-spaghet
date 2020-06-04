@@ -14,11 +14,6 @@ class SlackClient(private val httpClient: HttpClient, private val accessToken: S
         channel: String,
         message: String
     ) = httpClient.post<MessageResponse>("https://slack.com/api/chat.postMessage") {
-        /*
-                        setRequestProperty("Authorization", "Bearer $accessToken")
-                setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                setRequestProperty("User-Agent", "navikt/spammer")
-         */
         userAgent("navikt/spaghet")
         accept(ContentType.Application.Json)
         contentType(ContentType.Application.Json)
@@ -32,6 +27,5 @@ class SlackClient(private val httpClient: HttpClient, private val accessToken: S
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MessageResponse(
     val ok: Boolean,
-    val channel: String,
     val ts: String
 )
