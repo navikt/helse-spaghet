@@ -43,10 +43,18 @@ class Rapport(
         .filterNot { it.godkjent }
         .count { it.warnings.isEmpty() }
 
+    val warningsPåGodkjentePerioder = godkjenningDto
+        .filter { it.godkjent }
+        .tellTyperWarnings()
+
     override fun tilMelding(): String =
         """*Statistikk over godkjente vedtaksperioder* :information_desk_person:
 Siden i går har $antallGodkjente ($godkjenteUtenWarnings uten warnings) vedtaksperioder blitt godkjent og $antallInfotrygd ($avvisteUtenWarnings uten warnings) avvist. Av de avviste vedtaksperiodene er:
 
+
+
+*$antallGodkjente godkjente vedtaksperioder*
+${warningsPåGodkjentePerioder.formatterWarnings()}
 ${årsaker.tilMelding("")}
 
 :spaghet:
@@ -70,13 +78,7 @@ ${årsaker.tilMelding("")}
                 melding.appendln(begrunnelser.sortedByDescending { it.antall }.tilMelding())
                 melding.appendln("```")
             }
-            if (warnings.isNotEmpty()) {
-                melding.appendln()
-                melding.appendln(":warning: Vedtaksperiodene hadde følgende warnings:")
-                melding.appendln("```")
-                melding.appendln(warnings.sortedByDescending { it.antall }.tilMelding())
-                melding.appendln("```")
-            }
+            melding.append(warnings.formatterWarnings())
             return melding.toString()
         }
     }
@@ -94,6 +96,18 @@ ${årsaker.tilMelding("")}
     ) : Printbar {
         override fun tilMelding() = """($antall) $tekst"""
     }
+}
+
+fun List<Rapport.Warning>.formatterWarnings(): String {
+    val melding = StringBuilder()
+    if (isNotEmpty()) {
+        melding.appendln()
+        melding.appendln(":warning: Vedtaksperiodene hadde følgende warnings:")
+        melding.appendln("```")
+        melding.appendln(sortedByDescending { it.antall }.tilMelding())
+        melding.appendln("```")
+    }
+    return melding.toString()
 }
 
 fun List<Printbar>.tilMelding(prefix: String = " - ") = joinToString("\n") { "${prefix}${it.tilMelding()}" }
