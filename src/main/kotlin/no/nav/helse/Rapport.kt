@@ -37,7 +37,7 @@ class Rapport(
 
     override fun tilMelding(): String =
 """Statistikk over godkjente saker
-Siden i går har $antallGodkjente saker blitt godkjent og $antallInfotrygd avvist. Av de avviste vedtaksperiodene er
+Siden i går har $antallGodkjente saker blitt godkjent og $antallInfotrygd avvist. Av de avviste vedtaksperiodene er:
 ${årsaker.tilMelding()}
 """
 
@@ -49,9 +49,12 @@ ${årsaker.tilMelding()}
     ) : Printbar {
         override fun tilMelding() =
             """$antall avvist på grunn av $tekst:
-                | ${begrunnelser.tilMelding()}
-                | og warnings:
-                | ${warnings.tilMelding()}
+                |Begrunnelse(r):
+                |${begrunnelser.tilMelding()}
+                |
+                |og warning(s):
+                |${warnings.tilMelding()}
+                |
             """.trimMargin()
     }
 
@@ -70,7 +73,7 @@ ${årsaker.tilMelding()}
     }
 }
 
-fun List<Printbar>.tilMelding() = joinToString("\n") { it.tilMelding() }
+fun List<Printbar>.tilMelding() = joinToString("\n") { " - ${it.tilMelding()}" }
 
 interface Printbar {
     fun tilMelding(): String
