@@ -15,8 +15,8 @@ class SlackClient(private val httpClient: HttpClient, private val accessToken: S
         message: String
     ) = httpClient.post<MessageResponse>("https://slack.com/api/chat.postMessage") {
         userAgent("navikt/spaghet")
-        accept(ContentType.Application.Json)
-        contentType(ContentType.Application.Json)
+        accept(ContentType.Application.Json.withParameter("charset", "UTF-8"))
+        contentType(ContentType.Application.Json.withParameter("charset", "UTF-8"))
         header("Authorization", "Bearer $accessToken")
         body = objectMapper.createObjectNode()
             .put("channel", channel)
