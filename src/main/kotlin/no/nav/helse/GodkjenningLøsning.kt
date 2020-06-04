@@ -2,10 +2,12 @@ package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
 import io.prometheus.client.Counter
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -18,6 +20,8 @@ class GodkjenningLøsning(
     val godkjenning: Godkjenning
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
+        val log = LoggerFactory.getLogger("spaghet")
+
         init {
             River(rapid).apply {
                 validate {
@@ -57,10 +61,14 @@ class GodkjenningLøsning(
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
+            log.info("Lagrer godkjenning for {}", keyValue("vedtaksperiodeId", løsning.vedtaksperiodeId))
+
             if (løsning.godkjenning.godkjent) {
                 godkjentCounter.inc()
             } else {
-                årsakCounter.labels(løsning.godkjenning.årsak).inc()
+                if (løsning.godkjenning.årsak != null) {
+                    årsakCounter.labels(løsning.godkjenning.årsak).inc()
+                }
                 løsning.godkjenning.begrunnelser?.forEach { begrunnelserCounter.labels(it).inc() }
             }
 
