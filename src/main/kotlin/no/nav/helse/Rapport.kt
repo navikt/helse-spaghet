@@ -35,10 +35,21 @@ class Rapport(
     val antallGodkjente = godkjenningDto.count { it.godkjent }
     val antallInfotrygd = godkjenningDto.count { !it.godkjent }
 
+    val godkjenteUtenWarnings = godkjenningDto
+        .filter { it.godkjent }
+        .count { it.warnings.isEmpty() }
+
+    val avvisteUtenWarnings = godkjenningDto
+        .filterNot { it.godkjent }
+        .count { it.warnings.isEmpty() }
+
     override fun tilMelding(): String =
-"""Statistikk over godkjente saker
-Siden i går har $antallGodkjente saker blitt godkjent og $antallInfotrygd avvist. Av de avviste vedtaksperiodene er:
-${årsaker.tilMelding()}
+        """*Statistikk over godkjente vedtaksperioder* :information_desk_person:
+Siden i går har $antallGodkjente ($godkjenteUtenWarnings uten warnings) vedtaksperioder blitt godkjent og $antallInfotrygd ($avvisteUtenWarnings uten warnings) avvist. Av de avviste vedtaksperiodene er:
+
+${årsaker.tilMelding("")}
+
+:spaghet:
 """
 
     class Årsak(
@@ -47,33 +58,45 @@ ${årsaker.tilMelding()}
         val begrunnelser: List<Begrunnelse>,
         val warnings: List<Warning>
     ) : Printbar {
-        override fun tilMelding() =
-            """$antall avvist på grunn av $tekst:
-                |Begrunnelse(r):
-                |${begrunnelser.tilMelding()}
-                |
-                |og warning(s):
-                |${warnings.tilMelding()}
-                |
-            """.trimMargin()
+        override fun tilMelding(): String {
+            val melding = StringBuilder()
+            melding.appendln()
+            melding.appendln()
+            melding.appendln("*$antall avvist på grunn av $tekst*")
+            if (begrunnelser.isNotEmpty()) {
+                melding.appendln()
+                melding.appendln(":memo: Vedtaksperiodene hadde følgende begrunnelser:")
+                melding.appendln("```")
+                melding.appendln(begrunnelser.sortedByDescending { it.antall }.tilMelding())
+                melding.appendln("```")
+            }
+            if (warnings.isNotEmpty()) {
+                melding.appendln()
+                melding.appendln(":warning: Vedtaksperiodene hadde følgende warnings:")
+                melding.appendln("```")
+                melding.appendln(warnings.sortedByDescending { it.antall }.tilMelding())
+                melding.appendln("```")
+            }
+            return melding.toString()
+        }
     }
 
     class Begrunnelse(
         val antall: Int,
         val tekst: String
     ) : Printbar {
-        override fun tilMelding() = """$antall: $tekst"""
+        override fun tilMelding() = """($antall) $tekst"""
     }
 
     data class Warning(
         val antall: Int,
         val tekst: String
-    ) : Printbar{
-        override fun tilMelding() = """$antall: $tekst"""
+    ) : Printbar {
+        override fun tilMelding() = """($antall) $tekst"""
     }
 }
 
-fun List<Printbar>.tilMelding() = joinToString("\n") { " - ${it.tilMelding()}" }
+fun List<Printbar>.tilMelding(prefix: String = " - ") = joinToString("\n") { "${prefix}${it.tilMelding()}" }
 
 interface Printbar {
     fun tilMelding(): String
