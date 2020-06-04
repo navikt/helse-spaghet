@@ -50,7 +50,9 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsning) =
                 )
             }
         }
-    }fun DataSource.lagRapport(dato: LocalDate = LocalDate.now()): List<GodkjenningDto> = using(sessionOf(this)) { session ->
+    }
+
+fun DataSource.lagRapport(dato: LocalDate = LocalDate.now()): List<GodkjenningDto> = using(sessionOf(this)) { session ->
     session.run(
         queryOf(
             """
@@ -62,7 +64,7 @@ SELECT vedtaksperiode_id,
        arsak,
        kommentar,
        json_agg(DISTINCT w.tekst) AS warnings,
-       json_agg(b.tekst) AS begrunnelser
+       json_agg(DISTINCT b.tekst) AS begrunnelser
 FROM godkjenning g
          LEFT JOIN warning as w on g.id = w.godkjenning_ref
          LEFT JOIN begrunnelse b on g.id = b.godkjenning_ref
