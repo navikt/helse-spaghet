@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner
+import java.net.ProxySelector
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -22,7 +25,13 @@ suspend fun main() {
     val dataSource = dataSourceBuilder.getDataSource()
     val rapport = Rapport(dataSource.lagRapport(LocalDate.now()))
     val slackClient = SlackClient(
-        HttpClient {
+        HttpClient(Apache) {
+            engine {
+                customizeClient {
+                    setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
+                }
+            }
+
             install(JsonFeature) {
                 this.serializer = JacksonSerializer(objectMapper)
             }
