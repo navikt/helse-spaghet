@@ -7,10 +7,15 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import java.net.ProxySelector
+import java.time.Duration
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -23,7 +28,6 @@ suspend fun main() {
 
     val dataSourceBuilder = DataSourceBuilder(env)
     val dataSource = dataSourceBuilder.getDataSource()
-    val rapport = Rapport(dataSource.lagRapport(LocalDate.now()))
     val slackClient = SlackClient(
         HttpClient(Apache) {
             engine {
@@ -38,15 +42,23 @@ suspend fun main() {
         },
         requireNotNull(env["SLACK_ACCESS_TOKEN"]) { "SLACK_ACCESS_TOKEN må settes" }
     )
-
     val channel = requireNotNull(env["RAPPORTERING_CHANNEL"])
-    rapport.meldinger.forEach { melding ->
-        val result = slackClient.postMessage(channel, melding.tekst)
-        melding.tråd.forEach { trådmelding ->
-            slackClient.postMessage(channel, trådmelding, result.ts)
+
+    GlobalScope.launch {
+        while (isActive) {
+            val iGår = LocalDate.now().minusDays(1)
+            if (!dataSource.erRapportert(iGår)) {
+                dataSource.settRapportert(iGår)
+                Rapport(dataSource.lagRapport(iGår)).meldinger.forEach { melding ->
+                    val result = slackClient.postMessage(channel, melding.tekst)
+                    melding.tråd.forEach { trådmelding ->
+                        slackClient.postMessage(channel, trådmelding, result.ts)
+                    }
+                }
+            }
+            delay(Duration.ofMinutes(10L).toMillis())
         }
     }
-
 
     RapidApplication.create(env)
         .setupRiver(dataSource)
