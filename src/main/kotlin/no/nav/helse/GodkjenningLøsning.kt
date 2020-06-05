@@ -81,7 +81,7 @@ class GodkjenningLøsning(
             godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
             årsak = jsonNode.optional("årsak")?.asText(),
             begrunnelser = jsonNode.optional("begrunnelser")?.map(JsonNode::asText),
-            kommentar = jsonNode.optional("kommentar")?.asText()
+            kommentar = jsonNode.optional("kommentar")?.asText()?.takeIf { it.isNotBlank() }
         )
 
         private fun JsonNode.optional(name: String) = takeIf { hasNonNull(name) }?.get(name)
