@@ -12,15 +12,22 @@ import io.ktor.http.userAgent
 class SlackClient(private val httpClient: HttpClient, private val accessToken: String) {
     suspend fun postMessage(
         channel: String,
-        message: String
+        text: String,
+        threadTs: String? = null
     ) = httpClient.post<MessageResponse>("https://slack.com/api/chat.postMessage") {
         userAgent("navikt/spaghet")
         accept(ContentType.Application.Json.withParameter("charset", "UTF-8"))
         contentType(ContentType.Application.Json.withParameter("charset", "UTF-8"))
         header("Authorization", "Bearer $accessToken")
-        body = objectMapper.createObjectNode()
+
+        val message = objectMapper.createObjectNode()
             .put("channel", channel)
-            .put("text", message)
+            .put("text", text)
+        threadTs?.also {
+            message.put("thread_ts", it)
+        }
+        body = message
+
     }
 }
 

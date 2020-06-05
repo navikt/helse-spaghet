@@ -38,7 +38,15 @@ suspend fun main() {
         },
         requireNotNull(env["SLACK_ACCESS_TOKEN"]) { "SLACK_ACCESS_TOKEN må settes" }
     )
-    slackClient.postMessage(requireNotNull(env["RAPPORTERING_CHANNEL"]), rapport.tilMelding())
+
+    val channel = requireNotNull(env["RAPPORTERING_CHANNEL"])
+    rapport.meldinger.forEach { melding ->
+        val result = slackClient.postMessage(channel, melding.tekst)
+        melding.tråd.forEach { trådmelding ->
+            slackClient.postMessage(channel, trådmelding, result.ts)
+        }
+    }
+
 
     RapidApplication.create(env)
         .setupRiver(dataSource)
@@ -46,7 +54,7 @@ suspend fun main() {
         .start()
 }
 
-fun <T: RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
+fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
     GodkjenningLøsning.Factory(this, dataSource)
 }
 

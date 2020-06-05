@@ -33,7 +33,14 @@ class RapportTest {
 
     @Test
     fun genererRapport() {
-        println(Rapport(godkjenninger).tilMelding())
+        Rapport(godkjenninger).meldinger.forEach { melding ->
+            println(melding.tekst)
+            melding.tråd.forEach { trådmelding ->
+                println("--------")
+                println(trådmelding)
+            }
+            println("========")
+        }
     }
 
     fun godkjenning(index: Any): GodkjenningDto {
@@ -59,7 +66,7 @@ class RapportTest {
                 godkjentTidspunkt = LocalDateTime.now(),
                 godkjent = godkjent,
                 årsak = årsak,
-                kommentar = null,
+                kommentar = if (random.nextInt(5) == 0) "Dette ser helt forferdelig ut" else null,
                 warnings = warnings.randomEntries(),
                 begrunnelse = if (årsak == årsakOkIInfotrygd) listOf() else  begrunnelser.randomEntries(1)
             )
