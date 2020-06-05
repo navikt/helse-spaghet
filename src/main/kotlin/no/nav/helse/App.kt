@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
+import org.slf4j.LoggerFactory
 import java.net.ProxySelector
 import java.time.Duration
 import java.time.LocalDate
@@ -22,6 +23,8 @@ import javax.sql.DataSource
 val objectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+val log = LoggerFactory.getLogger("spaghet")
+
 
 suspend fun main() {
     val env = System.getenv()
@@ -47,6 +50,7 @@ suspend fun main() {
     GlobalScope.launch {
         while (isActive) {
             val iGår = LocalDate.now().minusDays(1)
+            log.info("er rapportert i går: ${dataSource.erRapportert(iGår)}")
             if (!dataSource.erRapportert(iGår)) {
                 dataSource.settRapportert(iGår)
                 Rapport(dataSource.lagRapport(iGår)).meldinger.forEach { melding ->

@@ -7,7 +7,6 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -20,8 +19,6 @@ class GodkjenningLøsning(
     val godkjenning: Godkjenning
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
-        val log = LoggerFactory.getLogger("spaghet")
-
         init {
             River(rapid).apply {
                 validate {
