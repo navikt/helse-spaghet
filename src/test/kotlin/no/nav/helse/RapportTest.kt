@@ -6,31 +6,6 @@ import java.util.UUID
 import kotlin.random.Random
 
 class RapportTest {
-    private val random = Random.Default
-    val årsakOkIInfotrygd = "Allerede behandlet i infotrygd - riktig vurdering"
-    private val årsaker = listOf(
-        "Allerede behandlet i infotrygd - feil vurdering og/eller beregning",
-        "Feil vurdering og/eller beregning",
-        årsakOkIInfotrygd
-    )
-
-    private val begrunnelser = listOf(
-        "Maksdato beregnet feil",
-        "Annet",
-        "Arbeidsgiverperiode beregnet feil",
-        "Vilkår ikke oppfylt",
-        "Vilkår om Lovvalg og medlemskap er ikke oppfylt",
-        "Dagsats beregnet feil"
-    )
-
-    private val warnings = listOf(
-        "Perioden er en direkte overgang fra periode i Infotrygd",
-        "Perioden er lagt inn i Infotrygd - men mangler inntektsopplysninger. Fjern perioden fra SP UB hvis du utbetaler via speil.",
-        "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling"
-    )
-
-    val godkjenninger = 0.rangeTo(500).map(::godkjenning)
-
     @Test
     fun genererRapport() {
         Rapport(godkjenninger).meldinger.forEach { melding ->
@@ -80,4 +55,29 @@ class RapportTest {
             mutableCopy.removeAt(random.nextInt(minEntries, mutableCopy.size))
         }
     }
+
+    private val random = Random.Default
+    private val årsakOkIInfotrygd = "Allerede behandlet i infotrygd - riktig vurdering"
+    private val årsaker = listOf(
+        "Allerede behandlet i infotrygd - feil vurdering og/eller beregning",
+        "Feil vurdering og/eller beregning",
+        årsakOkIInfotrygd
+    )
+
+    private val begrunnelser = listOf(
+        "Maksdato beregnet feil",
+        "Annet",
+        "Arbeidsgiverperiode beregnet feil",
+        "Vilkår ikke oppfylt",
+        "Vilkår om Lovvalg og medlemskap er ikke oppfylt",
+        "Dagsats beregnet feil"
+    )
+
+    private val warnings = listOf(
+        "Perioden er en direkte overgang fra periode i Infotrygd",
+        "Perioden er lagt inn i Infotrygd - men mangler inntektsopplysninger. Fjern perioden fra SP UB hvis du utbetaler via speil.",
+        "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling"
+    )
+
+    private val godkjenninger = 0.rangeTo(500).map(::godkjenning)
 }

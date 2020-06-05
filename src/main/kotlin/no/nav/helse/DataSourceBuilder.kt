@@ -5,15 +5,9 @@ import org.flywaydb.core.Flyway
 import javax.sql.DataSource
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration as createDataSource
 
-internal class DataSourceBuilder(env: Map<String, String>) {
-    private val databaseName = requireNotNull(env["DATABASE_NAME"]) { "database name must be set" }
-    private val databaseHost = requireNotNull(env["DATABASE_HOST"]) { "database host must be set" }
-    private val databasePort = requireNotNull(env["DATABASE_PORT"]) { "database port must be set" }
-    private val vaultMountPath = requireNotNull(env["VAULT_MOUNTPATH"]) { "vault mount path must be set" }
-
-
+internal class DataSourceBuilder(val env: Environment.DatabaseEnvironment) {
     private val hikariConfig = HikariConfig().apply {
-        jdbcUrl = "jdbc:postgresql://$databaseHost:$databasePort/$databaseName"
+        jdbcUrl = env.jdbcUrl
         maximumPoolSize = 3
         minimumIdle = 1
         idleTimeout = 10001
@@ -22,10 +16,10 @@ internal class DataSourceBuilder(env: Map<String, String>) {
     }
 
     fun getDataSource(role: Role = Role.User) =
-        createDataSource(hikariConfig, vaultMountPath, role.asRole(databaseName))
+        createDataSource(hikariConfig, env.vaultMountPath, role.asRole(env.databaseName))
 
     fun migrate() {
-        runMigration(getDataSource(Role.Admin), """SET ROLE "${Role.Admin.asRole(databaseName)}"""")
+        runMigration(getDataSource(Role.Admin), """SET ROLE "${Role.Admin.asRole(env.databaseName)}"""")
     }
 
     private fun runMigration(dataSource: DataSource, initSql: String? = null): Int {

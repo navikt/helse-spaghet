@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class SpaghetE2ETest {
-    val dataSource = setupDataSourceMedFlyway()
-    val river = TestRapid()
+    private val dataSource = setupDataSourceMedFlyway()
+    private val river = TestRapid()
         .setupRiver(dataSource)
 
 
@@ -24,7 +24,7 @@ class SpaghetE2ETest {
         assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
     }
 
-    fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
+    private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE fodselsnummer=?;", fødselsnummer)
             .map { it.string("vedtaksperiode_id") }
             .asList)

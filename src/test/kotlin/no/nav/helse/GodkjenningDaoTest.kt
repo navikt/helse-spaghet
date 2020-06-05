@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class GodkjenningDaoTest {
-    val dataSource = setupDataSourceMedFlyway()
+    private val dataSource = setupDataSourceMedFlyway()
 
     @Test
     fun `legger til warnings og begrunnelser for godkjenninger`() {
@@ -36,7 +36,7 @@ class GodkjenningDaoTest {
         assertEquals(løsning.godkjenning.begrunnelser, finnBegrunnelser(godkjenninger.first().id))
     }
 
-    fun finnGodkjenninger(vedtaksperiodeId: UUID) = using(sessionOf(dataSource)) { session ->
+    private fun finnGodkjenninger(vedtaksperiodeId: UUID) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
                 .map {
@@ -48,7 +48,7 @@ class GodkjenningDaoTest {
                 .asList)
     }
 
-    fun finnWarnings(id: Long) = using(sessionOf(dataSource)) { session ->
+    private fun finnWarnings(id: Long) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf("SELECT * FROM warning WHERE godkjenning_ref=?;", id)
                 .map {
@@ -57,7 +57,7 @@ class GodkjenningDaoTest {
                 .asList)
     }
 
-    fun finnBegrunnelser(id: Long) = using(sessionOf(dataSource)) { session ->
+    private fun finnBegrunnelser(id: Long) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf("SELECT * FROM begrunnelse WHERE godkjenning_ref=?;", id)
                 .map {

@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -14,25 +15,26 @@ import kotlinx.coroutines.launch
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ProxySelector
 import java.time.Duration
 import java.time.LocalDate
 import javax.sql.DataSource
 
-val objectMapper = jacksonObjectMapper()
+val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-val log = LoggerFactory.getLogger("spaghet")
+val log: Logger = LoggerFactory.getLogger("spaghet")
 
 
 suspend fun main() {
-    val env = System.getenv()
+    val env = setUpEnvironment()
 
-    val dataSourceBuilder = DataSourceBuilder(env)
+    val dataSourceBuilder = DataSourceBuilder(env.db)
     val dataSource = dataSourceBuilder.getDataSource()
     val slackClient = SlackClient(
-        HttpClient(Apache) {
+        httpClient = HttpClient(Apache) {
             engine {
                 customizeClient {
                     setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
@@ -43,10 +45,10 @@ suspend fun main() {
                 this.serializer = JacksonSerializer(objectMapper)
             }
         },
-        requireNotNull(env["SLACK_ACCESS_TOKEN"]) { "SLACK_ACCESS_TOKEN må settes" }
+        accessToken = env.slack.accessToken
     )
-    val channel = requireNotNull(env["RAPPORTERING_CHANNEL"])
 
+    val channel = env.slack.raportChannel
     GlobalScope.launch {
         while (isActive) {
             val iGår = LocalDate.now().minusDays(1)
@@ -64,7 +66,7 @@ suspend fun main() {
         }
     }
 
-    RapidApplication.create(env)
+    RapidApplication.create(env.raw)
         .setupRiver(dataSource)
         .setupMigration(dataSourceBuilder)
         .start()
