@@ -18,7 +18,7 @@ class Rapport(
                 antallUtenWarnings = godkjenninger.count { it.warnings.isEmpty() },
                 begrunnelser = godkjenninger.tellTyperBegrunnelser(),
                 warnings = godkjenninger.tellTyperWarnings(),
-                kommentarer = godkjenninger.mapNotNull { it.kommentar }
+                kommentarer = godkjenninger.mapNotNull { it.kommentar }.filter { it.isNotBlank() }
             )
         }
 
