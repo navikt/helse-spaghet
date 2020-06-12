@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.e22c895")
+    implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
     implementation("com.zaxxer:HikariCP:3.4.2")
     implementation("no.nav:vault-jdbc:1.3.7")
     implementation("org.flywaydb:flyway-core:6.2.4")
