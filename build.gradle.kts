@@ -1,8 +1,8 @@
+val junitJupiterVersion = "5.6.2"
+
 plugins {
     kotlin("jvm") version "1.3.72"
 }
-
-val junitJupiterVersion = "5.6.0"
 
 group = "no.helse"
 
@@ -12,10 +12,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
-    implementation("com.zaxxer:HikariCP:3.4.2")
+    implementation("com.github.navikt:rapids-and-rivers:1.2954646")
+    implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("no.nav:vault-jdbc:1.3.7")
-    implementation("org.flywaydb:flyway-core:6.2.4")
+    implementation("org.flywaydb:flyway-core:6.5.0")
     implementation("com.github.seratch:kotliquery:1.3.1")
     implementation("io.ktor:ktor-client-apache:1.3.2")
     implementation("io.ktor:ktor-client-jackson:1.3.2")
@@ -29,10 +29,10 @@ dependencies {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "12"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "12"
     }
 
     named<Jar>("jar") {
