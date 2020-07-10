@@ -1,5 +1,5 @@
 # Spaghet
-![master](https://github.com/navikt/helse-spaghet/workflows/master/badge.svg)
+![Bygg og deploy](https://github.com/navikt/helse-spaghet/workflows/Bygg%20og%20deploy/badge.svg)
 
 ## Beskrivelse
 Spaghet samler opp informasjon om ferdigbehandlede saker, lager statistikk og henter input fra saksbehandlere
