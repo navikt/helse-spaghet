@@ -69,7 +69,7 @@ class GodkjenningLøsning(
 
             if (løsning.godkjenning.godkjent) {
                 godkjentCounter.inc()
-                oppgaveTypeCounter.labels(løsning.periodetype ?: "unknown").inc()
+                oppgaveTypeCounter.labels(løsning.periodetype ?: "ukjent").inc()
             } else {
                 if (løsning.godkjenning.årsak != null) {
                     årsakCounter.labels(løsning.godkjenning.årsak).inc()
