@@ -18,6 +18,7 @@ class GodkjenningDaoTest {
             aktørId = "aktørId",
             fødselsnummer = "fødselsnummer",
             warnings = listOf("Test warning", "Test warning 2"),
+            periodetype = "FORLENGELSE",
             godkjenning = GodkjenningLøsning.Godkjenning(
                 godkjent = false,
                 saksbehandlerIdent = "Z999999",

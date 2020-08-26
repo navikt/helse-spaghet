@@ -3,10 +3,7 @@ package no.nav.helse
 import com.fasterxml.jackson.databind.JsonNode
 import io.prometheus.client.Counter
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.*
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -16,6 +13,7 @@ class GodkjenningLøsning(
     val aktørId: String,
     val fødselsnummer: String,
     val warnings: List<String>,
+    val periodetype: String?,
     val godkjenning: Godkjenning
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
@@ -26,6 +24,7 @@ class GodkjenningLøsning(
                     it.demandValue("@final", true)
                     it.require("@løsning.Godkjenning", ::tilGodkjenning)
                     it.requireKey("warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
+                    it.interestedIn("periodetype")
                 }
             }.register(this)
         }
@@ -49,12 +48,20 @@ class GodkjenningLøsning(
             .labelNames("begrunnelse")
             .register()
 
+        val oppgaveTypeCounter = Counter.build(
+            "oppgavetype_behandlet",
+            "Antall oppgaver behandlet av type"
+        )
+            .labelNames("type")
+            .register()
+
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
             val løsning = GodkjenningLøsning(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
                 fødselsnummer = packet["fødselsnummer"].asText(),
                 aktørId = packet["aktørId"].asText(),
                 warnings = packet["warnings"].warnings(),
+                periodetype = packet["periodetype"].takeUnless(JsonNode::isMissingOrNull)?.asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
@@ -62,6 +69,7 @@ class GodkjenningLøsning(
 
             if (løsning.godkjenning.godkjent) {
                 godkjentCounter.inc()
+                oppgaveTypeCounter.labels(løsning.periodetype ?: "unknown").inc()
             } else {
                 if (løsning.godkjenning.årsak != null) {
                     årsakCounter.labels(løsning.godkjenning.årsak).inc()

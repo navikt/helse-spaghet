@@ -7,8 +7,10 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.util.UUID
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpaghetE2ETest {
     private val dataSource = setupDataSourceMedFlyway()
     private val river = TestRapid()
@@ -19,7 +21,16 @@ class SpaghetE2ETest {
     fun `godkjenningsbehov blir lest fra rapid`() {
         val fødselsnummer = "1243356"
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(løsning(fødselsnummer, vedtaksperiodeId))
+        river.sendTestMessage(løsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE"))
+
+        assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
+    }
+
+    @Test
+    fun `godkjenningsbehov blir lest fra rapid når periodetype er null`() {
+        val fødselsnummer = "6543210"
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(løsning(fødselsnummer, vedtaksperiodeId, null))
 
         assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
     }
@@ -31,7 +42,7 @@ class SpaghetE2ETest {
     }
 
     @Language("JSON")
-    private fun løsning(fødselsnummer: String, vedtaksperiodeId: UUID) = """
+    private fun løsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String?) = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
@@ -59,6 +70,7 @@ class SpaghetE2ETest {
             ],
             "kontekster": []
           },
+          ${periodetype?.let { "\"periodetype\": \"$it\"," } ?: ""}
           "@løsning": {
             "Godkjenning": {
               "godkjent": true,

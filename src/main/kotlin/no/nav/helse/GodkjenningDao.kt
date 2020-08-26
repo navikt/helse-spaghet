@@ -23,9 +23,10 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsning) =
                             godkjent_tidspunkt,
                             godkjent,
                             arsak,
-                            kommentar
+                            kommentar,
+                            periodetype
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     løsning.vedtaksperiodeId,
                     løsning.aktørId,
@@ -34,7 +35,8 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsning) =
                     løsning.godkjenning.godkjentTidspunkt,
                     løsning.godkjenning.godkjent,
                     løsning.godkjenning.årsak,
-                    løsning.godkjenning.kommentar
+                    løsning.godkjenning.kommentar,
+                    løsning.periodetype
                 ).asUpdateAndReturnGeneratedKey
             )
             løsning.warnings.forEach { warning ->
