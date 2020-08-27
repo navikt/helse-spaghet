@@ -6,6 +6,13 @@ import java.util.UUID
 import kotlin.random.Random
 
 class RapportTest {
+    val periodetyper = arrayOf(
+        "FØRSTEGANGSBEHANDLING",
+        "FORLENGELSE",
+        "INFOTRYGDFORLENGELSE",
+        "OVERGANG_FRA_IT"
+    )
+
     @Test
     fun genererRapport() {
         Rapport(godkjenninger).meldinger.forEach { melding ->
@@ -29,6 +36,7 @@ class RapportTest {
                 godkjent = godkjent,
                 årsak = null,
                 kommentar = null,
+                periodetype = periodetyper.random(random),
                 warnings = warnings.randomEntries(),
                 begrunnelse = listOf()
             )
@@ -42,6 +50,7 @@ class RapportTest {
                 godkjent = godkjent,
                 årsak = årsak,
                 kommentar = if (random.nextInt(5) == 0) "Dette ser helt forferdelig ut" else null,
+                periodetype = periodetyper.random(random),
                 warnings = warnings.randomEntries(),
                 begrunnelse = if (årsak == årsakOkIInfotrygd) listOf() else  begrunnelser.randomEntries(1)
             )

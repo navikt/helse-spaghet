@@ -65,6 +65,7 @@ SELECT vedtaksperiode_id,
        godkjent,
        arsak,
        kommentar,
+       periodetype,
        json_agg(DISTINCT w.tekst) AS warnings,
        json_agg(DISTINCT b.tekst) AS begrunnelser
 FROM godkjenning g
@@ -87,6 +88,7 @@ data class GodkjenningDto(
     val godkjent: Boolean,
     val årsak: String?,
     val kommentar: String?,
+    val periodetype: String?,
     val warnings: List<String>,
     val begrunnelse: List<String>
 )
@@ -99,6 +101,7 @@ fun tilGodkjenningDto(row: Row): GodkjenningDto = GodkjenningDto(
     godkjent = row.boolean("godkjent"),
     årsak = row.stringOrNull("arsak"),
     kommentar = row.stringOrNull("kommentar"),
+    periodetype = row.stringOrNull("periodetype"),
     warnings = row.jsonArray("warnings"),
     begrunnelse = row.jsonArray("begrunnelser")
 )

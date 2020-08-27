@@ -17,6 +17,7 @@ class Rapport(
                 antall = godkjenninger.size,
                 antallUtenWarnings = godkjenninger.count { it.warnings.isEmpty() },
                 begrunnelser = godkjenninger.tellTyperBegrunnelser(),
+                periodetyper = godkjenninger.tellPeriodetyper(),
                 warnings = godkjenninger.tellTyperWarnings(),
                 kommentarer = godkjenninger.mapNotNull { it.kommentar }.filter { it.isNotBlank() }
             )
@@ -34,6 +35,16 @@ class Rapport(
             Begrunnelse(
                 antall = antall,
                 tekst = begrunnelse
+            )
+        }
+
+    private fun List<GodkjenningDto>.tellPeriodetyper() = map { it.periodetype }
+        .groupingBy { it }
+        .eachCount()
+        .map { (periodetype, antall) ->
+            Periodetype(
+                antall = antall,
+                type = periodetype ?: "ukjent"
             )
         }
 
@@ -60,10 +71,11 @@ class Rapport(
         Melding(tekst = it.toString())
     }
 
-    private val godkjentemelding = StringBuilder().let {
-        it.appendln("*$antallGodkjente godkjente vedtaksperioder*")
-        it.append(warningsPåGodkjentePerioder.formatterWarnings())
-        Melding(tekst = it.toString())
+    private val godkjentemelding = StringBuilder().let { stringBuilder ->
+        stringBuilder.appendln("*$antallGodkjente godkjente vedtaksperioder*")
+        stringBuilder.appendln(godkjenningDto.filter { it.godkjent }.tellPeriodetyper().tilMelding(""))
+        stringBuilder.append(warningsPåGodkjentePerioder.formatterWarnings())
+        Melding(tekst = stringBuilder.toString())
     }
 
     private val årsaksmeldinger = årsaker.map { Melding(it.tilMelding(), it.kommentarer) }
@@ -75,12 +87,14 @@ class Rapport(
         private val antall: Int,
         private val antallUtenWarnings: Int,
         private val begrunnelser: List<Begrunnelse>,
+        private val periodetyper: List<Periodetype>,
         private val warnings: List<Warning>,
         val kommentarer: List<String>
     ) : Printbar {
         override fun tilMelding(): String {
             val melding = StringBuilder()
             melding.appendln("*$antall avvist på grunn av $tekst ($antallUtenWarnings uten warnings)*")
+            melding.appendln(periodetyper.tilMelding(""))
             if (begrunnelser.isNotEmpty()) {
                 melding.appendln()
                 melding.appendln(":memo: Vedtaksperiodene hadde følgende begrunnelser:")
@@ -98,6 +112,13 @@ class Rapport(
         private val tekst: String
     ) : Printbar {
         override fun tilMelding() = """($antall) $tekst"""
+    }
+
+    data class Periodetype(
+        val antall: Int,
+        private val type: String
+    ) : Printbar {
+        override fun tilMelding() = """${type.replace("_", " ").toLowerCase().capitalize()}: $antall"""
     }
 
     data class Warning(
