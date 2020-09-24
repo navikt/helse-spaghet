@@ -38,12 +38,12 @@ class Rapport(
             )
         }
 
-    private fun List<GodkjenningDto>.tellPeriodetyper() = map { it.periodetype }
-        .groupingBy { it }
-        .eachCount()
-        .map { (periodetype, antall) ->
+    private fun List<GodkjenningDto>.tellPeriodetyper() =
+        groupBy { it.periodetype }
+        .map { (periodetype, godkjenninger) ->
             Periodetype(
-                antall = antall,
+                antall = godkjenninger.size,
+                antallUtenWarnings = godkjenninger.count { it.warnings.isEmpty() },
                 type = periodetype ?: "ukjent"
             )
         }
@@ -115,10 +115,11 @@ class Rapport(
     }
 
     data class Periodetype(
-        val antall: Int,
+        private val antall: Int,
+        private val antallUtenWarnings: Int,
         private val type: String
     ) : Printbar {
-        override fun tilMelding() = """${type.replace("_", " ").toLowerCase().capitalize()}: $antall"""
+        override fun tilMelding() = """${type.replace("_", " ").toLowerCase().capitalize()}: $antall ($antallUtenWarnings uten warnings)"""
     }
 
     data class Warning(
