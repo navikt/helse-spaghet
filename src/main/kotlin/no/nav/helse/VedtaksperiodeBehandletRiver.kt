@@ -69,7 +69,7 @@ class VedtaksperiodeBehandletRiver(
         vedtaksperiodeId: UUID
     ) {
         @Language("PostgreSQL")
-        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding) VALUES(:vedtaksperiode_id, :warning);"
+        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding) VALUES(:vedtaksperiode_id, :warning) ON CONFLICT DO NOTHING;"
         json["warnings"]["aktiviteter"].forEach { warning ->
             session.run(
                 queryOf(
