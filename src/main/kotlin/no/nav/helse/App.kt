@@ -74,6 +74,8 @@ suspend fun main() {
 
 fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
     GodkjenningLøsning.Factory(this, dataSource)
+    VedtaksperiodeTilGodkjenningRiver(this, dataSource)
+    VedtaksperiodeBehandletRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
