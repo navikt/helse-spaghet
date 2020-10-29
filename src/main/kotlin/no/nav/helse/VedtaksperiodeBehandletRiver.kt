@@ -89,7 +89,7 @@ class VedtaksperiodeBehandletRiver(
     ) {
         val begrunnelser = løsning["begrunnelser"] ?: return
         @Language("PostgreSQL")
-        val begrunnelseInsert = "INSERT INTO begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse);"
+        val begrunnelseInsert = "INSERT INTO godkjenningsbehov_losning_begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse);"
         begrunnelser.forEach { begrunnelse ->
             session.run(
                 queryOf(
