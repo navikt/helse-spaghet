@@ -95,7 +95,7 @@ class VedtaksperiodeBehandletRiver(
                 queryOf(
                     begrunnelseInsert, mapOf(
                         "id" to id,
-                        "begrunnelse" to begrunnelse
+                        "begrunnelse" to begrunnelse.asText()
                     )
                 ).asUpdate
             )
