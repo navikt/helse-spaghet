@@ -21,11 +21,11 @@ class VedtaksperiodeTilGodkjenningRiver(
         River(rapidApplication).apply {
             validate {
                 //it.demandValue("@event_name", "behov")
-                it.requireKey("@id", "vedtaksperiodeId")
+                it.requireKey("@id", "@opprettet")
+                it.interestedIn("vedtaksperiodeId")
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.forbid("@løsning")
                 it.forbid("@final")
-                it.interestedIn("@opprettet")
             }
 
         }.register(this)
@@ -35,9 +35,7 @@ class VedtaksperiodeTilGodkjenningRiver(
         try {
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-            val behovOpprettet = json.takeIf { it.hasNonNull("@opprettet") }
-                    ?.get("@opprettet")
-                    ?.asLocalDateTime() ?: LocalDate.EPOCH.atStartOfDay()
+            val behovOpprettet = json["@opprettet"].asLocalDateTime()
 
             sessionOf(dataSource).use { session ->
                 insertGodkjenningsbehov(json, vedtaksperiodeId, behovOpprettet)

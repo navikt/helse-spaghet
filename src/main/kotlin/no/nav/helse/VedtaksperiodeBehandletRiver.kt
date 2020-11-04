@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -33,7 +34,7 @@ class VedtaksperiodeBehandletRiver(
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             val løsning = json["@løsning"]["Godkjenning"]
             sessionOf(dataSource).use { session ->
-                insertLøsning(session, id, løsning)
+                insertLøsning(session, id, json, løsning)
                 if (json.hasNonNull("begrunnelser")) {
                     insertBegrunnelser(session, id, løsning)
                 }
@@ -50,6 +51,7 @@ class VedtaksperiodeBehandletRiver(
     private fun insertLøsning(
         session: Session,
         id: UUID,
+        json: JsonNode,
         løsning: JsonNode
     ) {
         @Language("PostgreSQL")
@@ -62,7 +64,8 @@ class VedtaksperiodeBehandletRiver(
                     "godkjent" to løsning["godkjent"].asBoolean(),
                     "automatisk_behandling" to (løsning["automatiskBehandling"]?.asBoolean(false) ?: false),
                     "arsak" to løsning["årsak"]?.takeIf { !it.isMissingOrNull() }?.asText(),
-                    "godkjenttidspunkt" to løsning["godkjenttidspunkt"].asLocalDateTime()
+                    // godkjenttidspunkt er en del av løsningen i spesialist, men ikke spade
+                    "godkjenttidspunkt" to (løsning["godkjenttidspunkt"]?.asLocalDateTime() ?: json["godkjenttidspunkt"].asLocalDateTime())
                 )
             ).asUpdate
         )
