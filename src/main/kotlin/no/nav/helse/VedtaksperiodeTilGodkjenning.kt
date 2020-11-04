@@ -45,14 +45,15 @@ class VedtaksperiodeTilGodkjenningRiver(
     private fun insertGodkjenningsbehov(json: JsonNode, vedtaksperiodeId: UUID, tidspunkt: LocalDateTime) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
-            "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype) VALUES(:id, :vedtaksperiode_id, :periodetype) ON CONFLICT DO NOTHING;"
+            "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype, tidspunkt) VALUES(:id, :vedtaksperiode_id, :periodetype, :tidspunkt) ON CONFLICT DO NOTHING;"
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     insertGodkjenningsbehov, mapOf(
                         "id" to UUID.fromString(json["@id"].asText()),
                         "vedtaksperiode_id" to vedtaksperiodeId,
-                        "periodetype" to json["periodetype"]?.asText()
+                        "periodetype" to json["periodetype"]?.asText(),
+                        "tidspunkt" to tidspunkt
                     )
                 ).asUpdate
             )
