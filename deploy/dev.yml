@@ -42,7 +42,7 @@ spec:
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443
     - name: KAFKA_RAPID_TOPIC
-      value: helse-rapid-v1
+      value: helse-rapid-v3
     - name: KAFKA_CONSUMER_GROUP_ID
       value: spaghet-v1
     - name: KAFKA_RESET_POLICY

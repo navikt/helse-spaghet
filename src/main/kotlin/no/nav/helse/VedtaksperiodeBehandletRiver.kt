@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -16,7 +17,7 @@ class VedtaksperiodeBehandletRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.demandValue("@event_name", "behov")
+                //it.demandValue("@event_name", "behov")
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.requireValue("@final", true)
                 it.requireKey("@id", "vedtaksperiodeId", "@løsning")
@@ -33,8 +34,12 @@ class VedtaksperiodeBehandletRiver(
             val løsning = json["@løsning"]["Godkjenning"]
             sessionOf(dataSource).use { session ->
                 insertLøsning(session, id, løsning)
-                insertBegrunnelser(session, id, løsning)
-                insertWarnings(session, json, vedtaksperiodeId)
+                if (json.hasNonNull("begrunnelser")) {
+                    insertBegrunnelser(session, id, løsning)
+                }
+                if (json.hasNonNull("warnings")) {
+                    insertWarnings(session, json, vedtaksperiodeId, json["@opprettet"].asLocalDateTime())
+                }
             }
             log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {
@@ -66,16 +71,18 @@ class VedtaksperiodeBehandletRiver(
     private fun insertWarnings(
         session: Session,
         json: JsonNode,
-        vedtaksperiodeId: UUID
+        vedtaksperiodeId: UUID,
+        tidspunkt: LocalDateTime
     ) {
         @Language("PostgreSQL")
-        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding) VALUES(:vedtaksperiode_id, :warning) ON CONFLICT DO NOTHING;"
+        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding, tidspunkt) VALUES(:vedtaksperiode_id, :warning, :tidspunkt) ON CONFLICT DO NOTHING;"
         json["warnings"]["aktiviteter"].forEach { warning ->
             session.run(
                 queryOf(
                     warningInsert, mapOf(
                         "vedtaksperiode_id" to vedtaksperiodeId,
-                        "warning" to warning["melding"].asText()
+                        "warning" to warning["melding"].asText(),
+                        "tidspunkt" to tidspunkt
                     )
                 ).asUpdate
             )
@@ -87,7 +94,7 @@ class VedtaksperiodeBehandletRiver(
         id: UUID?,
         løsning: JsonNode
     ) {
-        val begrunnelser = løsning["begrunnelser"] ?: return
+        val begrunnelser = løsning["begrunnelser"]
         @Language("PostgreSQL")
         val begrunnelseInsert = "INSERT INTO godkjenningsbehov_losning_begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse);"
         begrunnelser.forEach { begrunnelse ->

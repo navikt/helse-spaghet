@@ -6,7 +6,9 @@ import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDateTime
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -17,10 +19,11 @@ class VedtaksperiodeTilGodkjenningRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.demandValue("@event_name", "behov")
-                it.requireKey("@id", "vedtaksperiodeId")
+                //it.demandValue("@event_name", "behov")
+                it.requireKey("@id", "vedtaksperiodeId", "@opprettet")
                 it.demandAll("@behov", listOf("Godkjenning"))
-                //it.forbid("@løsning")
+                it.forbid("@løsning")
+                it.forbid("@final")
             }
 
         }.register(this)
@@ -31,7 +34,7 @@ class VedtaksperiodeTilGodkjenningRiver(
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             sessionOf(dataSource).use { session ->
-                insertGodkjenningsbehov(json, vedtaksperiodeId)
+                insertGodkjenningsbehov(json, vedtaksperiodeId, json["@opprettet"].asLocalDateTime())
             }
             log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {
@@ -39,7 +42,7 @@ class VedtaksperiodeTilGodkjenningRiver(
         }
     }
 
-    private fun insertGodkjenningsbehov(json: JsonNode, vedtaksperiodeId: UUID) {
+    private fun insertGodkjenningsbehov(json: JsonNode, vedtaksperiodeId: UUID, tidspunkt: LocalDateTime) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
             "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype) VALUES(:id, :vedtaksperiode_id, :periodetype) ON CONFLICT DO NOTHING;"
