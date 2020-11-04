@@ -8,6 +8,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -20,10 +21,11 @@ class VedtaksperiodeTilGodkjenningRiver(
         River(rapidApplication).apply {
             validate {
                 //it.demandValue("@event_name", "behov")
-                it.requireKey("@id", "vedtaksperiodeId", "@opprettet")
+                it.requireKey("@id", "vedtaksperiodeId")
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.forbid("@løsning")
                 it.forbid("@final")
+                it.interestedIn("@opprettet")
             }
 
         }.register(this)
@@ -33,8 +35,12 @@ class VedtaksperiodeTilGodkjenningRiver(
         try {
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+            val behovOpprettet = json.takeIf { it.hasNonNull("@opprettet") }
+                    ?.get("@opprettet")
+                    ?.asLocalDateTime() ?: LocalDate.EPOCH.atStartOfDay()
+
             sessionOf(dataSource).use { session ->
-                insertGodkjenningsbehov(json, vedtaksperiodeId, json["@opprettet"].asLocalDateTime())
+                insertGodkjenningsbehov(json, vedtaksperiodeId, behovOpprettet)
             }
             log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {

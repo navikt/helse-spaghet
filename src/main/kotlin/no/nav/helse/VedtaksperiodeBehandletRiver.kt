@@ -38,7 +38,7 @@ class VedtaksperiodeBehandletRiver(
                     insertBegrunnelser(session, id, løsning)
                 }
                 if (json.hasNonNull("warnings")) {
-                    insertWarnings(session, json, vedtaksperiodeId, json["@opprettet"].asLocalDateTime())
+                    insertWarnings(session, json, vedtaksperiodeId)
                 }
             }
             log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
@@ -71,18 +71,16 @@ class VedtaksperiodeBehandletRiver(
     private fun insertWarnings(
         session: Session,
         json: JsonNode,
-        vedtaksperiodeId: UUID,
-        tidspunkt: LocalDateTime
+        vedtaksperiodeId: UUID
     ) {
         @Language("PostgreSQL")
-        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding, tidspunkt) VALUES(:vedtaksperiode_id, :warning, :tidspunkt) ON CONFLICT DO NOTHING;"
+        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding) VALUES(:vedtaksperiode_id, :warning) ON CONFLICT DO NOTHING;"
         json["warnings"]["aktiviteter"].forEach { warning ->
             session.run(
                 queryOf(
                     warningInsert, mapOf(
                         "vedtaksperiode_id" to vedtaksperiodeId,
-                        "warning" to warning["melding"].asText(),
-                        "tidspunkt" to tidspunkt
+                        "warning" to warning["melding"].asText()
                     )
                 ).asUpdate
             )
