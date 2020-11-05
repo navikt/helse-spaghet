@@ -1,0 +1,1 @@
+DELETE FROM schedule WHERE melding_sendt=date '2020-11-04';
