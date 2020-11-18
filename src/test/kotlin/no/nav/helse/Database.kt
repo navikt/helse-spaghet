@@ -7,10 +7,9 @@ import org.flywaydb.core.Flyway
 import java.util.UUID
 import javax.sql.DataSource
 
+fun embeddedPostgres() = EmbeddedPostgres.builder().start()
 
-internal fun setupDataSourceMedFlyway(): DataSource {
-    val embeddedPostgres = EmbeddedPostgres.builder().start()
-
+internal fun setupDataSourceMedFlyway(embeddedPostgres: EmbeddedPostgres): DataSource {
     val hikariConfig = HikariConfig().apply {
         this.jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
         maximumPoolSize = 3

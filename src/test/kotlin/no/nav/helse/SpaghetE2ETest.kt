@@ -5,6 +5,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -12,9 +13,17 @@ import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpaghetE2ETest {
-    private val dataSource = setupDataSourceMedFlyway()
+    private val embeddedPostgres = embeddedPostgres()
+    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-        .setupRiver(dataSource)
+            .setupRiver(dataSource)
+
+    @AfterAll
+    fun tearDown() {
+        river.stop()
+        dataSource.connection.close()
+        embeddedPostgres.close()
+    }
 
 
     @Test

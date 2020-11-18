@@ -29,31 +29,34 @@ class GodkjenningLøsning(
             }.register(this)
         }
 
-        val godkjentCounter = Counter.build(
-            "vedtaksperioder_godkjent",
-            "Antall godkjente vedtaksperioder"
-        ).register()
+        companion object {
+            val godkjentCounter = Counter.build(
+                    "vedtaksperioder_godkjent",
+                    "Antall godkjente vedtaksperioder"
+            )
+                    .register()
 
-        val årsakCounter = Counter.build(
-            "vedtaksperioder_avvist_arsak",
-            "Antall avviste vedtaksperioder"
-        )
-            .labelNames("arsak")
-            .register()
+            val årsakCounter = Counter.build(
+                    "vedtaksperioder_avvist_arsak",
+                    "Antall avviste vedtaksperioder"
+            )
+                    .labelNames("arsak")
+                    .register()
 
-        val begrunnelserCounter = Counter.build(
-            "vedtaksperioder_avvist_begrunnelser",
-            "Antall avviste vedtaksperioder"
-        )
-            .labelNames("begrunnelse")
-            .register()
+            val begrunnelserCounter = Counter.build(
+                    "vedtaksperioder_avvist_begrunnelser",
+                    "Antall avviste vedtaksperioder"
+            )
+                    .labelNames("begrunnelse")
+                    .register()
 
-        val oppgaveTypeCounter = Counter.build(
-            "oppgavetype_behandlet",
-            "Antall oppgaver behandlet av type"
-        )
-            .labelNames("type")
-            .register()
+            val oppgaveTypeCounter = Counter.build(
+                    "oppgavetype_behandlet",
+                    "Antall oppgaver behandlet av type"
+            )
+                    .labelNames("type")
+                    .register()
+        }
 
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
             val løsning = GodkjenningLøsning(
