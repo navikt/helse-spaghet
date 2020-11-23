@@ -39,7 +39,8 @@ class AktivitetRiver(
                         vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText()),
                         melding = aktivitet["melding"].asText(),
                         level = aktivitet["alvorlighetsgrad"].asText(),
-                        tidsstempel = aktivitet["tidsstempel"].fromDate()
+                        tidsstempel = aktivitet["tidsstempel"].fromDate(),
+                        kilde = UUID.fromString(json["@forårsaket_av"]["id"].asText())
                 )
             }
         } catch (e: Exception) {
@@ -57,15 +58,23 @@ class AktivitetRiver(
             }
 
 
-    private fun insertAktivitet(vedtaksperiodeId: UUID, melding: String, level: String, tidsstempel: LocalDateTime) {
+    private fun insertAktivitet(
+            vedtaksperiodeId: UUID,
+            melding: String,
+            level: String,
+            tidsstempel:
+            LocalDateTime,
+            kilde: UUID
+    ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = """INSERT INTO vedtaksperiode_aktivitet(vedtaksperiode_id, melding, level, tidsstempel) VALUES(:vedtaksperiode_id, :melding, :level, :tidsstempel) ON CONFLICT DO NOTHING"""
+            val query = """INSERT INTO vedtaksperiode_aktivitet(vedtaksperiode_id, melding, level, tidsstempel, kilde) VALUES(:vedtaksperiode_id, :melding, :level, :tidsstempel, :kilde) ON CONFLICT DO NOTHING"""
             session.run(queryOf(query, mapOf(
                     "vedtaksperiode_id" to vedtaksperiodeId,
                     "melding" to melding,
                     "level" to level,
-                    "tidsstempel" to tidsstempel
+                    "tidsstempel" to tidsstempel,
+                    "kilde" to kilde
             )).asUpdate)
         }
     }
