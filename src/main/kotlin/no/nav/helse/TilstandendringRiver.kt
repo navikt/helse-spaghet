@@ -28,13 +28,14 @@ class TilstandendringRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+        val json = objectMapper.readTree(packet.toJson())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         try {
-            val json = objectMapper.readTree(packet.toJson())
-            log.info("Inserter tilstandsendring for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
+            log.info("Inserter tilstandsendring for vedtaksperiodeId: $vedtaksperiodeId")
             // Vi går ut i fra at første entry i kontekster er typen hendelse som førte til endringen.
             val kildeType = json["aktivitetslogg"]["kontekster"].first()["kontekstType"].asText()
             insertTilstandsendring(
-                    vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText()),
+                    vedtaksperiodeId = vedtaksperiodeId,
                     tidsstempel = json["@opprettet"].asLocalDateTime(),
                     tilstandFra = json["forrigeTilstand"].asText(),
                     tilstandTil = json["gjeldendeTilstand"].asText(),
@@ -42,7 +43,7 @@ class TilstandendringRiver(
                     kildeType = kildeType
             )
         } catch (e: Exception) {
-            log.error("Feilet ved inserting av tilstandsendring", e)
+            log.error("Feilet ved inserting av tilstandsendring med vedtaksperiodeId=$vedtaksperiodeId", e)
         }
     }
 
