@@ -31,12 +31,13 @@ class AktivitetRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+        val json = objectMapper.readTree(packet.toJson())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         try {
-            val json = objectMapper.readTree(packet.toJson())
             log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
             json["aktivitetslogg"]["aktiviteter"].forEach { aktivitet ->
                 insertAktivitet(
-                        vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText()),
+                        vedtaksperiodeId = vedtaksperiodeId,
                         melding = aktivitet["melding"].asText(),
                         level = aktivitet["alvorlighetsgrad"].asText(),
                         tidsstempel = aktivitet["tidsstempel"].fromDate(),
@@ -44,7 +45,7 @@ class AktivitetRiver(
                 )
             }
         } catch (e: Exception) {
-            log.error("Feilet ved inserting av aktiviteter", e)
+            log.error("Feilet ved inserting av aktiviteter for vedtaksperiode=$vedtaksperiodeId", e)
         }
     }
 
