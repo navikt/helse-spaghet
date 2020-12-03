@@ -35,15 +35,6 @@ class SpaghetE2ETest {
         assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
     }
 
-    @Test
-    fun `godkjenningsbehov blir lest fra rapid når periodetype er null`() {
-        val fødselsnummer = "6543210"
-        val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(løsning(fødselsnummer, vedtaksperiodeId, null))
-
-        assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
-    }
-
     private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE fodselsnummer=?;", fødselsnummer)
             .map { it.string("vedtaksperiode_id") }
@@ -51,7 +42,7 @@ class SpaghetE2ETest {
     }
 
     @Language("JSON")
-    private fun løsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String?) = """
+    private fun løsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String) = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
@@ -64,22 +55,23 @@ class SpaghetE2ETest {
           "organisasjonsnummer": "987654321",
           "vedtaksperiodeId": "$vedtaksperiodeId",
           "tilstand": "AVVENTER_GODKJENNING",
-          "periodeFom": "2020-05-16",
-          "periodeTom": "2020-05-22",
-          "sykepengegrunnlag": 42069.0,
-          "warnings": {
-            "aktiviteter": [
-              {
-                "kontekster": [],
-                "alvorlighetsgrad": "WARN",
-                "melding": "Perioden er en direkte overgang fra periode i Infotrygd",
-                "detaljer": {},
-                "tidsstempel": "2020-06-02 15:56:34.111"
-              }
-            ],
-            "kontekster": []
+          "Godkjenning": {
+            "warnings": {
+              "aktiviteter": [
+                {
+                  "kontekster": [],
+                  "alvorlighetsgrad": "WARN",
+                  "melding": "Perioden er en direkte overgang fra periode i Infotrygd",
+                  "detaljer": {},
+                  "tidsstempel": "2020-06-02 15:56:34.111"
+                }
+              ],
+              "kontekster": []
+            },
+            "periodeFom": "2020-05-16",
+            "periodeTom": "2020-05-22",
+            "periodetype": "$periodetype"
           },
-          ${periodetype?.let { "\"periodetype\": \"$it\"," } ?: ""}
           "@løsning": {
             "Godkjenning": {
               "godkjent": true,

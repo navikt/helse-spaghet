@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.prometheus.client.Counter
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -13,18 +14,19 @@ class GodkjenningLøsning(
     val aktørId: String,
     val fødselsnummer: String,
     val warnings: List<String>,
-    val periodetype: String?,
+    val periodetype: String,
     val godkjenning: Godkjenning
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
+        private val sikkerLogg = LoggerFactory.getLogger("tjenestekall")
         init {
             River(rapid).apply {
                 validate {
                     it.demandAll("@behov", listOf("Godkjenning"))
                     it.demandValue("@final", true)
                     it.require("@løsning.Godkjenning", ::tilGodkjenning)
-                    it.requireKey("warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
-                    it.interestedIn("periodetype")
+                    it.requireKey("Godkjenning.warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
+                    it.interestedIn("Godkjenning.periodetype")
                 }
             }.register(this)
         }
@@ -58,13 +60,17 @@ class GodkjenningLøsning(
                     .register()
         }
 
+        override fun onError(problems: MessageProblems, context: RapidsConnection.MessageContext) {
+            sikkerLogg.error("Forstod ikke Godkjenning:\n${problems.toExtendedReport()}")
+        }
+
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
             val løsning = GodkjenningLøsning(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
                 fødselsnummer = packet["fødselsnummer"].asText(),
                 aktørId = packet["aktørId"].asText(),
-                warnings = packet["warnings"].warnings(),
-                periodetype = packet["periodetype"].takeUnless(JsonNode::isMissingOrNull)?.asText(),
+                warnings = packet["Godkjenning.warnings"].warnings(),
+                periodetype = packet["Godkjenning.periodetype"].asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
@@ -72,7 +78,7 @@ class GodkjenningLøsning(
 
             if (løsning.godkjenning.godkjent) {
                 godkjentCounter.inc()
-                oppgaveTypeCounter.labels(løsning.periodetype ?: "ukjent").inc()
+                oppgaveTypeCounter.labels(løsning.periodetype).inc()
             } else {
                 if (løsning.godkjenning.årsak != null) {
                     årsakCounter.labels(løsning.godkjenning.årsak).inc()
