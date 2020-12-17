@@ -15,11 +15,11 @@ private val objectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 @Language("JSON")
-fun nyBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String) = """
+fun nyBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
-          "@id": "7e0187b7-07cf-4246-8ae9-4b642bf871a3",
+          "@id": "$id",
           "@behov": [
             "Godkjenning"
           ],
@@ -27,15 +27,8 @@ fun nyBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String)
           "fødselsnummer": "$fødselsnummer",
           "organisasjonsnummer": "987654321",
           "vedtaksperiodeId": "$vedtaksperiodeId",
-          "tilstand": "AVVENTER_GODKJENNING"
-        }
-    """
-
-
-fun nyLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String?, id: UUID = UUID.randomUUID()) =
-    objectMapper.readValue<ObjectNode>(gammelBehov(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
-        set<ObjectNode>(
-            "Godkjenning", objectMapper.readTree("""{
+          "tilstand": "AVVENTER_GODKJENNING",
+          "Godkjenning": {
             "warnings": {
               "aktiviteter": [
                 {
@@ -51,14 +44,22 @@ fun nyLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: Stri
             "periodeFom": "2020-05-16",
             "periodeTom": "2020-05-22",
             "periodetype": "$periodetype"
-          }"""
-            ))
-            .set<ObjectNode>(
+          }
+        }
+    """
+
+
+fun nyLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) =
+    objectMapper.readValue<ObjectNode>(nyBehov(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
+            set<ObjectNode>(
                 "@løsning", objectMapper.readTree(""" {
                 "Godkjenning": {
                 "godkjent": true,
                 "saksbehandlerIdent": "Z999999",
-                "godkjenttidspunkt": "2020-06-02T13:00:00.000000"
+                "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
+                "begrunnelser": [
+                        "Arbeidsgiverperiode beregnet feil"
+                    ]
             }
             }"""))
             .set<ObjectNode>("@final", objectMapper.valueToTree(true))
@@ -106,7 +107,10 @@ fun gammelLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: 
             "@løsning", objectMapper.readTree("""{ "Godkjenning": {
               "godkjent": true,
               "saksbehandlerIdent": "Z999999",
-              "godkjenttidspunkt": "2020-06-02T13:00:00.000000"
+              "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
+              "begrunnelser": [
+                    "Arbeidsgiverperiode beregnet feil"
+                ]
             }
           }"""
             ))

@@ -29,9 +29,13 @@ class SpaghetE2ETest {
     fun `godkjenningsbehov blir lest fra rapid`() {
         val fødselsnummer = "1243356"
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(nyLøsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE"))
+        val id = UUID.randomUUID()
+        river.sendTestMessage(nyBehov(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
+        river.sendTestMessage(nyLøsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
 
         assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
+        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsning(id))
+        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsningBegrunnelse(id))
     }
 
     @Test
@@ -60,6 +64,12 @@ class SpaghetE2ETest {
 
     private fun finnGodkjenningsbehovLøsning(id: UUID) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning WHERE id=?;", id)
+            .map { it.string("id") }
+            .asList)
+    }
+
+    private fun finnGodkjenningsbehovLøsningBegrunnelse(id: UUID) = using(sessionOf(dataSource)) { session ->
+        session.run(queryOf("SELECT * FROM godkjenningsbehov_losning_begrunnelse WHERE id=?;", id)
             .map { it.string("id") }
             .asList)
     }
