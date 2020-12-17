@@ -16,7 +16,7 @@ class SpaghetE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-            .setupRiver(dataSource)
+        .setupRiver(dataSource)
 
     @AfterAll
     fun tearDown() {
@@ -25,14 +25,25 @@ class SpaghetE2ETest {
         embeddedPostgres.close()
     }
 
-
     @Test
     fun `godkjenningsbehov blir lest fra rapid`() {
         val fødselsnummer = "1243356"
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(løsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE"))
+        river.sendTestMessage(nyLøsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE"))
 
         assertEquals(listOf(vedtaksperiodeId.toString()), finnGodkjenninger(fødselsnummer))
+    }
+
+    @Test
+    fun `gamle godkjenningsbehov uten løsning blir lest fra rapid`() {
+        val fødselsnummer = "2243356"
+        val vedtaksperiodeId = UUID.randomUUID()
+        val id = UUID.randomUUID()
+        river.sendTestMessage(gammelBehov(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
+        river.sendTestMessage(gammelLøsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
+
+        // assertEquals(1, finnWarnings(vedtaksperiodeId).size)
+        assertEquals(1, finnGodkjenningsbehovLøsning(id).size)
     }
 
     private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
@@ -41,46 +52,16 @@ class SpaghetE2ETest {
             .asList)
     }
 
-    @Language("JSON")
-    private fun løsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String) = """
-        {
-          "@event_name": "behov",
-          "@opprettet": "2020-06-02T12:00:00.000000",
-          "@id": "7e0187b7-07cf-4246-8ae9-4b642bf871a3",
-          "@behov": [
-            "Godkjenning"
-          ],
-          "aktørId": "1000000000000",
-          "fødselsnummer": "$fødselsnummer",
-          "organisasjonsnummer": "987654321",
-          "vedtaksperiodeId": "$vedtaksperiodeId",
-          "tilstand": "AVVENTER_GODKJENNING",
-          "Godkjenning": {
-            "warnings": {
-              "aktiviteter": [
-                {
-                  "kontekster": [],
-                  "alvorlighetsgrad": "WARN",
-                  "melding": "Perioden er en direkte overgang fra periode i Infotrygd",
-                  "detaljer": {},
-                  "tidsstempel": "2020-06-02 15:56:34.111"
-                }
-              ],
-              "kontekster": []
-            },
-            "periodeFom": "2020-05-16",
-            "periodeTom": "2020-05-22",
-            "periodetype": "$periodetype"
-          },
-          "@løsning": {
-            "Godkjenning": {
-              "godkjent": true,
-              "saksbehandlerIdent": "Z999999",
-              "godkjenttidspunkt": "2020-06-02T13:00:00.000000"
-            }
-          },
-          "@final": true,
-          "@besvart": "2020-06-02T13:00:00.000000"
-        }
-    """
+    private fun finnWarnings(vedtaksperiode: UUID) = using(sessionOf(dataSource)) { session ->
+        session.run(queryOf("SELECT * FROM godkjenningsbehov_warning WHERE vedtaksperiode_id=?;", vedtaksperiode)
+            .map { it.string("melding") }
+            .asList)
+    }
+
+    private fun finnGodkjenningsbehovLøsning(id: UUID) = using(sessionOf(dataSource)) { session ->
+        session.run(queryOf("SELECT * FROM godkjenningsbehov_losning WHERE id=?;", id)
+            .map { it.string("id") }
+            .asList)
+    }
+
 }
