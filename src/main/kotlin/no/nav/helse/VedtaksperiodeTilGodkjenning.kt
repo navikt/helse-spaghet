@@ -36,9 +36,9 @@ class VedtaksperiodeTilGodkjenningRiver(
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             val behovOpprettet = json["@opprettet"].asLocalDateTime()
-
+            val id = UUID.fromString(json["@id"].asText())
             sessionOf(dataSource).use { session ->
-                insertGodkjenningsbehov(json, vedtaksperiodeId, behovOpprettet)
+                insertGodkjenningsbehov(id, periodetype(json), vedtaksperiodeId, behovOpprettet)
             }
             log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {
@@ -46,7 +46,17 @@ class VedtaksperiodeTilGodkjenningRiver(
         }
     }
 
-    private fun insertGodkjenningsbehov(json: JsonNode, vedtaksperiodeId: UUID, tidspunkt: LocalDateTime) {
+    fun periodetype(json: JsonNode) = when {
+        // Gamle godkjenningsbehov
+        json.hasNonNull("periodetype") -> json["periodetype"].asText()
+        // Nytt format flytter periodetype i Godkjenning
+        json.hasNonNull("Godkjenning") ->  json["Godkjenning"]["periodetype"].asText()
+        // Historiske godkjenningsbehov har ikke periodetype (før automatisering)
+        else -> "UKJENT"
+    }
+
+
+    private fun insertGodkjenningsbehov(hendelseId: UUID, periodetype: String?, vedtaksperiodeId: UUID, tidspunkt: LocalDateTime) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
             "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype, tidspunkt) VALUES(:id, :vedtaksperiode_id, :periodetype, :tidspunkt) ON CONFLICT DO NOTHING;"
@@ -54,9 +64,9 @@ class VedtaksperiodeTilGodkjenningRiver(
             session.run(
                 queryOf(
                     insertGodkjenningsbehov, mapOf(
-                        "id" to UUID.fromString(json["@id"].asText()),
+                        "id" to hendelseId,
                         "vedtaksperiode_id" to vedtaksperiodeId,
-                        "periodetype" to json["periodetype"]?.asText(),
+                        "periodetype" to periodetype,
                         "tidspunkt" to tidspunkt
                     )
                 ).asUpdate

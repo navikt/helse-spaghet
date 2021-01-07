@@ -6,7 +6,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -18,7 +17,6 @@ class VedtaksperiodeBehandletRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                //it.demandValue("@event_name", "behov")
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.requireValue("@final", true)
                 it.requireKey("@id", "vedtaksperiodeId", "@løsning")
@@ -32,14 +30,12 @@ class VedtaksperiodeBehandletRiver(
             val json = objectMapper.readTree(packet.toJson())
             val id = UUID.fromString(json["@id"].asText())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-            val løsning = json["@løsning"]["Godkjenning"]
+            val løsning = løsning(json)
+            val saksbehandlerIdentitet = finnIdentitet(løsning)
             sessionOf(dataSource).use { session ->
-                insertLøsning(session, id, json, løsning)
-                if (json.hasNonNull("begrunnelser")) {
+                insertLøsning(session, id, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
+                if (løsning.hasNonNull("begrunnelser")) {
                     insertBegrunnelser(session, id, løsning)
-                }
-                if (json.hasNonNull("warnings")) {
-                    insertWarnings(session, json, vedtaksperiodeId)
                 }
             }
             log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
@@ -48,47 +44,45 @@ class VedtaksperiodeBehandletRiver(
         }
     }
 
+    private fun hentGodkjentTidspunkt(json: JsonNode): LocalDateTime {
+        // godkjenningstidspunkt har blitt flyttet til løsningen
+        return (løsning(json)["godkjenttidspunkt"]?.asLocalDateTime() ?: json["godkjenttidspunkt"].asLocalDateTime())
+    }
+
+    private fun finnIdentitet(løsning: JsonNode) = when {
+        løsning.valueOrNull("automatiskBehandling")?.asBoolean() == true -> SPESIALIST_OID
+        else -> løsning["saksbehandlerIdent"].asText()
+    }
+
+    private fun løsning(json: JsonNode): JsonNode {
+        return json["@løsning"]["Godkjenning"]
+    }
+
     private fun insertLøsning(
         session: Session,
         id: UUID,
-        json: JsonNode,
+        godkjentTidspunkt: LocalDateTime,
+        saksbehandlerIdentitet: String,
         løsning: JsonNode
     ) {
         @Language("PostgreSQL")
         val løsningInsert =
-            """INSERT INTO godkjenningsbehov_losning(id, godkjent, automatisk_behandling, arsak, godkjenttidspunkt) VALUES(:id, :godkjent, :automatisk_behandling, :arsak, :godkjenttidspunkt);"""
+            """INSERT INTO godkjenningsbehov_losning(id, godkjent, automatisk_behandling, arsak, godkjent_av, godkjenttidspunkt) VALUES(:id, :godkjent, :automatisk_behandling, :arsak, :godkjent_av, :godkjenttidspunkt);"""
         session.run(
             queryOf(
                 løsningInsert, mapOf(
                     "id" to id,
                     "godkjent" to løsning["godkjent"].asBoolean(),
                     "automatisk_behandling" to (løsning["automatiskBehandling"]?.asBoolean(false) ?: false),
-                    "arsak" to løsning["årsak"]?.takeIf { !it.isMissingOrNull() }?.asText(),
-                    // godkjenttidspunkt er en del av løsningen i spesialist, men ikke spade
-                    "godkjenttidspunkt" to (løsning["godkjenttidspunkt"]?.asLocalDateTime() ?: json["godkjenttidspunkt"].asLocalDateTime())
+                    "arsak" to løsning.valueOrNull("årsak")?.asText(),
+                    "godkjent_av" to saksbehandlerIdentitet,
+                    "godkjenttidspunkt" to godkjentTidspunkt
                 )
             ).asUpdate
         )
     }
 
-    private fun insertWarnings(
-        session: Session,
-        json: JsonNode,
-        vedtaksperiodeId: UUID
-    ) {
-        @Language("PostgreSQL")
-        val warningInsert = "INSERT INTO godkjenningsbehov_warning(vedtaksperiode_id, melding) VALUES(:vedtaksperiode_id, :warning) ON CONFLICT DO NOTHING;"
-        json["warnings"]["aktiviteter"].forEach { warning ->
-            session.run(
-                queryOf(
-                    warningInsert, mapOf(
-                        "vedtaksperiode_id" to vedtaksperiodeId,
-                        "warning" to warning["melding"].asText()
-                    )
-                ).asUpdate
-            )
-        }
-    }
+    private fun JsonNode.valueOrNull(field: String): JsonNode? = takeIf { has(field) }?.get(field)
 
     private fun insertBegrunnelser(
         session: Session,
@@ -108,5 +102,9 @@ class VedtaksperiodeBehandletRiver(
                 ).asUpdate
             )
         }
+    }
+
+    companion object {
+        const val SPESIALIST_OID = "5cc46653-7c6c-4c5e-b617-baf648452ad4"
     }
 }

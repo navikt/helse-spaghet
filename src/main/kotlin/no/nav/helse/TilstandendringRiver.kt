@@ -35,6 +35,7 @@ class TilstandendringRiver(
             // Vi går ut i fra at første entry i kontekster er typen hendelse som førte til endringen.
             val kildeType = json["aktivitetslogg"]["kontekster"].firstOrNull()?.get("kontekstType")?.asText() ?: "Ukjent"
             insertTilstandsendring(
+                    hendelseId = UUID.fromString(json["@id"].asText()),
                     vedtaksperiodeId = vedtaksperiodeId,
                     tidsstempel = json["@opprettet"].asLocalDateTime(),
                     tilstandFra = json["forrigeTilstand"].asText(),
@@ -48,6 +49,7 @@ class TilstandendringRiver(
     }
 
     private fun insertTilstandsendring(
+            hendelseId: UUID,
             vedtaksperiodeId: UUID,
             tidsstempel: LocalDateTime,
             tilstandFra: String,
@@ -59,6 +61,7 @@ class TilstandendringRiver(
             @Language("PostgreSQL")
             val query = """
 INSERT INTO vedtaksperiode_tilstandsendring(
+    hendelse_id,
     vedtaksperiode_id,
     tidsstempel,
     tilstand_fra,
@@ -66,6 +69,7 @@ INSERT INTO vedtaksperiode_tilstandsendring(
     kilde,
     kilde_type)
 VALUES(
+    :hendelse_id,
     :vedtaksperiode_id,
     :tidsstempel,
     :tilstand_fra,
@@ -74,6 +78,7 @@ VALUES(
     :kilde_type
 );"""
             session.run(queryOf(query, mapOf(
+                    "hendelse_id" to hendelseId,
                     "vedtaksperiode_id" to vedtaksperiodeId,
                     "tidsstempel" to tidsstempel,
                     "tilstand_fra" to tilstandFra,

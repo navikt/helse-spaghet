@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -8,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
 import java.util.*
 
 private val objectMapper: ObjectMapper = jacksonObjectMapper()
@@ -15,7 +15,7 @@ private val objectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 @Language("JSON")
-fun nyBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) = """
+fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
@@ -49,21 +49,29 @@ fun nyBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String,
     """
 
 
-fun nyLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) =
-    objectMapper.readValue<ObjectNode>(nyBehov(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
+fun løsningNyttFormat(
+        fødselsnummer: String,
+        vedtaksperiodeId: UUID,
+        periodetype: String,
+        id: UUID = UUID.randomUUID(),
+        automatiskBehandlet: Boolean = false,
+        saksbehandlerIdent: String = "Z999999",
+) =
+    objectMapper.readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
             set<ObjectNode>(
                 "@løsning", objectMapper.readTree(""" {
                 "Godkjenning": {
                 "godkjent": true,
-                "saksbehandlerIdent": "Z999999",
+                "saksbehandlerIdent": "$saksbehandlerIdent",
                 "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
+                "automatiskBehandling": $automatiskBehandlet,
                 "begrunnelser": [
                         "Arbeidsgiverperiode beregnet feil"
                     ]
             }
             }"""))
-            .set<ObjectNode>("@final", objectMapper.valueToTree(true))
-            .set<JsonNode>("@besvart", objectMapper.valueToTree("2020-06-02T13:00:00.000000"))
+            .put("@final", true)
+            .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
 
 
@@ -114,6 +122,87 @@ fun gammelLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: 
             }
           }"""
             ))
-            .set<ObjectNode>("@final", objectMapper.valueToTree(true))
-            .set<JsonNode>("@besvart", objectMapper.valueToTree("2020-06-02T13:00:00.000000"))
+            .put("@final", true)
+            .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
+
+@Language("JSON")
+fun vedtaksperiodeEndret(
+        hendelseId: UUID = UUID.randomUUID(),
+        vedtaksperiodeId: UUID = UUID.randomUUID(),
+        orgnummer: String = "98765432",
+        timestamp: LocalDateTime = LocalDateTime.now(),
+        tilstandFra: String = "AVVENTER_GODKJENNING",
+        tilstandTil: String = "AVVENTER_SIMULERING"
+) = """
+{
+  "vedtaksperiodeId": "$vedtaksperiodeId",
+  "organisasjonsnummer": "$orgnummer",
+  "gjeldendeTilstand": "$tilstandFra",
+  "forrigeTilstand": "$tilstandTil",
+  "aktivitetslogg": {
+    "aktiviteter": [
+      {
+        "kontekster": [0, 1],
+        "alvorlighetsgrad": "INFO",
+        "melding": "Behandler simulering",
+        "detaljer": {},
+        "tidsstempel": "$timestamp"
+      },
+      {
+        "kontekster": [0, 1, 2, 3, 4],
+        "alvorlighetsgrad": "INFO",
+        "melding": "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling",
+        "detaljer": {},
+        "tidsstempel": "$timestamp"
+      }
+    ],
+    "kontekster": [
+      {
+        "kontekstType": "Simulering",
+        "kontekstMap": {
+          "meldingsreferanseId": "eb288a68-f49f-4c24-bdc6-3fdef4e57630",
+          "aktørId": "100000231823",
+          "fødselsnummer": "12121212345",
+          "organisasjonsnummer": "$orgnummer"
+        }
+      },
+      {
+        "kontekstType": "Person",
+        "kontekstMap": {
+          "fødselsnummer": "12121212345",
+          "aktørId": "100000231823"
+        }
+      },
+      {
+        "kontekstType": "Arbeidsgiver",
+        "kontekstMap": {
+          "organisasjonsnummer": "$orgnummer"
+        }
+      },
+      {
+        "kontekstType": "Vedtaksperiode",
+        "kontekstMap": {
+          "vedtaksperiodeId": "$vedtaksperiodeId"
+        }
+      },
+      {
+        "kontekstType": "Tilstand",
+        "kontekstMap": {
+          "tilstand": "AVVENTER_SIMULERING"
+        }
+      }
+    ]
+  },
+  "@event_name":"vedtaksperiode_endret",
+  "@id": "$hendelseId",
+  "@opprettet": "$timestamp",
+  "@forårsaket_av": {
+    "event_name": "behov",
+    "id": "ae2a4ee4-304a-4482-879f-40b412880e17",
+    "opprettet": "${timestamp.minusMinutes(3)}"
+  },
+  "aktørId": "100000231823",
+  "fødselsnummer": "12121212345"
+} 
+"""

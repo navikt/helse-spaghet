@@ -37,6 +37,7 @@ class AktivitetRiver(
             log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
             json["aktivitetslogg"]["aktiviteter"].forEach { aktivitet ->
                 insertAktivitet(
+                        hendelseId = UUID.fromString(json["@id"].asText()),
                         vedtaksperiodeId = vedtaksperiodeId,
                         melding = aktivitet["melding"].asText(),
                         level = aktivitet["alvorlighetsgrad"].asText(),
@@ -60,6 +61,7 @@ class AktivitetRiver(
 
 
     private fun insertAktivitet(
+            hendelseId: UUID,
             vedtaksperiodeId: UUID,
             melding: String,
             level: String,
@@ -69,8 +71,9 @@ class AktivitetRiver(
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = """INSERT INTO vedtaksperiode_aktivitet(vedtaksperiode_id, melding, level, tidsstempel, kilde) VALUES(:vedtaksperiode_id, :melding, :level, :tidsstempel, :kilde) ON CONFLICT DO NOTHING"""
+            val query = """INSERT INTO vedtaksperiode_aktivitet(hendelse_id, vedtaksperiode_id, melding, level, tidsstempel, kilde) VALUES(:hendelse_id, :vedtaksperiode_id, :melding, :level, :tidsstempel, :kilde) ON CONFLICT DO NOTHING"""
             session.run(queryOf(query, mapOf(
+                    "hendelse_id" to hendelseId,
                     "vedtaksperiode_id" to vedtaksperiodeId,
                     "melding" to melding,
                     "level" to level,
