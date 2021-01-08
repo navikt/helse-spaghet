@@ -82,8 +82,6 @@ class VedtaksperiodeBehandletRiver(
         )
     }
 
-    private fun JsonNode.valueOrNull(field: String): JsonNode? = takeIf { has(field) }?.get(field)
-
     private fun insertBegrunnelser(
         session: Session,
         id: UUID?,

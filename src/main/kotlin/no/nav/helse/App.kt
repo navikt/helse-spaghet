@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -87,3 +88,5 @@ private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder
         }
     })
 }
+
+fun JsonNode.valueOrNull(field: String): JsonNode? = takeIf { has(field) }?.get(field)

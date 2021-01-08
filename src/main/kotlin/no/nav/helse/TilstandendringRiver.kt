@@ -33,7 +33,11 @@ class TilstandendringRiver(
         try {
             log.info("Inserter tilstandsendring for vedtaksperiodeId: $vedtaksperiodeId")
             // Vi går ut i fra at første entry i kontekster er typen hendelse som førte til endringen.
-            val kildeType = json["aktivitetslogg"]["kontekster"].firstOrNull()?.get("kontekstType")?.asText() ?: "Ukjent"
+            val kildeType = json
+                    .valueOrNull("aktivitetslogg")
+                    ?.valueOrNull("kontekster")
+                    ?.firstOrNull()?.get("kontekstType")
+                    ?.asText() ?: "Ukjent"
             insertTilstandsendring(
                     hendelseId = UUID.fromString(json["@id"].asText()),
                     vedtaksperiodeId = vedtaksperiodeId,
