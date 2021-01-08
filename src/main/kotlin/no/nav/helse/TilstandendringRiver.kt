@@ -31,7 +31,7 @@ class TilstandendringRiver(
         val json = objectMapper.readTree(packet.toJson())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         try {
-            log.info("Inserter tilstandsendring for vedtaksperiodeId: $vedtaksperiodeId")
+            //log.info("Inserter tilstandsendring for vedtaksperiodeId: $vedtaksperiodeId")
             // Vi går ut i fra at første entry i kontekster er typen hendelse som førte til endringen.
             val kildeType = json
                     .valueOrNull("aktivitetslogg")

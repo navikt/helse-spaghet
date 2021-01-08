@@ -34,7 +34,7 @@ class AktivitetRiver(
         val json = objectMapper.readTree(packet.toJson())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         try {
-            log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
+            //log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
             json["aktivitetslogg"]["aktiviteter"].forEach { aktivitet ->
                 insertAktivitet(
                         hendelseId = UUID.fromString(json["@id"].asText()),
