@@ -1,7 +1,7 @@
-val junitJupiterVersion = "5.6.2"
+val junitJupiterVersion = "5.7.0"
 
 plugins {
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.21"
 }
 
 group = "no.helse"
@@ -12,13 +12,13 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:61e42dfc5a")
+    implementation("com.github.navikt:rapids-and-rivers:1.6d6256d")
     implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("no.nav:vault-jdbc:1.3.7")
     implementation("org.flywaydb:flyway-core:6.5.0")
     implementation("com.github.seratch:kotliquery:1.3.1")
-    implementation("io.ktor:ktor-client-apache:1.4.0")
-    implementation("io.ktor:ktor-client-jackson:1.4.0")
+    implementation("io.ktor:ktor-client-apache:1.5.0")
+    implementation("io.ktor:ktor-client-jackson:1.5.0")
 
     testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
 
