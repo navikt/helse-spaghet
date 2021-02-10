@@ -16,7 +16,7 @@ class AktivitetRiverE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-            .setupRiver(dataSource)
+        .setupRiver(dataSource)
 
     @AfterAll
     fun tearDown() {
@@ -42,56 +42,59 @@ class AktivitetRiverE2ETest {
 
         val tilstandsendringer = hentTilstandsendringer(vedtaksperiodeId)
 
-        assertEquals(listOf(
+        assertEquals(
+            listOf(
                 Tilstandsendring(
-                        vedtaksperiodeId = vedtaksperiodeId,
-                        tidsstempel = tidspunkt,
-                        tilstandFra = "AVVENTER_GAP",
-                        tilstandTil = "TIL_INFOTRYGD",
-                        kilde = kilde,
-                        kildeType = "Utbetalingshistorikk"
+                    vedtaksperiodeId = vedtaksperiodeId,
+                    tidsstempel = tidspunkt,
+                    tilstandFra = "AVVENTER_GAP",
+                    tilstandTil = "TIL_INFOTRYGD",
+                    kilde = kilde,
+                    kildeType = "Utbetalingshistorikk"
                 )
-        ), tilstandsendringer)
+            ), tilstandsendringer
+        )
 
     }
 
     private fun hentErrors(vedtaksperiodeId: UUID) =
-            sessionOf(dataSource).use { session ->
-                @Language("PostgreSQL")
-                val query = """SELECT * FROM vedtaksperiode_aktivitet WHERE vedtaksperiode_id=?;"""
-                session.run(queryOf(query, vedtaksperiodeId)
-                        .map { it.string("melding") }
-                        .asList
-                )
-            }
+        sessionOf(dataSource).use { session ->
+            @Language("PostgreSQL")
+            val query = """SELECT * FROM vedtaksperiode_aktivitet WHERE vedtaksperiode_id=?;"""
+            session.run(queryOf(query, vedtaksperiodeId)
+                .map { it.string("melding") }
+                .asList
+            )
+        }
 
     private fun hentTilstandsendringer(vedtaksperiodeId: UUID) =
-            sessionOf(dataSource).use { session ->
-                @Language("PostgreSQL")
-                val query = "SELECT * FROM vedtaksperiode_tilstandsendring WHERE vedtaksperiode_id=?;"
-                session.run(queryOf(query, vedtaksperiodeId)
-                        .map { row ->
-                            Tilstandsendring(
-                                    vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
-                                    tidsstempel = row.localDateTime("tidsstempel"),
-                                    tilstandFra = row.string("tilstand_fra"),
-                                    tilstandTil = row.string("tilstand_til"),
-                                    kilde = UUID.fromString(row.string("kilde")),
-                                    kildeType = row.string("kilde_type")
-                            )
-                        }
-                        .asList
-                )
-            }
+        sessionOf(dataSource).use { session ->
+            @Language("PostgreSQL")
+            val query = "SELECT * FROM vedtaksperiode_tilstandsendring WHERE vedtaksperiode_id=?;"
+            session.run(queryOf(query, vedtaksperiodeId)
+                .map { row ->
+                    Tilstandsendring(
+                        vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
+                        tidsstempel = row.localDateTime("tidsstempel"),
+                        tilstandFra = row.string("tilstand_fra"),
+                        tilstandTil = row.string("tilstand_til"),
+                        kilde = UUID.fromString(row.string("kilde")),
+                        kildeType = row.string("kilde_type")
+                    )
+                }
+                .asList
+            )
+        }
 
     private data class Tilstandsendring(
-            val vedtaksperiodeId: UUID,
-            val tidsstempel: LocalDateTime,
-            val tilstandFra: String,
-            val tilstandTil: String,
-            val kilde: UUID,
-            val kildeType: String
+        val vedtaksperiodeId: UUID,
+        val tidsstempel: LocalDateTime,
+        val tilstandFra: String,
+        val tilstandTil: String,
+        val kilde: UUID,
+        val kildeType: String
     )
+
 
     @Language("JSON")
     private fun vedtaksperiodeEndretMedError(vedtaksperiodeId: UUID, kilde: UUID) = """

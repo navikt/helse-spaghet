@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
-class GodkjenningLøsning(
+class GodkjenningLøsningRiver(
     val vedtaksperiodeId: UUID,
     val aktørId: String,
     val fødselsnummer: String,
@@ -65,7 +65,7 @@ class GodkjenningLøsning(
         }
 
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
-            val løsning = GodkjenningLøsning(
+            val løsning = GodkjenningLøsningRiver(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
                 fødselsnummer = packet["fødselsnummer"].asText(),
                 aktørId = packet["aktørId"].asText(),

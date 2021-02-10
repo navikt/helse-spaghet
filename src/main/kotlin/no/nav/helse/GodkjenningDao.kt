@@ -1,15 +1,13 @@
 package no.nav.helse
 
-import kotliquery.Row
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotliquery.*
+import java.lang.RuntimeException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
-fun DataSource.insertGodkjenning(løsning: GodkjenningLøsning) =
+fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
     using(sessionOf(this, returnGeneratedKey = true)) { session ->
         session.transaction { transaction ->
             val godkjenningId = transaction.run(
@@ -79,6 +77,23 @@ GROUP BY g.id;
             .asList
     )
 }
+
+fun Session.findGodkjenning(vedtaksperiodeId: UUID): Int =
+    this.run(
+        queryOf(
+            """
+SELECT id
+FROM godkjenning g
+WHERE g.vedtaksperiode_id = ?
+ORDER BY g.godkjent_tidspunkt DESC
+LIMIT 1
+    """, vedtaksperiodeId
+        )
+            .map { it.int("id") }.asSingle
+    ).let {
+        it ?: throw RuntimeException("Forventet godkjenning for vedtaksperiode $vedtaksperiodeId")
+         }
+
 
 data class GodkjenningDto(
     val vedtaksperiodeId: UUID,

@@ -27,13 +27,13 @@ class GodkjenningDaoTest {
 
     @Test
     fun `legger til warnings og begrunnelser for godkjenninger`() {
-        val løsning = GodkjenningLøsning(
+        val løsning = GodkjenningLøsningRiver(
             vedtaksperiodeId = UUID.randomUUID(),
             aktørId = "aktørId",
             fødselsnummer = "fødselsnummer",
             warnings = listOf("Test warning", "Test warning 2"),
             periodetype = "FORLENGELSE",
-            godkjenning = GodkjenningLøsning.Godkjenning(
+            godkjenning = GodkjenningLøsningRiver.Godkjenning(
                 godkjent = false,
                 saksbehandlerIdent = "Z999999",
                 godkjentTidspunkt = LocalDateTime.now(),

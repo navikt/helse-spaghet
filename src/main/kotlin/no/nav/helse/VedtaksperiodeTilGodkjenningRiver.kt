@@ -20,7 +20,6 @@ class VedtaksperiodeTilGodkjenningRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                //it.demandValue("@event_name", "behov")
                 it.requireKey("@id", "@opprettet")
                 it.interestedIn("vedtaksperiodeId")
                 it.demandAll("@behov", listOf("Godkjenning"))
@@ -37,9 +36,7 @@ class VedtaksperiodeTilGodkjenningRiver(
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             val behovOpprettet = json["@opprettet"].asLocalDateTime()
             val id = UUID.fromString(json["@id"].asText())
-            sessionOf(dataSource).use { session ->
-                insertGodkjenningsbehov(id, periodetype(json), vedtaksperiodeId, behovOpprettet)
-            }
+            insertGodkjenningsbehov(id, periodetype(json), vedtaksperiodeId, behovOpprettet)
             log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {
             log.error("Feilet ved inserting av godkjenningsbehov", e)
@@ -50,13 +47,18 @@ class VedtaksperiodeTilGodkjenningRiver(
         // Gamle godkjenningsbehov
         json.hasNonNull("periodetype") -> json["periodetype"].asText()
         // Nytt format flytter periodetype i Godkjenning
-        json.hasNonNull("Godkjenning") ->  json["Godkjenning"]["periodetype"].asText()
+        json.hasNonNull("Godkjenning") -> json["Godkjenning"]["periodetype"].asText()
         // Historiske godkjenningsbehov har ikke periodetype (før automatisering)
         else -> "UKJENT"
     }
 
 
-    private fun insertGodkjenningsbehov(hendelseId: UUID, periodetype: String?, vedtaksperiodeId: UUID, tidspunkt: LocalDateTime) {
+    private fun insertGodkjenningsbehov(
+        hendelseId: UUID,
+        periodetype: String?,
+        vedtaksperiodeId: UUID,
+        tidspunkt: LocalDateTime
+    ) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
             "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype, tidspunkt) VALUES(:id, :vedtaksperiode_id, :periodetype, :tidspunkt) ON CONFLICT DO NOTHING;"
