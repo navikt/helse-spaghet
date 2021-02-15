@@ -70,7 +70,6 @@ fun løsningNyttFormat(
                     ]
             }
             }"""))
-            .put("@final", true)
             .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
 
@@ -122,7 +121,6 @@ fun gammelLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: 
             }
           }"""
             ))
-            .put("@final", true)
             .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
 

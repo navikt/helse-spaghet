@@ -99,7 +99,6 @@ class VedtaksperiodeGodkjentE2ETest {
   "@behov": [
     "Godkjenning"
   ],
-  "@final": true,
   "@løsning": {
     "Godkjenning": {
       "godkjent": true,

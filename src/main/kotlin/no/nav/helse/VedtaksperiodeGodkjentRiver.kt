@@ -29,6 +29,9 @@ class VedtaksperiodeGodkjentRiver(
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             val warnings = json["warnings"].map(::warningOfJson)
+            if(warnings.isEmpty()) {
+                return
+            }
             sessionOf(dataSource).use { session ->
                 val godkjenningsId = session.findGodkjenning(vedtaksperiodeId)
                 warnings.forEach {
