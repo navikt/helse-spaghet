@@ -60,10 +60,6 @@ class GodkjenningLøsningRiver(
                     .register()
         }
 
-        override fun onError(problems: MessageProblems, context: RapidsConnection.MessageContext) {
-            sikkerLogg.error("Forstod ikke Godkjenning:\n${problems.toExtendedReport()}")
-        }
-
         override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
             val løsning = GodkjenningLøsningRiver(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),

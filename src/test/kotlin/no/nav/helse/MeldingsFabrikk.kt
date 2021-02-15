@@ -61,14 +61,14 @@ fun løsningNyttFormat(
             set<ObjectNode>(
                 "@løsning", objectMapper.readTree(""" {
                 "Godkjenning": {
-                "godkjent": true,
-                "saksbehandlerIdent": "$saksbehandlerIdent",
-                "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
-                "automatiskBehandling": $automatiskBehandlet,
-                "begrunnelser": [
-                        "Arbeidsgiverperiode beregnet feil"
+                    "godkjent": true,
+                    "saksbehandlerIdent": "$saksbehandlerIdent",
+                    "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
+                    "automatiskBehandling": $automatiskBehandlet,
+                    "begrunnelser": [
+                            "Arbeidsgiverperiode beregnet feil"
                     ]
-            }
+                }
             }"""))
             .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
