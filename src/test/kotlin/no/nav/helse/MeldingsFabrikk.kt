@@ -15,7 +15,7 @@ private val objectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 @Language("JSON")
-fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID()) = """
+fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID(), inntektskilde: String = "EN_ARBEIDSGIVER") = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
@@ -39,11 +39,12 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
                   "tidsstempel": "2020-06-02 15:56:34.111"
                 }
               ],
-              "kontekster": []
+              "kontekster": [] 
             },
             "periodeFom": "2020-05-16",
             "periodeTom": "2020-05-22",
-            "periodetype": "$periodetype"
+            "periodetype": "$periodetype",
+            "inntektskilde": "$inntektskilde"  
           }
         }
     """
@@ -70,57 +71,6 @@ fun løsningNyttFormat(
                     ]
                 }
             }"""))
-            .put("@besvart", "2020-06-02T13:00:00.000000")
-    }.toString()
-
-
-@Language("JSON")
-fun gammelBehov(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String?, id: UUID = UUID.randomUUID()) = """
-        {
-          "@event_name": "behov",
-          "@opprettet": "2020-06-02T12:00:00.000000",
-          "@id": "$id",
-          "@behov": [
-            "Godkjenning"
-          ],
-          "aktørId": "1000000000000",
-          "fødselsnummer": "$fødselsnummer",
-          "organisasjonsnummer": "987654321",
-          "vedtaksperiodeId": "$vedtaksperiodeId",
-          "tilstand": "AVVENTER_GODKJENNING",
-          "periodeFom": "2020-05-16",
-          "periodeTom": "2020-05-22",
-          "sykepengegrunnlag": 42069.0,
-          ${periodetype?.let { "\"periodetype\": \"$it\"," } ?: ""}
-          "warnings": {
-            "aktiviteter": [
-              {
-                "kontekster": [],
-                "alvorlighetsgrad": "WARN",
-                "melding": "Perioden er en direkte overgang fra periode i Infotrygd",
-                "detaljer": {},
-                "tidsstempel": "2020-06-02 15:56:34.111"
-              }
-            ],
-            "kontekster": []
-          }
-        }
-    """
-
-
-fun gammelLøsning(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String?, id: UUID = UUID.randomUUID()) =
-    objectMapper.readValue<ObjectNode>(gammelBehov(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
-        set<ObjectNode>(
-            "@løsning", objectMapper.readTree("""{ "Godkjenning": {
-              "godkjent": true,
-              "saksbehandlerIdent": "Z999999",
-              "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
-              "begrunnelser": [
-                    "Arbeidsgiverperiode beregnet feil"
-                ]
-            }
-          }"""
-            ))
             .put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
 

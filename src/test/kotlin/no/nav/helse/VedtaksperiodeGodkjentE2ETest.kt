@@ -43,6 +43,13 @@ class VedtaksperiodeGodkjentE2ETest {
         assertEquals(listOf("Arbeidsuførhet, aktivitetsplikt og/eller medvirkning må vurderes. Se forklaring på vilkårs-siden.", "Perioden er lagt inn i Infotrygd, men ikke utbetalt. Fjern fra Infotrygd hvis det utbetales via speil."), hentWarnings(vedtaksperiodeId))
     }
 
+    @Test
+    fun `lagrer inntektskilde i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        assertEquals("EN_ARBEIDSGIVER", finnInntektskilde(vedtaksperiodeId))
+    }
+
     private fun hentWarnings(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -57,6 +64,12 @@ class VedtaksperiodeGodkjentE2ETest {
                 .asList
             )
         }
+
+    private fun finnInntektskilde(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
+            .map { it.stringOrNull("inntektskilde") }
+            .asSingle)
+    }
 
 
     @Language("JSON")
@@ -114,6 +127,7 @@ class VedtaksperiodeGodkjentE2ETest {
   },
   "Godkjenning": {
     "periodetype": "INFOTRYGDFORLENGELSE",
+    "inntektskilde": "EN_ARBEIDSGIVER",
     "warnings": {
       "aktiviteter": [],
       "kontekster": []

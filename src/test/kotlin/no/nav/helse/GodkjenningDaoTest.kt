@@ -33,6 +33,7 @@ class GodkjenningDaoTest {
             fødselsnummer = "fødselsnummer",
             warnings = listOf("Test warning", "Test warning 2"),
             periodetype = "FORLENGELSE",
+            inntektskilde = "EN_ARBEIDSGIVER",
             godkjenning = GodkjenningLøsningRiver.Godkjenning(
                 godkjent = false,
                 saksbehandlerIdent = "Z999999",

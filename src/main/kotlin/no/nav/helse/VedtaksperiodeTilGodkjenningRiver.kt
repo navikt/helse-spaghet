@@ -35,33 +35,26 @@ class VedtaksperiodeTilGodkjenningRiver(
             val json = objectMapper.readTree(packet.toJson())
             val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
             val behovOpprettet = json["@opprettet"].asLocalDateTime()
+            val periodetype = json["Godkjenning"]["periodetype"].asText()
+            val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
             val id = UUID.fromString(json["@id"].asText())
-            insertGodkjenningsbehov(id, periodetype(json), vedtaksperiodeId, behovOpprettet)
+            insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
             log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (e: Exception) {
             log.error("Feilet ved inserting av godkjenningsbehov", e)
         }
     }
 
-    fun periodetype(json: JsonNode) = when {
-        // Gamle godkjenningsbehov
-        json.hasNonNull("periodetype") -> json["periodetype"].asText()
-        // Nytt format flytter periodetype i Godkjenning
-        json.hasNonNull("Godkjenning") -> json["Godkjenning"]["periodetype"].asText()
-        // Historiske godkjenningsbehov har ikke periodetype (før automatisering)
-        else -> "UKJENT"
-    }
-
-
     private fun insertGodkjenningsbehov(
         hendelseId: UUID,
         periodetype: String?,
+        inntektskilde: String,
         vedtaksperiodeId: UUID,
         tidspunkt: LocalDateTime
     ) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
-            "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype, tidspunkt) VALUES(:id, :vedtaksperiode_id, :periodetype, :tidspunkt) ON CONFLICT DO NOTHING;"
+            "INSERT INTO godkjenningsbehov(id, vedtaksperiode_id, periodetype, inntektskilde, tidspunkt) VALUES(:id, :vedtaksperiode_id, :periodetype, :inntektskilde, :tidspunkt) ON CONFLICT DO NOTHING;"
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -69,6 +62,7 @@ class VedtaksperiodeTilGodkjenningRiver(
                         "id" to hendelseId,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "periodetype" to periodetype,
+                        "inntektskilde" to inntektskilde,
                         "tidspunkt" to tidspunkt
                     )
                 ).asUpdate

@@ -93,18 +93,6 @@ class SpaghetE2ETest {
     }
 
     @Test
-    fun `gamle godkjenningsbehov uten løsning blir lest fra rapid`() {
-        val fødselsnummer = "2243356"
-        val vedtaksperiodeId = UUID.randomUUID()
-        val id = UUID.randomUUID()
-        river.sendTestMessage(gammelBehov(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
-        river.sendTestMessage(gammelLøsning(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
-
-        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsning(id))
-        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsningBegrunnelse(id))
-    }
-
-    @Test
     fun `persisterer periodetype for nye godkjenninger`() {
         val id = UUID.randomUUID()
         river.sendTestMessage(behovNyttFormat("8756876", UUID.randomUUID(), "FORLENGELSE", id))
@@ -112,12 +100,19 @@ class SpaghetE2ETest {
         assertEquals("FORLENGELSE", finnPeriodetype(id))
     }
 
-    @Test
-    fun `persisterer periodetype for gamle godkjenninger`() {
-        val id = UUID.randomUUID()
-        river.sendTestMessage(gammelBehov("8756876", UUID.randomUUID(), "FORLENGELSE", id))
 
-        assertEquals("FORLENGELSE", finnPeriodetype(id))
+    @Test
+    fun `persisterer inntektskilde`() {
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+
+        val fødselsnummer = "83497290"
+
+        river.sendTestMessage(behovNyttFormat(fødselsnummer, UUID.randomUUID(), "FORLENGELSE", id1, "EN_ARBEIDSGIVER"))
+        river.sendTestMessage(behovNyttFormat(fødselsnummer, UUID.randomUUID(), "FORLENGELSE", id2, "FLERE_ARBEIDSGIVERE"))
+
+        assertEquals("EN_ARBEIDSGIVER", finnInntektskilde(id1))
+        assertEquals("FLERE_ARBEIDSGIVERE", finnInntektskilde(id2))
     }
 
     private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
@@ -160,5 +155,11 @@ class SpaghetE2ETest {
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning WHERE id=?;", id)
                 .map { it.string("godkjent_av") }
                 .asSingle)
+    }
+
+    private fun finnInntektskilde(id: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenningsbehov WHERE id=?;", id)
+            .map { it.stringOrNull("inntektskilde") }
+            .asSingle)
     }
 }

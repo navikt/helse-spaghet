@@ -15,6 +15,7 @@ class GodkjenningLøsningRiver(
     val fødselsnummer: String,
     val warnings: List<String>,
     val periodetype: String,
+    val inntektskilde: String,
     val godkjenning: Godkjenning
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
@@ -25,8 +26,7 @@ class GodkjenningLøsningRiver(
                     it.demandAll("@behov", listOf("Godkjenning"))
                     it.rejectKey("@final")
                     it.require("@løsning.Godkjenning", ::tilGodkjenning)
-                    it.requireKey("Godkjenning.warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer")
-                    it.interestedIn("Godkjenning.periodetype")
+                    it.requireKey("Godkjenning.warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer", "Godkjenning.periodetype", "Godkjenning.inntektskilde")
                 }
             }.register(this)
         }
@@ -67,6 +67,7 @@ class GodkjenningLøsningRiver(
                 aktørId = packet["aktørId"].asText(),
                 warnings = packet["Godkjenning.warnings"].warnings(),
                 periodetype = packet["Godkjenning.periodetype"].asText(),
+                inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
