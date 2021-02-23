@@ -25,7 +25,7 @@ class VedtaksperiodeBehandletRiver(
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             val json = objectMapper.readTree(packet.toJson())
             val id = UUID.fromString(json["@id"].asText())

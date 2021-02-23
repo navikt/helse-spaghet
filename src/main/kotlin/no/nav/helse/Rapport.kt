@@ -64,16 +64,16 @@ class Rapport(
         .tellTyperWarnings()
 
     private val startmelding = StringBuilder().let {
-        it.appendln("*Statistikk over godkjente vedtaksperioder* :information_desk_person:")
-        it.appendln("Siden i går er $antallGodkjente godkjent ($godkjenteUtenWarnings uten warnings)")
-        it.appendln("og $antallAvvist avvist ($avvisteUtenWarnings uten warnings)")
+        it.appendLine("*Statistikk over godkjente vedtaksperioder* :information_desk_person:")
+        it.appendLine("Siden i går er $antallGodkjente godkjent ($godkjenteUtenWarnings uten warnings)")
+        it.appendLine("og $antallAvvist avvist ($avvisteUtenWarnings uten warnings)")
         it.append("Av de avviste vedtaksperiodene er:")
         Melding(tekst = it.toString())
     }
 
     private val godkjentemelding = StringBuilder().let { stringBuilder ->
-        stringBuilder.appendln("*$antallGodkjente godkjente vedtaksperioder*")
-        stringBuilder.appendln(godkjenningDto.filter { it.godkjent }.tellPeriodetyper().tilMelding(""))
+        stringBuilder.appendLine("*$antallGodkjente godkjente vedtaksperioder*")
+        stringBuilder.appendLine(godkjenningDto.filter { it.godkjent }.tellPeriodetyper().tilMelding(""))
         stringBuilder.append(warningsPåGodkjentePerioder.formatterWarnings())
         Melding(tekst = stringBuilder.toString())
     }
@@ -93,14 +93,14 @@ class Rapport(
     ) : Printbar {
         override fun tilMelding(): String {
             val melding = StringBuilder()
-            melding.appendln("*$antall avvist på grunn av $tekst ($antallUtenWarnings uten warnings)*")
-            melding.appendln(periodetyper.tilMelding(""))
+            melding.appendLine("*$antall avvist på grunn av $tekst ($antallUtenWarnings uten warnings)*")
+            melding.appendLine(periodetyper.tilMelding(""))
             if (begrunnelser.isNotEmpty()) {
-                melding.appendln()
-                melding.appendln(":memo: Vedtaksperiodene hadde følgende begrunnelser:")
-                melding.appendln("```")
-                melding.appendln(begrunnelser.sortedByDescending { it.antall }.tilMelding())
-                melding.appendln("```")
+                melding.appendLine()
+                melding.appendLine(":memo: Vedtaksperiodene hadde følgende begrunnelser:")
+                melding.appendLine("```")
+                melding.appendLine(begrunnelser.sortedByDescending { it.antall }.tilMelding())
+                melding.appendLine("```")
             }
             melding.append(warnings.formatterWarnings())
             return melding.toString()
@@ -133,10 +133,10 @@ class Rapport(
 fun List<Rapport.Warning>.formatterWarnings(): String {
     val melding = StringBuilder()
     if (isNotEmpty()) {
-        melding.appendln()
-        melding.appendln(":warning: Vedtaksperiodene hadde følgende warnings:")
-        melding.appendln("```")
-        melding.appendln(sortedByDescending { it.antall }.tilMelding())
+        melding.appendLine()
+        melding.appendLine(":warning: Vedtaksperiodene hadde følgende warnings:")
+        melding.appendLine("```")
+        melding.appendLine(sortedByDescending { it.antall }.tilMelding())
         melding.append("```")
     }
     return melding.toString()
