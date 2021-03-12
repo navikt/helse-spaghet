@@ -25,22 +25,18 @@ class VedtaksperiodeGodkjentRiver(
 
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        try {
-            val json = objectMapper.readTree(packet.toJson())
-            val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-            val warnings = json["warnings"].map(::warningOfJson)
-            if(warnings.isEmpty()) {
-                return
+        val json = objectMapper.readTree(packet.toJson())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val warnings = json["warnings"].map(::warningOfJson)
+        if (warnings.isEmpty()) {
+            return
+        }
+        sessionOf(dataSource).use { session ->
+            val godkjenningsId = session.findGodkjenning(vedtaksperiodeId)
+            warnings.forEach {
+                session.insertWarning(godkjenningsId, it)
             }
-            sessionOf(dataSource).use { session ->
-                val godkjenningsId = session.findGodkjenning(vedtaksperiodeId)
-                warnings.forEach {
-                    session.insertWarning(godkjenningsId, it)
-                }
-                log.info("Lagret warnings for godkjenningsId=$godkjenningsId, vedtaksPeriode=$vedtaksperiodeId")
-            }
-        } catch (e: Exception) {
-            log.error("Feilet ved inserting av warnings for vedtaksperiode_godkjent", e)
+            log.info("Lagret warnings for godkjenningsId=$godkjenningsId, vedtaksPeriode=$vedtaksperiodeId")
         }
     }
 

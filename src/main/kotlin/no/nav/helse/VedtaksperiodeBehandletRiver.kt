@@ -26,22 +26,18 @@ class VedtaksperiodeBehandletRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        try {
-            val json = objectMapper.readTree(packet.toJson())
-            val id = UUID.fromString(json["@id"].asText())
-            val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-            val løsning = løsning(json)
-            val saksbehandlerIdentitet = finnIdentitet(løsning)
-            sessionOf(dataSource).use { session ->
-                insertLøsning(session, id, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
-                if (løsning.hasNonNull("begrunnelser")) {
-                    insertBegrunnelser(session, id, løsning)
-                }
+        val json = objectMapper.readTree(packet.toJson())
+        val id = UUID.fromString(json["@id"].asText())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val løsning = løsning(json)
+        val saksbehandlerIdentitet = finnIdentitet(løsning)
+        sessionOf(dataSource).use { session ->
+            insertLøsning(session, id, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
+            if (løsning.hasNonNull("begrunnelser")) {
+                insertBegrunnelser(session, id, løsning)
             }
-            log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
-        } catch (e: Exception) {
-            log.error("Feilet ved inserting av løsning for godkjenningsbehov", e)
         }
+        log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
     private fun hentGodkjentTidspunkt(json: JsonNode): LocalDateTime {
@@ -67,7 +63,7 @@ class VedtaksperiodeBehandletRiver(
     ) {
         @Language("PostgreSQL")
         val løsningInsert =
-            """INSERT INTO godkjenningsbehov_losning(id, godkjent, automatisk_behandling, arsak, godkjent_av, godkjenttidspunkt) VALUES(:id, :godkjent, :automatisk_behandling, :arsak, :godkjent_av, :godkjenttidspunkt);"""
+            """INSERT INTO godkjenningsbehov_losning(id, godkjent, automatisk_behandling, arsak, godkjent_av, godkjenttidspunkt) VALUES(:id, :godkjent, :automatisk_behandling, :arsak, :godkjent_av, :godkjenttidspunkt) ON CONFLICT DO NOTHING;"""
         session.run(
             queryOf(
                 løsningInsert, mapOf(
@@ -89,7 +85,7 @@ class VedtaksperiodeBehandletRiver(
     ) {
         val begrunnelser = løsning["begrunnelser"]
         @Language("PostgreSQL")
-        val begrunnelseInsert = "INSERT INTO godkjenningsbehov_losning_begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse);"
+        val begrunnelseInsert = "INSERT INTO godkjenningsbehov_losning_begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse) ON CONFLICT DO NOTHING;"
         begrunnelser.forEach { begrunnelse ->
             session.run(
                 queryOf(

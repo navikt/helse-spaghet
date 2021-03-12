@@ -97,7 +97,7 @@ class AktivitetRiverE2ETest {
 
 
     @Language("JSON")
-    private fun vedtaksperiodeEndretMedError(vedtaksperiodeId: UUID, kilde: UUID) = """
+    private fun vedtaksperiodeEndretMedError(vedtaksperiodeId: UUID, kilde: UUID, id: UUID = UUID.randomUUID()) = """
 {
   "vedtaksperiodeId": "$vedtaksperiodeId",
   "organisasjonsnummer": "987654321",
@@ -149,7 +149,7 @@ class AktivitetRiverE2ETest {
     ]
   },
   "@event_name": "vedtaksperiode_endret",
-  "@id": "afaa7641-8215-4940-a984-cbefec7ac705",
+  "@id": "$id",
   "@opprettet": "2020-10-15T13:37:10.555",
   "@forårsaket_av": {
     "event_name": "behov",

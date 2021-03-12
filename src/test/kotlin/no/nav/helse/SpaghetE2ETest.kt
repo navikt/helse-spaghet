@@ -39,7 +39,7 @@ class SpaghetE2ETest {
     fun `finner aktiviteter for hendelse`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val id = UUID.randomUUID()
-        river.sendTestMessage(vedtaksperiodeEndret(hendelseId = id, vedtaksperiodeId = vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
 
         assertEquals(listOf(
                 "Behandler simulering",
@@ -51,9 +51,9 @@ class SpaghetE2ETest {
     fun `finner vedtaksperiode_endret for hendelse`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val id = UUID.randomUUID()
-        river.sendTestMessage(vedtaksperiodeEndret(hendelseId = id, vedtaksperiodeId = vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
 
-        assertEquals("AVVENTER_GODKJENNING", finnVedtaksperiodeTilstandsendring(id))
+        assertEquals(listOf("AVVENTER_GODKJENNING"), finnVedtaksperiodeTilstandsendring(id))
     }
 
     @Test
@@ -115,6 +115,43 @@ class SpaghetE2ETest {
         assertEquals("FLERE_ARBEIDSGIVERE", finnInntektskilde(id2))
     }
 
+    @Test
+    fun `lagrer kun behov en gang`() {
+        val eventId = UUID.randomUUID()
+        val vedtaksperiodeId = UUID.randomUUID()
+        val behov = behovNyttFormat("colemak", vedtaksperiodeId, "FORLENGELSE", eventId)
+
+        river.sendTestMessage(behov)
+        river.sendTestMessage(behov)
+
+        assertEquals(1, finnGodkjenningsbehov(vedtaksperiodeId).size)
+    }
+
+    @Test
+    fun `lagrer kun løsning en gang`() {
+        val eventId = UUID.randomUUID()
+        val vedtaksperiodeId = UUID.randomUUID()
+
+        river.sendTestMessage(behovNyttFormat("colemak", vedtaksperiodeId, "FORLENGELSE", eventId))
+
+        val løsning = løsningNyttFormat("colemak", vedtaksperiodeId, "FORLENGELSE", eventId)
+        river.sendTestMessage(løsning)
+        river.sendTestMessage(løsning)
+
+        assertEquals(1, finnGodkjenningsbehovLøsning(eventId).size)
+        assertEquals(1, finnGodkjenningsbehovLøsningBegrunnelse(eventId).size)
+    }
+
+    @Test
+    fun `lagrer kun tilstandsendring en gang`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val id = UUID.randomUUID()
+        river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
+
+        assertEquals(1, finnVedtaksperiodeTilstandsendring(id).size)
+    }
+
     private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE fodselsnummer=?;", fødselsnummer)
                 .map { it.string("vedtaksperiode_id") }
@@ -134,15 +171,15 @@ class SpaghetE2ETest {
     }
 
     private fun finnAktiviteter(id: UUID) = sessionOf(dataSource).use { session ->
-        session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE hendelse_id=?;", id)
+        session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE id=?;", id)
                 .map { it.string("melding") }
                 .asList)
     }
 
     private fun finnVedtaksperiodeTilstandsendring(id: UUID) = sessionOf(dataSource).use { session ->
-        session.run(queryOf("SELECT * FROM vedtaksperiode_tilstandsendring WHERE hendelse_id=?;", id)
+        session.run(queryOf("SELECT * FROM vedtaksperiode_tilstandsendring WHERE id=?;", id)
                 .map { it.string("tilstand_til") }
-                .asSingle)
+                .asList)
     }
 
     private fun finnPeriodetype(id: UUID) = sessionOf(dataSource).use { session ->
@@ -161,5 +198,12 @@ class SpaghetE2ETest {
         session.run(queryOf("SELECT * FROM godkjenningsbehov WHERE id=?;", id)
             .map { it.stringOrNull("inntektskilde") }
             .asSingle)
+    }
+
+    private fun finnGodkjenningsbehov(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenningsbehov WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
+            .map { it.string("id") }
+            .asList)
+
     }
 }

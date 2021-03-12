@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -9,7 +8,6 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import org.intellij.lang.annotations.Language
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -32,22 +30,18 @@ class VedtaksperiodeTilGodkjenningRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        try {
-            val json = objectMapper.readTree(packet.toJson())
-            val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-            val behovOpprettet = json["@opprettet"].asLocalDateTime()
-            val periodetype = json["Godkjenning"]["periodetype"].asText()
-            val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
-            val id = UUID.fromString(json["@id"].asText())
-            insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
-            log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
-        } catch (e: Exception) {
-            log.error("Feilet ved inserting av godkjenningsbehov", e)
-        }
+        val json = objectMapper.readTree(packet.toJson())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val behovOpprettet = json["@opprettet"].asLocalDateTime()
+        val periodetype = json["Godkjenning"]["periodetype"].asText()
+        val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
+        val id = UUID.fromString(json["@id"].asText())
+        insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
+        log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
     private fun insertGodkjenningsbehov(
-        hendelseId: UUID,
+        id: UUID,
         periodetype: String?,
         inntektskilde: String,
         vedtaksperiodeId: UUID,
@@ -60,7 +54,7 @@ class VedtaksperiodeTilGodkjenningRiver(
             session.run(
                 queryOf(
                     insertGodkjenningsbehov, mapOf(
-                        "id" to hendelseId,
+                        "id" to id,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "periodetype" to periodetype,
                         "inntektskilde" to inntektskilde,

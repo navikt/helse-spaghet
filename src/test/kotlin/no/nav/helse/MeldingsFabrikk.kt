@@ -76,12 +76,12 @@ fun løsningNyttFormat(
 
 @Language("JSON")
 fun vedtaksperiodeEndret(
-        hendelseId: UUID = UUID.randomUUID(),
-        vedtaksperiodeId: UUID = UUID.randomUUID(),
-        orgnummer: String = "98765432",
-        timestamp: LocalDateTime = LocalDateTime.now(),
-        tilstandFra: String = "AVVENTER_GODKJENNING",
-        tilstandTil: String = "AVVENTER_SIMULERING"
+    id: UUID = UUID.randomUUID(),
+    vedtaksperiodeId: UUID = UUID.randomUUID(),
+    orgnummer: String = "98765432",
+    timestamp: LocalDateTime = LocalDateTime.now(),
+    tilstandFra: String = "AVVENTER_GODKJENNING",
+    tilstandTil: String = "AVVENTER_SIMULERING"
 ) = """
 {
   "vedtaksperiodeId": "$vedtaksperiodeId",
@@ -143,7 +143,7 @@ fun vedtaksperiodeEndret(
     ]
   },
   "@event_name":"vedtaksperiode_endret",
-  "@id": "$hendelseId",
+  "@id": "$id",
   "@opprettet": "$timestamp",
   "@forårsaket_av": {
     "event_name": "behov",

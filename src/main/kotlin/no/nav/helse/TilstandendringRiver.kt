@@ -22,7 +22,7 @@ class TilstandendringRiver(
         River(rapidApplication).apply {
             validate {
                 it.demandValue("@event_name", "vedtaksperiode_endret")
-                it.requireKey("vedtaksperiodeId", "aktivitetslogg")
+                it.requireKey("vedtaksperiodeId", "aktivitetslogg", "@id")
             }
 
         }.register(this)
@@ -31,30 +31,24 @@ class TilstandendringRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val json = objectMapper.readTree(packet.toJson())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-        try {
-            //log.info("Inserter tilstandsendring for vedtaksperiodeId: $vedtaksperiodeId")
-            // Vi går ut i fra at første entry i kontekster er typen hendelse som førte til endringen.
-            val kildeType = json
-                    .valueOrNull("aktivitetslogg")
-                    ?.valueOrNull("kontekster")
-                    ?.firstOrNull()?.get("kontekstType")
-                    ?.asText() ?: "Ukjent"
-            insertTilstandsendring(
-                    hendelseId = UUID.fromString(json["@id"].asText()),
-                    vedtaksperiodeId = vedtaksperiodeId,
-                    tidsstempel = json["@opprettet"].asLocalDateTime(),
-                    tilstandFra = json["forrigeTilstand"].asText(),
-                    tilstandTil = json["gjeldendeTilstand"].asText(),
-                    kilde = UUID.fromString(json["@forårsaket_av"]["id"].asText()),
-                    kildeType = kildeType
-            )
-        } catch (e: Exception) {
-            log.error("Feilet ved inserting av tilstandsendring med vedtaksperiodeId=$vedtaksperiodeId", e)
-        }
+        val kildeType = json
+            .valueOrNull("aktivitetslogg")
+            ?.valueOrNull("kontekster")
+            ?.firstOrNull()?.get("kontekstType")
+            ?.asText() ?: "Ukjent"
+        insertTilstandsendring(
+            id = UUID.fromString(json["@id"].asText()),
+            vedtaksperiodeId = vedtaksperiodeId,
+            tidsstempel = json["@opprettet"].asLocalDateTime(),
+            tilstandFra = json["forrigeTilstand"].asText(),
+            tilstandTil = json["gjeldendeTilstand"].asText(),
+            kilde = UUID.fromString(json["@forårsaket_av"]["id"].asText()),
+            kildeType = kildeType
+        )
     }
 
     private fun insertTilstandsendring(
-            hendelseId: UUID,
+            id: UUID,
             vedtaksperiodeId: UUID,
             tidsstempel: LocalDateTime,
             tilstandFra: String,
@@ -66,7 +60,7 @@ class TilstandendringRiver(
             @Language("PostgreSQL")
             val query = """
 INSERT INTO vedtaksperiode_tilstandsendring(
-    hendelse_id,
+    id,
     vedtaksperiode_id,
     tidsstempel,
     tilstand_fra,
@@ -74,16 +68,16 @@ INSERT INTO vedtaksperiode_tilstandsendring(
     kilde,
     kilde_type)
 VALUES(
-    :hendelse_id,
+    :id,
     :vedtaksperiode_id,
     :tidsstempel,
     :tilstand_fra,
     :tilstand_til,
     :kilde,
     :kilde_type
-);"""
+) ON CONFLICT DO NOTHING;"""
             session.run(queryOf(query, mapOf(
-                    "hendelse_id" to hendelseId,
+                    "id" to id,
                     "vedtaksperiode_id" to vedtaksperiodeId,
                     "tidsstempel" to tidsstempel,
                     "tilstand_fra" to tilstandFra,
