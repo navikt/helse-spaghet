@@ -2,20 +2,15 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
-import java.lang.Exception
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
 class TilstandendringRiver(
-        rapidApplication: RapidsConnection,
-        private val dataSource: DataSource
+    rapidApplication: RapidsConnection,
+    private val dataSource: DataSource
 ) : River.PacketListener {
 
     init {
@@ -23,6 +18,10 @@ class TilstandendringRiver(
             validate {
                 it.demandValue("@event_name", "vedtaksperiode_endret")
                 it.requireKey("vedtaksperiodeId", "aktivitetslogg", "@id")
+                it.requireKey("forrigeTilstand", "gjeldendeTilstand")
+                it.demand("forrigeTilstand") { forrigeTilstand ->
+                    require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
+                }
             }
 
         }.register(this)
@@ -48,13 +47,13 @@ class TilstandendringRiver(
     }
 
     private fun insertTilstandsendring(
-            id: UUID,
-            vedtaksperiodeId: UUID,
-            tidsstempel: LocalDateTime,
-            tilstandFra: String,
-            tilstandTil: String,
-            kilde: UUID,
-            kildeType: String
+        id: UUID,
+        vedtaksperiodeId: UUID,
+        tidsstempel: LocalDateTime,
+        tilstandFra: String,
+        tilstandTil: String,
+        kilde: UUID,
+        kildeType: String
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -76,15 +75,19 @@ VALUES(
     :kilde,
     :kilde_type
 ) ON CONFLICT DO NOTHING;"""
-            session.run(queryOf(query, mapOf(
-                    "id" to id,
-                    "vedtaksperiode_id" to vedtaksperiodeId,
-                    "tidsstempel" to tidsstempel,
-                    "tilstand_fra" to tilstandFra,
-                    "tilstand_til" to tilstandTil,
-                    "kilde" to kilde,
-                    "kilde_type" to kildeType
-            )).asUpdate)
+            session.run(
+                queryOf(
+                    query, mapOf(
+                        "id" to id,
+                        "vedtaksperiode_id" to vedtaksperiodeId,
+                        "tidsstempel" to tidsstempel,
+                        "tilstand_fra" to tilstandFra,
+                        "tilstand_til" to tilstandTil,
+                        "kilde" to kilde,
+                        "kilde_type" to kildeType
+                    )
+                ).asUpdate
+            )
         }
     }
 }

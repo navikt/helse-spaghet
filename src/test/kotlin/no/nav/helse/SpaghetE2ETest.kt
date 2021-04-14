@@ -8,14 +8,14 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SpaghetE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-            .setupRiver(dataSource)
+        .setupRiver(dataSource)
 
     @AfterAll
     fun tearDown() {
@@ -41,10 +41,12 @@ class SpaghetE2ETest {
         val id = UUID.randomUUID()
         river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
 
-        assertEquals(listOf(
+        assertEquals(
+            listOf(
                 "Behandler simulering",
                 "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling"
-        ), finnAktiviteter(id))
+            ), finnAktiviteter(id)
+        )
     }
 
     @Test
@@ -57,13 +59,37 @@ class SpaghetE2ETest {
     }
 
     @Test
+    fun `finner ikke vedtaksperiode_endret for hendelse som forblir i samme tilstand`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val id = UUID.randomUUID()
+        river.sendTestMessage(
+            vedtaksperiodeEndret(
+                id = id,
+                vedtaksperiodeId = vedtaksperiodeId,
+                tilstandFra = "AVSLUTTET_UTEN_UTBETALING",
+                tilstandTil = "AVSLUTTET_UTEN_UTBETALING"
+            )
+        )
+
+        assertEquals(emptyList<String>(), finnVedtaksperiodeTilstandsendring(id))
+    }
+
+    @Test
     fun `defaulter til ident om saksbehandler oid ikke eksisterer`() {
         val fødselsnummer = "83497290"
         val vedtaksperiodeId = UUID.randomUUID()
         val id = UUID.randomUUID()
         val saksbehandlerIdent = "Z111111"
         river.sendTestMessage(behovNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
-        river.sendTestMessage(løsningNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id, saksbehandlerIdent = saksbehandlerIdent))
+        river.sendTestMessage(
+            løsningNyttFormat(
+                fødselsnummer,
+                vedtaksperiodeId,
+                "FORLENGELSE",
+                id,
+                saksbehandlerIdent = saksbehandlerIdent
+            )
+        )
 
         assertEquals(saksbehandlerIdent, finnSaksbehandlerIdentitet(id))
     }
@@ -75,7 +101,16 @@ class SpaghetE2ETest {
         val id = UUID.randomUUID()
         val saksbehandlerIdent = "Automatisk behandlet"
         river.sendTestMessage(behovNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
-        river.sendTestMessage(løsningNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id, automatiskBehandlet = true, saksbehandlerIdent = saksbehandlerIdent))
+        river.sendTestMessage(
+            løsningNyttFormat(
+                fødselsnummer,
+                vedtaksperiodeId,
+                "FORLENGELSE",
+                id,
+                automatiskBehandlet = true,
+                saksbehandlerIdent = saksbehandlerIdent
+            )
+        )
 
         assertEquals(VedtaksperiodeBehandletRiver.SPESIALIST_OID, finnSaksbehandlerIdentitet(id))
     }
@@ -109,7 +144,15 @@ class SpaghetE2ETest {
         val fødselsnummer = "83497290"
 
         river.sendTestMessage(behovNyttFormat(fødselsnummer, UUID.randomUUID(), "FORLENGELSE", id1, "EN_ARBEIDSGIVER"))
-        river.sendTestMessage(behovNyttFormat(fødselsnummer, UUID.randomUUID(), "FORLENGELSE", id2, "FLERE_ARBEIDSGIVERE"))
+        river.sendTestMessage(
+            behovNyttFormat(
+                fødselsnummer,
+                UUID.randomUUID(),
+                "FORLENGELSE",
+                id2,
+                "FLERE_ARBEIDSGIVERE"
+            )
+        )
 
         assertEquals("EN_ARBEIDSGIVER", finnInntektskilde(id1))
         assertEquals("FLERE_ARBEIDSGIVERE", finnInntektskilde(id2))
@@ -154,44 +197,44 @@ class SpaghetE2ETest {
 
     private fun finnGodkjenninger(fødselsnummer: String) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE fodselsnummer=?;", fødselsnummer)
-                .map { it.string("vedtaksperiode_id") }
-                .asList)
+            .map { it.string("vedtaksperiode_id") }
+            .asList)
     }
 
     private fun finnGodkjenningsbehovLøsning(id: UUID) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning WHERE id=?;", id)
-                .map { it.string("id") }
-                .asList)
+            .map { it.string("id") }
+            .asList)
     }
 
     private fun finnGodkjenningsbehovLøsningBegrunnelse(id: UUID) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning_begrunnelse WHERE id=?;", id)
-                .map { it.string("id") }
-                .asList)
+            .map { it.string("id") }
+            .asList)
     }
 
     private fun finnAktiviteter(id: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE id=?;", id)
-                .map { it.string("melding") }
-                .asList)
+            .map { it.string("melding") }
+            .asList)
     }
 
     private fun finnVedtaksperiodeTilstandsendring(id: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM vedtaksperiode_tilstandsendring WHERE id=?;", id)
-                .map { it.string("tilstand_til") }
-                .asList)
+            .map { it.string("tilstand_til") }
+            .asList)
     }
 
     private fun finnPeriodetype(id: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov WHERE id=?;", id)
-                .map { it.stringOrNull("periodetype") }
-                .asSingle)
+            .map { it.stringOrNull("periodetype") }
+            .asSingle)
     }
 
     private fun finnSaksbehandlerIdentitet(id: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning WHERE id=?;", id)
-                .map { it.string("godkjent_av") }
-                .asSingle)
+            .map { it.string("godkjent_av") }
+            .asSingle)
     }
 
     private fun finnInntektskilde(id: UUID) = sessionOf(dataSource).use { session ->
