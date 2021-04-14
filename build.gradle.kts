@@ -1,24 +1,24 @@
-val junitJupiterVersion = "5.7.0"
+val junitJupiterVersion = "5.7.1"
 
 plugins {
-    kotlin("jvm") version "1.4.30"
+    kotlin("jvm") version "1.4.32"
 }
 
 group = "no.helse"
 
 repositories {
-    jcenter()
+    mavenCentral()
     maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.5e3ca6a")
-    implementation("com.zaxxer:HikariCP:3.4.5")
+    implementation("com.github.navikt:rapids-and-rivers:3c6229a")
+    implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("no.nav:vault-jdbc:1.3.7")
-    implementation("org.flywaydb:flyway-core:6.5.0")
+    implementation("org.flywaydb:flyway-core:7.7.3")
     implementation("com.github.seratch:kotliquery:1.3.1")
-    implementation("io.ktor:ktor-client-apache:1.5.0")
-    implementation("io.ktor:ktor-client-jackson:1.5.0")
+    implementation("io.ktor:ktor-client-apache:1.5.3")
+    implementation("io.ktor:ktor-client-jackson:1.5.3")
 
     testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
 
@@ -29,10 +29,10 @@ dependencies {
 
 tasks {
     compileKotlin {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "15"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "15"
     }
 
     named<Jar>("jar") {
@@ -62,6 +62,6 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "6.8.3"
+        gradleVersion = "7.0"
     }
 }

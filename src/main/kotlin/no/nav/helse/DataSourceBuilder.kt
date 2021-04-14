@@ -22,8 +22,8 @@ internal class DataSourceBuilder(val env: Environment.DatabaseEnvironment) {
         runMigration(getDataSource(Role.Admin), """SET ROLE "${Role.Admin.asRole(env.databaseName)}"""")
     }
 
-    private fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
-        return Flyway.configure()
+    private fun runMigration(dataSource: DataSource, initSql: String? = null) {
+        Flyway.configure()
             .dataSource(dataSource)
             .initSql(initSql)
             .load()
