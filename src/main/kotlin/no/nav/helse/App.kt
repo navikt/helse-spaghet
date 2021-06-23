@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.json.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -74,6 +73,7 @@ suspend fun main() {
 }
 
 fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
+    AnnulleringRiver(this, dataSource)
     GodkjenningLøsningRiver.Factory(this, dataSource)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
