@@ -9,8 +9,8 @@ import java.util.*
 import javax.sql.DataSource
 
 object Util {
-    fun JsonNode.asNullableText(): String? {
-        return if (this.isValueNode && this.isTextual) {
+    fun JsonNode?.asNullableText(): String? {
+        return if (this != null && this.isValueNode && this.isTextual) {
             return this.asText()
         } else null
     }

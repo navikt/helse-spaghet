@@ -15,7 +15,7 @@ object TestData {
             "saksbehandler": {"oid": "$saksbehandler"},
             "fagsystemId": "$fagsystemId",
             "begrunnelser": ${begrunnelser.toJson()},
-            "kommentar": ${kommentar?.let { "\"$it\"" }},
+            ${kommentar?.let {""""kommentar": "$it",""" } ?: ""} 
             "@opprettet": "$opprettet"
          }""".trimMargin()
 
