@@ -44,7 +44,7 @@ class AnnulleringE2ETest {
     }
 
     @Test
-    fun `kommentar er optional`() {
+    fun `Med kommentar`() {
         e2eTest {
             annullering
                 .kommentar("Kremfjes")

@@ -3,11 +3,7 @@ package no.nav.helse
 import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
 import java.lang.Exception
 import java.time.LocalDateTime
@@ -51,8 +47,7 @@ class AktivitetRiver(
         }
     }
 
-    // Spleis serialiserer ikke datoer i aktivitetsloggeren som ISO-8601, men bruker sitt eget format 😞
-    private val legacyDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+
     private fun JsonNode.fromDate(): LocalDateTime =
             try {
                 this.asLocalDateTime()
@@ -82,5 +77,10 @@ class AktivitetRiver(
                     "kilde" to kilde
             )).asUpdate)
         }
+    }
+
+    companion object {
+        // Spleis serialiserer ikke datoer i aktivitetsloggeren som ISO-8601, men bruker sitt eget format 😞
+        val legacyDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     }
 }
