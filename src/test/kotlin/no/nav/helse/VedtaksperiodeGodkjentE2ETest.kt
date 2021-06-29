@@ -33,6 +33,14 @@ class VedtaksperiodeGodkjentE2ETest {
     }
 
     @Test
+    fun `lagrer warnings for avvisning i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeAvvist(vedtaksperiodeId))
+        assertEquals(listOf("Bruker har mottatt AAP innenfor 6 måneder av skjæringstidspunkt. Kontroller at brukeren har rett til sykepenger", "Det finnes åpne oppgaver på sykepenger i Gosys"), hentWarnings(vedtaksperiodeId))
+    }
+
+    @Test
     fun `assosieres med en godkjenning i database`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val vedtaksperiodeId2 = UUID.randomUUID()
@@ -103,9 +111,41 @@ class VedtaksperiodeGodkjentE2ETest {
         }
       ]
     }
-    
-
     """
+
+    @Language("JSON")
+    private fun vedtaksperiodeAvvist(vedtaksperiodeId: UUID) = """{
+  "@event_name": "vedtaksperiode_avvist",
+  "@opprettet": "2021-05-27T12:20:09.12384379",
+  "@id": "4b47c841-aa08-4cab-b13a-1fefd2024b24",
+  "fødselsnummer": "12345678901",
+  "vedtaksperiodeId": "$vedtaksperiodeId",
+  "warnings": [
+    {
+      "melding": "Bruker har mottatt AAP innenfor 6 måneder av skjæringstidspunkt. Kontroller at brukeren har rett til sykepenger",
+      "kilde": "Spleis"
+    },
+    {
+      "melding": "Det finnes åpne oppgaver på sykepenger i Gosys",
+      "kilde": "Spesialist"
+    }
+  ],
+  "saksbehandlerIdent": "V12345",
+  "saksbehandlerEpost": "mille.mellomleder@nav.no",
+  "automatiskBehandling": false,
+  "årsak": "Feil vurdering og/eller beregning",
+  "begrunnelser": ["No shirt, no shoes, no service"],
+  "kommentar": "",
+  "periodetype": "OVERGANG_FRA_IT",
+  "system_read_count": 0,
+  "system_participating_services": [
+    {
+      "service": "spesialist",
+      "instance": "spesialist-1234567890a-skpjd",
+      "time": "2021-02-13T11:27:29.123456789"
+    }
+  ]
+}"""
 
     @Language("JSON")
     private fun godkjenning(vedtaksperiodeId: UUID) = """{

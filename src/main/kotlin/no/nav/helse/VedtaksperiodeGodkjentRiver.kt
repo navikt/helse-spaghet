@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.*
+import no.nav.helse.Util.asNullableText
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.River
 import org.intellij.lang.annotations.Language
-import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -17,7 +20,12 @@ class VedtaksperiodeGodkjentRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_godkjent")
+                it.demand("@event_name") { node ->
+                    listOf(
+                        "vedtaksperiode_godkjent",
+                        "vedtaksperiode_avvist"
+                    ).contains(node.asNullableText())
+                }
                 it.requireKey("@id", "vedtaksperiodeId", "warnings")
             }
         }.register(this)
