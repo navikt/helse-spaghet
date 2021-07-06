@@ -13,7 +13,6 @@ class GodkjenningLøsningRiver(
     val vedtaksperiodeId: UUID,
     val aktørId: String,
     val fødselsnummer: String,
-    val warnings: List<String>,
     val periodetype: String,
     val inntektskilde: String,
     val godkjenning: Godkjenning
@@ -26,7 +25,7 @@ class GodkjenningLøsningRiver(
                     it.demandAll("@behov", listOf("Godkjenning"))
                     it.rejectKey("@final")
                     it.require("@løsning.Godkjenning", ::tilGodkjenning)
-                    it.requireKey("Godkjenning.warnings", "vedtaksperiodeId", "aktørId", "fødselsnummer", "Godkjenning.periodetype", "Godkjenning.inntektskilde")
+                    it.requireKey("vedtaksperiodeId", "aktørId", "fødselsnummer", "Godkjenning.periodetype", "Godkjenning.inntektskilde")
                 }
             }.register(this)
         }
@@ -65,7 +64,6 @@ class GodkjenningLøsningRiver(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
                 fødselsnummer = packet["fødselsnummer"].asText(),
                 aktørId = packet["aktørId"].asText(),
-                warnings = packet["Godkjenning.warnings"].warnings(),
                 periodetype = packet["Godkjenning.periodetype"].asText(),
                 inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
@@ -96,8 +94,6 @@ class GodkjenningLøsningRiver(
         )
 
         private fun JsonNode.optional(name: String) = takeIf { hasNonNull(name) }?.get(name)
-
-        private fun JsonNode.warnings() = this["aktiviteter"].map { it["melding"].asText() }
     }
 
     data class Godkjenning(

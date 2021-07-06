@@ -39,12 +39,6 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                     løsning.inntektskilde
                 ).asUpdateAndReturnGeneratedKey
             )
-            løsning.warnings.forEach { warning ->
-                transaction.run(
-                    queryOf("INSERT INTO warning(godkjenning_ref, tekst) VALUES(?, ?);", godkjenningId, warning)
-                        .asUpdate
-                )
-            }
             løsning.godkjenning.begrunnelser?.forEach { begrunnelse ->
                 transaction.run(
                     queryOf("INSERT INTO begrunnelse(godkjenning_ref, tekst) VALUES(?, ?);", godkjenningId, begrunnelse)
@@ -66,10 +60,10 @@ SELECT vedtaksperiode_id,
        arsak,
        kommentar,
        periodetype,
-       json_agg(DISTINCT w.tekst) AS warnings,
+       json_agg(DISTINCT w.melding) AS warnings,
        json_agg(DISTINCT b.tekst) AS begrunnelser
 FROM godkjenning g
-         LEFT JOIN warning as w on g.id = w.godkjenning_ref
+         LEFT JOIN warning_for_godkjenning as w on g.id = w.godkjenning_ref
          LEFT JOIN begrunnelse b on g.id = b.godkjenning_ref
 WHERE g.godkjent_tidspunkt::date = ?
 GROUP BY g.id;

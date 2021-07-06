@@ -26,12 +26,11 @@ class GodkjenningDaoTest {
     }
 
     @Test
-    fun `legger til warnings og begrunnelser for godkjenninger`() {
+    fun `lagrer begrunnelser for godkjenninger`() {
         val løsning = GodkjenningLøsningRiver(
             vedtaksperiodeId = UUID.randomUUID(),
             aktørId = "aktørId",
             fødselsnummer = "fødselsnummer",
-            warnings = listOf("Test warning", "Test warning 2"),
             periodetype = "FORLENGELSE",
             inntektskilde = "EN_ARBEIDSGIVER",
             godkjenning = GodkjenningLøsningRiver.Godkjenning(
@@ -48,7 +47,6 @@ class GodkjenningDaoTest {
 
         val godkjenninger = finnGodkjenninger(løsning.vedtaksperiodeId)
         assertEquals(1, godkjenninger.size)
-        assertEquals(løsning.warnings, finnWarnings(godkjenninger.first().id))
         assertEquals(løsning.godkjenning.begrunnelser, finnBegrunnelser(godkjenninger.first().id))
     }
 
@@ -66,7 +64,7 @@ class GodkjenningDaoTest {
 
     private fun finnWarnings(id: Long) = using(sessionOf(dataSource)) { session ->
         session.run(
-            queryOf("SELECT * FROM warning WHERE godkjenning_ref=?;", id)
+            queryOf("SELECT * FROM warning_for_godkjenning WHERE godkjenning_ref=?;", id)
                 .map {
                     it.string("tekst")
                 }
