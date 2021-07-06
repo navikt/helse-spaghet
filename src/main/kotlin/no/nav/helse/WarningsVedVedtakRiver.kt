@@ -13,7 +13,11 @@ import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource
 
-class VedtaksperiodeGodkjentRiver(
+/**
+ * Leser informasjon fra events som Spesialist sender ut samtidig som den svarer på godkjenningsbehov,
+ * for å ta vare på warnings både fra Spleis og Spesialist.
+ */
+class WarningsVedVedtakRiver(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource
 ) : River.PacketListener {
@@ -58,6 +62,9 @@ class VedtaksperiodeGodkjentRiver(
         private fun warningOfJson(json: JsonNode) =
             Warning(melding = json["melding"].asText(), kilde = json["kilde"].asText())
 
+        /**
+         * Her er tanken å lagre alle warnings som ble vist til saksbehandler
+         */
         private fun Session.insertWarning(
             godkjenningsId: Int,
             warning: Warning
