@@ -2,7 +2,9 @@
 ![Bygg og deploy](https://github.com/navikt/helse-spaghet/workflows/Bygg%20og%20deploy/badge.svg)
 
 ## Beskrivelse
-Spaghet samler opp informasjon om ferdigbehandlede saker, lager statistikk og henter input fra saksbehandlere
+Spaghet samler opp informasjon om ferdigbehandlede saker inkl. input fra saksbehandlere.
+
+Informasjonen brukes til dataanalyse og i tillegg sender appen statistikk til Slack daglig.
 
 ## Henvendelser
 
