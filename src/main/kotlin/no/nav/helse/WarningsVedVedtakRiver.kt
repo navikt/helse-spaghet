@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import java.lang.RuntimeException
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -44,7 +45,8 @@ class WarningsVedVedtakRiver(
             return
         }
         sessionOf(dataSource).use { session ->
-            val godkjenningsId = session.findGodkjenning(vedtaksperiodeId)
+            val godkjenningsId = session.findGodkjenningId(vedtaksperiodeId)
+                ?: throw RuntimeException("Forventet godkjenning for vedtaksperiode $vedtaksperiodeId")
             warnings.forEach {
                 session.insertWarning(godkjenningsId, it)
             }

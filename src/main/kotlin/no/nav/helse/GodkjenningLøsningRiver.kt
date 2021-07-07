@@ -25,7 +25,14 @@ class GodkjenningLøsningRiver(
                     it.demandAll("@behov", listOf("Godkjenning"))
                     it.rejectKey("@final")
                     it.require("@løsning.Godkjenning", ::tilGodkjenning)
-                    it.requireKey("vedtaksperiodeId", "aktørId", "fødselsnummer", "Godkjenning.periodetype", "Godkjenning.inntektskilde")
+                    it.requireKey(
+                        "vedtaksperiodeId",
+                        "aktørId",
+                        "fødselsnummer",
+                        "Godkjenning.periodetype",
+                        "Godkjenning.inntektskilde",
+                        "@løsning.Godkjenning.godkjenttidspunkt",
+                    )
                 }
             }.register(this)
         }
@@ -60,6 +67,8 @@ class GodkjenningLøsningRiver(
         }
 
         override fun onPacket(packet: JsonMessage, context: MessageContext) {
+            if (godkjenningAlleredeLagret(packet)) return
+
             val løsning = GodkjenningLøsningRiver(
                 vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
                 fødselsnummer = packet["fødselsnummer"].asText(),
@@ -83,6 +92,12 @@ class GodkjenningLøsningRiver(
 
             dataSource.insertGodkjenning(løsning)
         }
+
+        private fun godkjenningAlleredeLagret(packet: JsonMessage) =
+            dataSource.godkjenningAlleredeLagret(
+                UUID.fromString(packet["vedtaksperiodeId"].asText()),
+                packet["@løsning.Godkjenning.godkjenttidspunkt"].asLocalDateTime()
+            )
 
         private fun tilGodkjenning(jsonNode: JsonNode) = Godkjenning(
             godkjent = jsonNode["godkjent"].asBoolean(),
