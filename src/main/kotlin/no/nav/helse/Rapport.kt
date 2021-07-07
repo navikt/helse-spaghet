@@ -6,7 +6,8 @@ data class Melding(
 )
 
 class Rapport(
-    godkjenningDto: List<GodkjenningDto>
+    godkjenningDto: List<GodkjenningDto>,
+    miljø: String
 ) {
     private val årsaker: List<Årsak> = godkjenningDto
         .filterNot { it.godkjent }
@@ -64,9 +65,9 @@ class Rapport(
         .tellTyperWarnings()
 
     private val startmelding = StringBuilder().let {
-        it.appendLine("*Statistikk over godkjente vedtaksperioder* :information_desk_person:")
-        it.appendLine("Siden i går er $antallGodkjente godkjent ($godkjenteUtenWarnings uten warnings)")
-        it.appendLine("og $antallAvvist avvist ($avvisteUtenWarnings uten warnings)")
+        it.appendLine("*Hei! Statistikk over behandlede vedtaksperioder _i ${miljø}_* :information_desk_person:")
+        it.appendLine("I går ble det gjort $antallGodkjente godkjenninger ($godkjenteUtenWarnings uten warnings)")
+        it.appendLine("og $antallAvvist avvisninger ($avvisteUtenWarnings uten warnings)")
         it.append("Av de avviste vedtaksperiodene er:")
         Melding(tekst = it.toString())
     }

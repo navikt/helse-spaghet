@@ -55,7 +55,7 @@ suspend fun main() {
             log.info("er rapportert i går: ${dataSource.erRapportert(iGår)}")
             if (!dataSource.erRapportert(iGår)) {
                 dataSource.settRapportert(iGår)
-                Rapport(dataSource.lagRapport(iGår)).meldinger.forEach { melding ->
+                Rapport(dataSource.lagRapport(iGår), env.miljø).meldinger.forEach { melding ->
                     val result = slackClient.postMessage(channel, melding.tekst)
                     melding.tråd.forEach { trådmelding ->
                         slackClient.postMessage(channel, trådmelding, result.ts)

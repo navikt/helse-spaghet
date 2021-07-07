@@ -15,7 +15,7 @@ class RapportTest {
 
     @Test
     fun genererRapport() {
-        Rapport(godkjenninger).meldinger.forEach { melding ->
+        Rapport(godkjenninger, "oz").meldinger.forEach { melding ->
             println(melding.tekst)
             melding.tråd.forEach { trådmelding ->
                 println("--------")
