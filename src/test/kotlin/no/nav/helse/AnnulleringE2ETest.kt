@@ -4,6 +4,7 @@ import no.nav.helse.E2eTestApp.Companion.e2eTest
 import no.nav.helse.TestData.annullering
 import no.nav.helse.TestData.begrunnelse
 import no.nav.helse.TestData.fagsystemId
+import no.nav.helse.TestData.gjelderSisteSkjæringstidspunkt
 import no.nav.helse.TestData.kommentar
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -73,4 +74,15 @@ class AnnulleringE2ETest {
             assertEquals("Kremfjes", dataSource.annulleringer()[0].kommentar)
         }
     }
+
+    @Test
+    fun `Med gjelder_siste_skjæringstidspunkt satt`() {
+        e2eTest {
+            annullering
+                .gjelderSisteSkjæringstidspunkt(true)
+                .sendTilRapid()
+            assertEquals(true, dataSource.annulleringer()[0].gjelderSisteSkjæringstidspunkt)
+        }
+    }
+
 }

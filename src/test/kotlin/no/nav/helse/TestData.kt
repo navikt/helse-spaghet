@@ -15,7 +15,8 @@ object TestData {
             "saksbehandler": {"oid": "$saksbehandler"},
             "fagsystemId": "$fagsystemId",
             "begrunnelser": ${begrunnelser.toJson()},
-            ${kommentar?.let {""""kommentar": "$it",""" } ?: ""} 
+            ${kommentar?.let {""""kommentar": "$it",""" } ?: ""}
+            "gjelderSisteSkjæringstidspunkt": $gjelderSisteSkjæringstidspunkt,
             "@opprettet": "$opprettet"
          }""".trimMargin()
 
@@ -24,12 +25,14 @@ object TestData {
         fagsystemId = "ABCD12345",
         begrunnelser = listOf(),
         kommentar = null,
-        opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS)
+        opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+        gjelderSisteSkjæringstidspunkt = true
     )
 
     fun Annullering.fagsystemId(it: String) = copy(fagsystemId = it)
     fun Annullering.kommentar(it: String) = copy(kommentar = it)
     fun Annullering.begrunnelse(it: String) = copy(begrunnelser = begrunnelser + it)
+    fun Annullering.gjelderSisteSkjæringstidspunkt(it: Boolean) = copy(gjelderSisteSkjæringstidspunkt = it)
 
     data class VedtaksperiodeEndret(
         val vedtaksperiodeId: UUID = randomUUID(),

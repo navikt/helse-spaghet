@@ -16,6 +16,7 @@ data class Annullering(
     val fagsystemId: String,
     val begrunnelser: List<String>,
     val kommentar: String?,
+    val gjelderSisteSkjæringstidspunkt: Boolean,
     val opprettet: LocalDateTime,
 ) {
     companion object {
@@ -25,6 +26,7 @@ data class Annullering(
                 fagsystemId = this["fagsystemId"].asText(),
                 begrunnelser = this["begrunnelser"].map { it.asText() },
                 kommentar = this["kommentar"].asNullableText(),
+                gjelderSisteSkjæringstidspunkt = this["gjelderSisteSkjæringstidspunkt"].asBoolean(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
             )
         }
@@ -37,8 +39,9 @@ data class Annullering(
                     fagsystem_id,
                     begrunnelser,
                     kommentar,
+                    gjelder_siste_skjæringstidspunkt,
                     opprettet
-                ) VALUES ( ?, ?, ?, ?, ? )
+                ) VALUES ( ?, ?, ?, ?, ?, ? )
                 ON CONFLICT DO NOTHING;
             """
             run(
@@ -48,6 +51,7 @@ data class Annullering(
                     annullering.fagsystemId,
                     annullering.begrunnelser.toJson(),
                     annullering.kommentar,
+                    annullering.gjelderSisteSkjæringstidspunkt,
                     annullering.opprettet,
                 ).asUpdate
             )
