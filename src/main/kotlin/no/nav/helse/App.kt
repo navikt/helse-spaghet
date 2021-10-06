@@ -77,6 +77,7 @@ fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
     GodkjenningLøsningRiver.Factory(this, dataSource)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
+    TidFraGodkjenningTilUtbetalingRiver(this, dataSource)
     TilstandendringRiver(this, dataSource)
     AktivitetRiver(this, dataSource)
     WarningsVedVedtakRiver(this, dataSource)
