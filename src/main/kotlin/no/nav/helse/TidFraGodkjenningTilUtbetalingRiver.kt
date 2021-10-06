@@ -25,7 +25,6 @@ class TidFraGodkjenningTilUtbetalingRiver(
             validate {
                 it.demandValue("@event_name", "vedtaksperiode_endret")
                 it.requireKey("vedtaksperiodeId")
-                it.requireKey("forrigeTilstand", "gjeldendeTilstand")
                 it.demandValue("gjeldendeTilstand", "AVSLUTTET")
                 it.demandValue("forrigeTilstand", "TIL_UTBETALING")
             }
