@@ -33,14 +33,10 @@ class TidFraGodkjenningTilUtbetalingRiver(
     companion object {
         val utbetalingsRTT = Summary.build()
             .name("tidBrukt")
-            .help("Latency inntektskomponenten, in seconds")
-            .register()
-        val utbetalingRttCustomQuantiles = Summary.build()
-            .name("tidBruktCustomQuantiles")
             .quantile(0.5, 0.05) // Add 50th percentile (= median) with 5% tolerated error
             .quantile(0.9, 0.01) // Add 90th percentile with 1% tolerated error
             .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
-            .help("Latency inntektskomponenten, in seconds")
+            .help("Måler hvor lang tid det tar fra godkjenning til utbetaling i millisekunder")
             .register()
         val legacyDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -52,9 +48,8 @@ class TidFraGodkjenningTilUtbetalingRiver(
 
         finnUtbetalingsTidspunkt(json)?.let { utbetalingsTidspunkt ->
             finnGodkjenninger(vedtaksperiodeId)?.let { godkjentTidspunkt ->
-                val delta = MILLIS.between(utbetalingsTidspunkt, godkjentTidspunkt)
+                val delta = MILLIS.between(godkjentTidspunkt, utbetalingsTidspunkt)
                 utbetalingsRTT.observe(delta.toDouble())
-                utbetalingRttCustomQuantiles.observe(delta.toDouble())
             }
         }
     }
