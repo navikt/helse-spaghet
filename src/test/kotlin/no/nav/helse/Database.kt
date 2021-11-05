@@ -1,8 +1,9 @@
 package no.nav.helse
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import java.util.*
+import javax.sql.DataSource
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -10,10 +11,7 @@ import no.nav.helse.Util.uuid
 import no.nav.helse.Util.withSession
 import org.flywaydb.core.Flyway
 import org.intellij.lang.annotations.Language
-import java.util.*
-import javax.sql.DataSource
-
-fun embeddedPostgres() = EmbeddedPostgres.builder().start()
+import org.testcontainers.containers.PostgreSQLContainer
 
 fun DataSource.annulleringer(): List<Annullering> {
     return this.withSession {
@@ -43,17 +41,19 @@ fun Row.stringList(column: String) =
     objectMapper.readTree(string(column))
         .map { it.asText()!! }
 
-internal fun setupDataSourceMedFlyway(embeddedPostgres: EmbeddedPostgres): DataSource {
-    val hikariConfig = HikariConfig().apply {
-        this.jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
-        maximumPoolSize = 3
-        minimumIdle = 1
-        idleTimeout = 10001
-        connectionTimeout = 1000
-        maxLifetime = 30001
-    }
-
-    val dataSource = HikariDataSource(hikariConfig)
+internal fun setupDataSourceMedFlyway(): DataSource {
+    val postgres = PostgreSQLContainer<Nothing>("postgres:13").also { it.start() }
+    val dataSource: DataSource =
+        HikariDataSource(HikariConfig().apply {
+            jdbcUrl = postgres.jdbcUrl
+            username = postgres.username
+            password = postgres.password
+            maximumPoolSize = 3
+            minimumIdle = 1
+            idleTimeout = 10001
+            connectionTimeout = 1000
+            maxLifetime = 30001
+        })
 
     Flyway.configure()
         .dataSource(dataSource)
@@ -62,6 +62,7 @@ internal fun setupDataSourceMedFlyway(embeddedPostgres: EmbeddedPostgres): DataS
         .migrate()
 
     dataSource.createTruncateFunction()
+
     return dataSource
 }
 

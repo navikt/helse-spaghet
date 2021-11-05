@@ -20,7 +20,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:1.5.3")
     implementation("io.ktor:ktor-client-jackson:1.5.3")
 
-    testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
+    testImplementation("org.testcontainers:postgresql:1.16.2")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
