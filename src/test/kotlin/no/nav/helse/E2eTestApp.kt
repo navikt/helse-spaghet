@@ -3,17 +3,17 @@ package no.nav.helse
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import no.nav.helse.TestData.toJson
 import no.nav.helse.TestUtil.failOnExceptions
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.slf4j.LoggerFactory
+import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
 
 class E2eTestApp(
     var rapid: TestRapid = TestRapid(),
     var listAppender: ListAppender<ILoggingEvent> = ListAppender(),
-    private val embeddedPostgres: EmbeddedPostgres = embeddedPostgres(),
+    private val embeddedPostgres: PostgreSQLContainer<Nothing> = embeddedPostgres(),
     val dataSource: DataSource = setupDataSourceMedFlyway(embeddedPostgres)
 ) {
 

@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotliquery.Row
@@ -10,10 +9,11 @@ import no.nav.helse.Util.uuid
 import no.nav.helse.Util.withSession
 import org.flywaydb.core.Flyway
 import org.intellij.lang.annotations.Language
+import org.testcontainers.containers.PostgreSQLContainer
 import java.util.*
 import javax.sql.DataSource
 
-fun embeddedPostgres() = EmbeddedPostgres.builder().start()
+fun embeddedPostgres() = PostgreSQLContainer<Nothing>("postgres:13").also { it.start() }
 
 fun DataSource.annulleringer(): List<Annullering> {
     return this.withSession {
@@ -44,9 +44,11 @@ fun Row.stringList(column: String) =
     objectMapper.readTree(string(column))
         .map { it.asText()!! }
 
-internal fun setupDataSourceMedFlyway(embeddedPostgres: EmbeddedPostgres): DataSource {
+internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>): DataSource {
     val hikariConfig = HikariConfig().apply {
-        this.jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
+        jdbcUrl = postgres.jdbcUrl
+        username = postgres.username
+        password = postgres.password
         maximumPoolSize = 3
         minimumIdle = 1
         idleTimeout = 10001
