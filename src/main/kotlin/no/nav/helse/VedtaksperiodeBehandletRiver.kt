@@ -1,11 +1,16 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.ktor.utils.io.*
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import net.logstash.logback.argument.StructuredArgument
+import net.logstash.logback.argument.StructuredArguments
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
+import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -31,13 +36,17 @@ class VedtaksperiodeBehandletRiver(
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         val løsning = løsning(json)
         val saksbehandlerIdentitet = finnIdentitet(løsning)
-        sessionOf(dataSource).use { session ->
-            insertLøsning(session, behovId, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
-            if (løsning.hasNonNull("begrunnelser")) {
-                insertBegrunnelser(session, behovId, løsning)
+        try {
+            sessionOf(dataSource).use { session ->
+                insertLøsning(session, behovId, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
+                if (løsning.hasNonNull("begrunnelser")) {
+                    insertBegrunnelser(session, behovId, løsning)
+                }
             }
+            log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
+        } catch (err: PSQLException) {
+            log.warn("Klarte ikke lagre løsning for godkjenningsbehov {}, mest sannsynlig fordi opprinnelig behov ikke er lagret (eller at vi inserter løsning med feil foreign key): {}", keyValue("behovId", behovId), err.message, err)
         }
-        log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
     private fun hentGodkjentTidspunkt(json: JsonNode): LocalDateTime {
