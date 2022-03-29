@@ -54,6 +54,7 @@ internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>): D
         idleTimeout = 10001
         connectionTimeout = 1000
         maxLifetime = 30001
+        initializationFailTimeout = 10000
     }
 
     val dataSource = HikariDataSource(hikariConfig)

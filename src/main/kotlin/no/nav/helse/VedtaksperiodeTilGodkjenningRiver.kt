@@ -19,7 +19,7 @@ class VedtaksperiodeTilGodkjenningRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.requireKey("@id", "@opprettet")
+                it.requireKey("@behovId", "@opprettet")
                 it.interestedIn("vedtaksperiodeId")
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.forbid("@løsning")
@@ -35,7 +35,7 @@ class VedtaksperiodeTilGodkjenningRiver(
         val behovOpprettet = json["@opprettet"].asLocalDateTime()
         val periodetype = json["Godkjenning"]["periodetype"].asText()
         val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
-        val id = UUID.fromString(json["@id"].asText())
+        val id = UUID.fromString(json["@behovId"].asText())
         insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
         log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
     }

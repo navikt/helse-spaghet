@@ -19,7 +19,8 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
-          "@id": "$id",
+          "@id": "${UUID.randomUUID()}",
+          "@behovId": "$id",
           "@behov": [
             "Godkjenning"
           ],

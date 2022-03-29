@@ -19,7 +19,7 @@ class VedtaksperiodeBehandletRiver(
             validate {
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.rejectKey("@final")
-                it.requireKey("@id", "vedtaksperiodeId", "@løsning")
+                it.requireKey("@behovId", "vedtaksperiodeId", "@løsning")
             }
 
         }.register(this)
@@ -27,14 +27,14 @@ class VedtaksperiodeBehandletRiver(
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val json = objectMapper.readTree(packet.toJson())
-        val id = UUID.fromString(json["@id"].asText())
+        val behovId = UUID.fromString(json["@behovId"].asText())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         val løsning = løsning(json)
         val saksbehandlerIdentitet = finnIdentitet(løsning)
         sessionOf(dataSource).use { session ->
-            insertLøsning(session, id, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
+            insertLøsning(session, behovId, hentGodkjentTidspunkt(json), saksbehandlerIdentitet, løsning)
             if (løsning.hasNonNull("begrunnelser")) {
-                insertBegrunnelser(session, id, løsning)
+                insertBegrunnelser(session, behovId, løsning)
             }
         }
         log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
