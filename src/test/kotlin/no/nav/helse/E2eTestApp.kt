@@ -32,6 +32,10 @@ class E2eTestApp(
         rapid.sendTestMessage(toJson())
     }
 
+    fun TestData.NyAktivitet.sendTilRapid() {
+        rapid.sendTestMessage(toJson())
+    }
+
     private fun mockLog() {
         val logger = LoggerFactory.getLogger("spaghet") as Logger
         listAppender.start()

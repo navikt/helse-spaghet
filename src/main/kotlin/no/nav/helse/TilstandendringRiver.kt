@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.*
@@ -17,7 +18,9 @@ class TilstandendringRiver(
         River(rapidApplication).apply {
             validate {
                 it.demandValue("@event_name", "vedtaksperiode_endret")
-                it.requireKey("vedtaksperiodeId", "aktivitetslogg", "@id")
+                it.requireKey("vedtaksperiodeId", "@id")
+                it.require("@opprettet", JsonNode::asLocalDateTime)
+                it.requireKey("@forårsaket_av.id", "@forårsaket_av.event_name")
                 it.requireKey("forrigeTilstand", "gjeldendeTilstand")
                 it.demand("forrigeTilstand") { forrigeTilstand ->
                     require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
@@ -28,21 +31,15 @@ class TilstandendringRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val json = objectMapper.readTree(packet.toJson())
-        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
-        val kildeType = json
-            .valueOrNull("aktivitetslogg")
-            ?.valueOrNull("kontekster")
-            ?.firstOrNull()?.get("kontekstType")
-            ?.asText() ?: "Ukjent"
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         insertTilstandsendring(
-            id = UUID.fromString(json["@id"].asText()),
+            id = UUID.fromString(packet["@id"].asText()),
             vedtaksperiodeId = vedtaksperiodeId,
-            tidsstempel = json["@opprettet"].asLocalDateTime(),
-            tilstandFra = json["forrigeTilstand"].asText(),
-            tilstandTil = json["gjeldendeTilstand"].asText(),
-            kilde = UUID.fromString(json["@forårsaket_av"]["id"].asText()),
-            kildeType = kildeType
+            tidsstempel = packet["@opprettet"].asLocalDateTime(),
+            tilstandFra = packet["forrigeTilstand"].asText(),
+            tilstandTil = packet["gjeldendeTilstand"].asText(),
+            kilde = UUID.fromString(packet["@forårsaket_av.id"].asText()),
+            kildeType = packet["@forårsaket_av.event_name"].asText()
         )
     }
 

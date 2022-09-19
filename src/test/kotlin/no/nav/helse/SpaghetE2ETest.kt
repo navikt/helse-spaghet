@@ -36,20 +36,6 @@ class SpaghetE2ETest {
     }
 
     @Test
-    fun `finner aktiviteter for hendelse`() {
-        val vedtaksperiodeId = UUID.randomUUID()
-        val id = UUID.randomUUID()
-        river.sendTestMessage(vedtaksperiodeEndret(id = id, vedtaksperiodeId = vedtaksperiodeId))
-
-        assertEquals(
-            listOf(
-                "Behandler simulering",
-                "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling"
-            ), finnAktiviteter(id)
-        )
-    }
-
-    @Test
     fun `finner vedtaksperiode_endret for hendelse`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val id = UUID.randomUUID()
@@ -210,12 +196,6 @@ class SpaghetE2ETest {
     private fun finnGodkjenningsbehovLøsningBegrunnelse(id: UUID) = using(sessionOf(dataSource)) { session ->
         session.run(queryOf("SELECT * FROM godkjenningsbehov_losning_begrunnelse WHERE id=?;", id)
             .map { it.string("id") }
-            .asList)
-    }
-
-    private fun finnAktiviteter(id: UUID) = sessionOf(dataSource).use { session ->
-        session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE id=?;", id)
-            .map { it.string("melding") }
             .asList)
     }
 

@@ -20,41 +20,45 @@ class AktivitetRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_endret")
-                it.requireKey("vedtaksperiodeId", "aktivitetslogg")
+                it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
+                it.requireKey("@id", "@forårsaket_av.id", "aktiviteter")
+                it.requireArray("aktiviteter") {
+                    requireAny("nivå", Nivå.values().map { nivå -> nivå.toString() })
+                    requireKey("melding")
+                    require("tidsstempel", JsonNode::asLocalDateTime)
+                    requireArray("kontekster") {
+                        requireKey("konteksttype", "kontekstmap")
+                    }
+                }
             }
 
         }.register(this)
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val json = objectMapper.readTree(packet.toJson())
-        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         try {
             //log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
-            json["aktivitetslogg"]["aktiviteter"].forEach { aktivitet ->
+            packet["aktiviteter"].forEach { aktivitet ->
+                val vedtaksperiodeId = aktivitet.path("kontekster").firstNotNullOfOrNull { kontekst ->
+                    if (kontekst.path("konteksttype").asText() == "Vedtaksperiode") {
+                        kontekst.path("kontekstmap").path("vedtaksperiodeId").takeIf { it.isTextual }?.asText()?.let { UUID.fromString(it) }
+                    } else {
+                        null
+                    }
+                } ?: return@forEach
                 insertAktivitet(
-                        id = UUID.fromString(json["@id"].asText()),
+                        id = UUID.fromString(packet["@id"].asText()),
                         vedtaksperiodeId = vedtaksperiodeId,
                         melding = aktivitet["melding"].asText(),
-                        level = aktivitet["alvorlighetsgrad"].asText(),
-                        tidsstempel = aktivitet["tidsstempel"].fromDate(),
-                        kilde = UUID.fromString(json["@forårsaket_av"]["id"].asText())
+                        level = Nivå.valueOf(aktivitet["nivå"].asText()).gammeltNavn,
+                        tidsstempel = aktivitet["tidsstempel"].asLocalDateTime(),
+                        kilde = UUID.fromString(packet["@forårsaket_av.id"].asText())
                 )
             }
         } catch (e: Exception) {
-            log.error("Feilet ved inserting av aktiviteter for vedtaksperiode=$vedtaksperiodeId", e)
+            log.error("Feilet ved inserting av aktiviteter for id=${packet["@id"].asText()}", e)
         }
     }
-
-
-    private fun JsonNode.fromDate(): LocalDateTime =
-            try {
-                this.asLocalDateTime()
-            } catch (_: DateTimeParseException) {
-                LocalDateTime.from(legacyDateFormat.parse(this.asText()))
-            }
-
 
     private fun insertAktivitet(
         id: UUID,
@@ -79,8 +83,10 @@ class AktivitetRiver(
         }
     }
 
-    companion object {
-        // Spleis serialiserer ikke datoer i aktivitetsloggeren som ISO-8601, men bruker sitt eget format 😞
-        val legacyDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+    enum class Nivå(val gammeltNavn: String) {
+        INFO("INFO"),
+        VARSEL("WARN"),
+        FUNKSJONELL_FEIL("ERROR"),
+        LOGISK_FEIL("SEVERE");
     }
 }

@@ -4,7 +4,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest
 import no.nav.helse.TestData.aktivitet
-import no.nav.helse.TestData.vedtaksperiodeEndret
+import no.nav.helse.TestData.nyAktivitet
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ class AktivitetRiverE2ETest {
     @Test
     fun `lagrer errors i database`() {
         e2eTest {
-            val endring = vedtaksperiodeEndret.aktivitet(
+            val endring = nyAktivitet.aktivitet(
                 aktivitet
                     .melding("Utbetaling skal gå rett til bruker")
                     .error()
@@ -29,9 +29,32 @@ class AktivitetRiverE2ETest {
     }
 
     @Test
+    fun `finner aktiviteter for hendelse`() {
+        e2eTest {
+            val endring = nyAktivitet.aktivitet(
+                aktivitet
+                    .melding("Behandler simulering")
+                    .error()
+            ).aktivitet(
+                aktivitet
+                    .melding("Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling")
+                    .error()
+            )
+            endring.sendTilRapid()
+
+            val expected = listOf(
+                "Behandler simulering",
+                "Simulering kom frem til et annet totalbeløp. Kontroller beløpet til utbetaling"
+            )
+            assertEquals(expected, finnAktiviteter(endring.meldingsId))
+            assertEquals(expected, finnAktiviteterKilde(endring.forårsaketAv))
+        }
+    }
+
+    @Test
     fun `to errors`() {
         e2eTest {
-            val endring = vedtaksperiodeEndret
+            val endring = nyAktivitet
                 .aktivitet(
                     aktivitet
                         .melding("Utbetaling skal gå rett til bruker")
@@ -50,7 +73,7 @@ class AktivitetRiverE2ETest {
     @Test
     fun `lagrer aktivitet uavhengig av nivå`() {
         e2eTest {
-            val endring = vedtaksperiodeEndret
+            val endring = nyAktivitet
                 .aktivitet(
                     aktivitet
                         .melding("Bruker skal gå rett til start")
@@ -60,34 +83,6 @@ class AktivitetRiverE2ETest {
 
             assertEquals(endring.aktiviteter.map { it.melding }, hentErrors(endring.vedtaksperiodeId))
         }
-    }
-
-    @Test
-    fun `lagrer tilstandsendring`() {
-        e2eTest {
-            val endring = vedtaksperiodeEndret
-                .forrigeTilstand("AVVENTER_GAP")
-                .gjeldendeTilstand("TIL_INFOTRYGD")
-                .kontekstType("Utbetalingshistorikk")
-
-            endring.sendTilRapid()
-
-            val tilstandsendringer = hentTilstandsendringer(endring.vedtaksperiodeId)
-
-            assertEquals(
-                listOf(
-                    Tilstandsendring(
-                        vedtaksperiodeId = endring.vedtaksperiodeId,
-                        tidsstempel = endring.opprettet,
-                        tilstandFra = endring.forrigeTilstand,
-                        tilstandTil = endring.gjeldendeTilstand,
-                        kilde = endring.forårsaketAv,
-                        kildeType = endring.kontekstType!!
-                    )
-                ), tilstandsendringer
-            )
-        }
-
     }
 
     private fun E2eTestApp.hentErrors(vedtaksperiodeId: UUID) =
@@ -100,31 +95,14 @@ class AktivitetRiverE2ETest {
             )
         }
 
-    private fun E2eTestApp.hentTilstandsendringer(vedtaksperiodeId: UUID) =
-        sessionOf(dataSource).use { session ->
-            @Language("PostgreSQL")
-            val query = "SELECT * FROM vedtaksperiode_tilstandsendring WHERE vedtaksperiode_id=?;"
-            session.run(queryOf(query, vedtaksperiodeId)
-                .map { row ->
-                    Tilstandsendring(
-                        vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
-                        tidsstempel = row.localDateTime("tidsstempel"),
-                        tilstandFra = row.string("tilstand_fra"),
-                        tilstandTil = row.string("tilstand_til"),
-                        kilde = UUID.fromString(row.string("kilde")),
-                        kildeType = row.string("kilde_type")
-                    )
-                }
-                .asList
-            )
-        }
-
-    private data class Tilstandsendring(
-        val vedtaksperiodeId: UUID,
-        val tidsstempel: LocalDateTime,
-        val tilstandFra: String,
-        val tilstandTil: String,
-        val kilde: UUID,
-        val kildeType: String
-    )
+    private fun E2eTestApp.finnAktiviteter(id: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE id=?;", id)
+            .map { it.string("melding") }
+            .asList)
+    }
+    private fun E2eTestApp.finnAktiviteterKilde(kilde: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM vedtaksperiode_aktivitet WHERE kilde=?;", kilde)
+            .map { it.string("melding") }
+            .asList)
+    }
 }

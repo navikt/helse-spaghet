@@ -1,6 +1,8 @@
 package no.nav.helse
 
-import no.nav.helse.AktivitetRiver.Companion.legacyDateFormat
+import no.nav.helse.AktivitetRiver.Nivå
+import no.nav.helse.AktivitetRiver.Nivå.FUNKSJONELL_FEIL
+import no.nav.helse.AktivitetRiver.Nivå.INFO
 import no.nav.helse.TestData.Aktivitet.Companion.toJson
 import no.nav.helse.Util.toJson
 import java.time.LocalDateTime
@@ -42,6 +44,32 @@ object TestData {
         val gjeldendeTilstand: String = "TIL_INFOTRYGD",
         val forrigeTilstand: String = "AVVENTER_GAP",
         val forårsaketAv: UUID = randomUUID(),
+        val kildeType: String? = null
+    ) {
+        fun forrigeTilstand(it: String) = copy(forrigeTilstand = it)
+        fun gjeldendeTilstand(it: String) = copy(gjeldendeTilstand = it)
+        fun kildeType(it: String) = copy(kildeType = it)
+        fun toJson() =
+            """{
+            "@event_name": "vedtaksperiode_endret",
+            "vedtaksperiodeId": "$vedtaksperiodeId",
+            "gjeldendeTilstand": "$gjeldendeTilstand",
+            "forrigeTilstand": "$forrigeTilstand",
+            "@opprettet": "$opprettet",
+            "@id": "$meldingsId",
+            "@forårsaket_av": {"id": "$forårsaketAv", "event_name": "$kildeType"}
+         }""".trimMargin()
+
+
+    }
+    data class NyAktivitet(
+        val vedtaksperiodeId: UUID = randomUUID(),
+        val aktiviteter: List<Aktivitet> = listOf(),
+        val meldingsId: UUID = randomUUID(),
+        val opprettet: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+        val gjeldendeTilstand: String = "TIL_INFOTRYGD",
+        val forrigeTilstand: String = "AVVENTER_GAP",
+        val forårsaketAv: UUID = randomUUID(),
         val kontekstType: String? = null
     ) {
         fun aktivitet(it: Aktivitet) = copy(aktiviteter = aktiviteter + it)
@@ -50,14 +78,8 @@ object TestData {
         fun kontekstType(it: String) = copy(kontekstType = it)
         fun toJson() =
             """{
-            "@event_name": "vedtaksperiode_endret",
-            "aktivitetslogg": {
-            "aktiviteter": ${aktiviteter.toJson()}
-            ${kontekstType?.let { """, "kontekster": [{"kontekstType": "$kontekstType"}]""" } ?: ""}
-            },
-            "vedtaksperiodeId": "$vedtaksperiodeId",
-            "gjeldendeTilstand": "$gjeldendeTilstand",
-            "forrigeTilstand": "$forrigeTilstand",
+            "@event_name": "aktivitetslogg_ny_aktivitet",
+            "aktiviteter": ${aktiviteter.toJson(vedtaksperiodeId)},
             "@opprettet": "$opprettet",
             "@id": "$meldingsId",
             "@forårsaket_av": {"id": "$forårsaketAv"}
@@ -68,25 +90,48 @@ object TestData {
 
     data class Aktivitet(
         val melding: String = "Uffda, dette ble rart",
-        val alvorlighetsgrad: String = "WARNING",
+        val alvorlighetsgrad: String = Nivå.VARSEL.name,
         val tidsstempel: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+        val kontekster: List<Map<String, Any>> = emptyList()
     ) {
-        fun error() = copy (alvorlighetsgrad = "ERROR")
-        fun info()  = copy (alvorlighetsgrad = "INFO")
+        fun error() = copy (alvorlighetsgrad = FUNKSJONELL_FEIL.name)
+        fun info()  = copy (alvorlighetsgrad = INFO.name)
         fun toJson() = """{
             "melding" : "$melding",
-            "alvorlighetsgrad" : "$alvorlighetsgrad",
-            "tidsstempel" : "${tidsstempel.format(legacyDateFormat)}"
+            "nivå" : "$alvorlighetsgrad",
+            "tidsstempel" : "$tidsstempel",
+            "kontekster": ${kontekster.map { kontekst ->
+                """{
+                    "konteksttype": "${kontekst.getValue("konteksttype")}",
+                    "kontekstmap": {
+                    ${(kontekst.getValue("kontekstmap") as Map<String, String>).entries.joinToString { 
+                        """
+                           "${it.key}": "${it.value}" 
+                        """
+                }}
+                    }
+                }
+                """
+        }}
            }
         """.trimIndent()
 
         fun melding(it: String) = copy(melding = it)
+        fun vedtaksperiodeId(id: UUID) = copy(kontekster = kontekster + listOf(
+            mapOf(
+                "konteksttype" to "Vedtaksperiode",
+                "kontekstmap" to mapOf(
+                    "vedtaksperiodeId" to id.toString()
+                )
+            )
+        ))
 
         companion object {
-            fun List<Aktivitet>.toJson(): String = map{it.toJson()}.joinToString ( separator = ", ", prefix = "[", postfix = "]")
+            fun List<Aktivitet>.toJson(vedtaksperiodeId: UUID): String =
+                joinToString(separator = ", ", prefix = "[", postfix = "]") { it.vedtaksperiodeId(vedtaksperiodeId).toJson() }
         }
     }
-
     val vedtaksperiodeEndret = VedtaksperiodeEndret()
+    val nyAktivitet = NyAktivitet()
     val aktivitet = Aktivitet()
 }
