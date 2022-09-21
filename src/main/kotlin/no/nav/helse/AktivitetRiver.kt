@@ -23,8 +23,7 @@ class AktivitetRiver(
                 it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
                 it.requireKey("@id", "@forårsaket_av.id", "aktiviteter")
                 it.requireArray("aktiviteter") {
-                    requireAny("nivå", Nivå.values().map { nivå -> nivå.toString() })
-                    requireKey("melding")
+                    requireKey("nivå", "melding")
                     require("tidsstempel", JsonNode::asLocalDateTime)
                     requireArray("kontekster") {
                         requireKey("konteksttype", "kontekstmap")
@@ -38,23 +37,27 @@ class AktivitetRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             //log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
-            packet["aktiviteter"].forEach { aktivitet ->
-                val vedtaksperiodeId = aktivitet.path("kontekster").firstNotNullOfOrNull { kontekst ->
-                    if (kontekst.path("konteksttype").asText() == "Vedtaksperiode") {
-                        kontekst.path("kontekstmap").path("vedtaksperiodeId").takeIf { it.isTextual }?.asText()?.let { UUID.fromString(it) }
-                    } else {
-                        null
+            packet["aktiviteter"]
+                .filter {
+                        aktivitet["nivå"].asText() in Nivå.values().map(Enum<*>::name)
+                }
+                .forEach { aktivitet ->
+                        val vedtaksperiodeId = aktivitet.path("kontekster").firstNotNullOfOrNull { kontekst ->
+                            if (kontekst.path("konteksttype").asText() == "Vedtaksperiode") {
+                                kontekst.path("kontekstmap").path("vedtaksperiodeId").takeIf { it.isTextual }?.asText()?.let { UUID.fromString(it) }
+                            } else {
+                                null
+                            }
+                        } ?: return@forEach
+                        insertAktivitet(
+                                id = UUID.fromString(packet["@id"].asText()),
+                                vedtaksperiodeId = vedtaksperiodeId,
+                                melding = aktivitet["melding"].asText(),
+                                level = Nivå.valueOf(aktivitet["nivå"].asText()).gammeltNavn,
+                                tidsstempel = aktivitet["tidsstempel"].asLocalDateTime(),
+                                kilde = UUID.fromString(packet["@forårsaket_av.id"].asText())
+                        )
                     }
-                } ?: return@forEach
-                insertAktivitet(
-                        id = UUID.fromString(packet["@id"].asText()),
-                        vedtaksperiodeId = vedtaksperiodeId,
-                        melding = aktivitet["melding"].asText(),
-                        level = Nivå.valueOf(aktivitet["nivå"].asText()).gammeltNavn,
-                        tidsstempel = aktivitet["tidsstempel"].asLocalDateTime(),
-                        kilde = UUID.fromString(packet["@forårsaket_av.id"].asText())
-                )
-            }
         } catch (e: Exception) {
             log.error("Feilet ved inserting av aktiviteter for id=${packet["@id"].asText()}", e)
         }
@@ -85,6 +88,7 @@ class AktivitetRiver(
 
     enum class Nivå(val gammeltNavn: String) {
         INFO("INFO"),
+        BEHOV("BEHOV"),
         VARSEL("WARN"),
         FUNKSJONELL_FEIL("ERROR"),
         LOGISK_FEIL("SEVERE");
