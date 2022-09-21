@@ -38,7 +38,7 @@ class AktivitetRiver(
         try {
             //log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
             packet["aktiviteter"]
-                .filter {
+                .filter { aktivitet ->
                         aktivitet["nivå"].asText() in Nivå.values().map(Enum<*>::name)
                 }
                 .forEach { aktivitet ->
