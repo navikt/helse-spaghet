@@ -40,7 +40,8 @@ class GodkjenningDaoTest {
                 årsak = "Annet",
                 begrunnelser = listOf("Begrunnelse", "Begrunnelse2", "Annet"),
                 kommentar = "Feil første fraværsdato"
-            )
+            ),
+            utbetalingType = "UTBETALING"
         )
 
         dataSource.insertGodkjenning(løsning)

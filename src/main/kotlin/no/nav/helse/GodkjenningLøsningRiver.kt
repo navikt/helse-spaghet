@@ -15,7 +15,8 @@ class GodkjenningLøsningRiver(
     val fødselsnummer: String,
     val periodetype: String,
     val inntektskilde: String,
-    val godkjenning: Godkjenning
+    val godkjenning: Godkjenning,
+    val utbetalingType: String
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
         private val sikkerLogg = LoggerFactory.getLogger("tjenestekall")
@@ -31,6 +32,7 @@ class GodkjenningLøsningRiver(
                         "fødselsnummer",
                         "Godkjenning.periodetype",
                         "Godkjenning.inntektskilde",
+                        "Godkjenning.utbetalingtype",
                         "@løsning.Godkjenning.godkjenttidspunkt",
                     )
                 }
@@ -75,6 +77,7 @@ class GodkjenningLøsningRiver(
                 aktørId = packet["aktørId"].asText(),
                 periodetype = packet["Godkjenning.periodetype"].asText(),
                 inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
+                utbetalingType = packet["Godkjenning.utbetalingtype"].asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 

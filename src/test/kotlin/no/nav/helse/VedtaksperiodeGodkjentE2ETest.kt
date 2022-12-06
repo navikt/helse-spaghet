@@ -58,6 +58,13 @@ class VedtaksperiodeGodkjentE2ETest {
         assertEquals("EN_ARBEIDSGIVER", finnInntektskilde(vedtaksperiodeId))
     }
 
+    @Test
+    fun `lagrer utbetalingtype i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        assertEquals("UTBETALING", finnUtbetalingType(vedtaksperiodeId))
+    }
+
     private fun hentWarnings(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -76,6 +83,12 @@ class VedtaksperiodeGodkjentE2ETest {
     private fun finnInntektskilde(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("inntektskilde") }
+            .asSingle)
+    }
+
+    private fun finnUtbetalingType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
+            .map { it.stringOrNull("utbetaling_type") }
             .asSingle)
     }
 
@@ -168,6 +181,7 @@ class VedtaksperiodeGodkjentE2ETest {
   "Godkjenning": {
     "periodetype": "INFOTRYGDFORLENGELSE",
     "inntektskilde": "EN_ARBEIDSGIVER",
+    "utbetalingtype": "UTBETALING",
     "warnings": {
       "aktiviteter": [],
       "kontekster": []

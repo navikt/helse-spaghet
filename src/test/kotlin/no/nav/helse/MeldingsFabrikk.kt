@@ -45,7 +45,8 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
             "periodeFom": "2020-05-16",
             "periodeTom": "2020-05-22",
             "periodetype": "$periodetype",
-            "inntektskilde": "$inntektskilde"  
+            "inntektskilde": "$inntektskilde",
+            "utbetalingtype": "UTBETALING"
           }
         }
     """
