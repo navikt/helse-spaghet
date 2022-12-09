@@ -92,20 +92,23 @@ class RevurderingIgangsattE2ETest {
         "periodeForEndringFom":"2022-11-07",
         "periodeForEndringTom":"2022-11-30",
         "årsak":"$årsak",
+        "typeEndring": "REVURDERING",
         "berørtePerioder":[
             {
                 "vedtaksperiodeId":"c0f78b58-4687-4191-adf8-6588c5982abb",
                 "skjæringstidspunkt":"2022-10-03",
                 "periodeFom":"2022-11-07",
                 "periodeTom":"2022-11-29",
-                "orgnummer":"456"
+                "orgnummer":"456",
+                "typeEndring": "REVURDERING"
             },            
             {
                 "vedtaksperiodeId":"c0c78b58-4687-4191-adf8-6588c5982abb",
                 "skjæringstidspunkt":"2022-10-03",
                 "periodeFom":"2022-11-30",
                 "periodeTom":"2022-12-15",
-                "orgnummer":"456"
+                "orgnummer":"456",
+                "typeEndring": "REVURDERING"
             }
           ],
         "@id":"69cf0c28-16d9-464e-bc71-bd9eabea22a1",
