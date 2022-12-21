@@ -44,7 +44,7 @@ class RevurderingFerdigstiltRiver(
                         statement = statement,
                         paramMap = mapOf(
                             "revurderingId" to revurderingId,
-                            "opprettet" to opprettet,
+                            "oppdatert" to opprettet,
                             "status" to status,
                         )
                     ).asUpdate
