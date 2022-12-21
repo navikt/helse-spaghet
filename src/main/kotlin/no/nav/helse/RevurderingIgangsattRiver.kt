@@ -29,6 +29,7 @@ class RevurderingIgangsattRiver(
                     require("periodeFom", JsonNode::asLocalDate)
                     require("periodeTom", JsonNode::asLocalDate)
                     require("skjæringstidspunkt", JsonNode::asLocalDate)
+                    requireKey("orgnummer")
                 }
             }
         }.register(this)
@@ -71,8 +72,8 @@ class RevurderingIgangsattRiver(
 
                 @Language("PostgreSQL")
                 val statement2 = """
-                    INSERT INTO revurdering_vedtaksperiode(revurdering_id, vedtaksperiode_id, periode_fom, periode_tom, skjaeringstidspunkt)
-                    VALUES ${berørtePerioder.joinToString { "(?, ?, ?, ?, ?)" }}
+                    INSERT INTO revurdering_vedtaksperiode(revurdering_id, vedtaksperiode_id, periode_fom, periode_tom, skjaeringstidspunkt, orgnummer)
+                    VALUES ${berørtePerioder.joinToString { "(?, ?, ?, ?, ?, ?)" }}
                     ON CONFLICT DO NOTHING
                 """
 
@@ -85,7 +86,8 @@ class RevurderingIgangsattRiver(
                                 periode.path("vedtaksperiodeId").let { UUID.fromString(it.asText()) },
                                 periode.path("periodeFom").asLocalDate(),
                                 periode.path("periodeTom").asLocalDate(),
-                                periode.path("skjæringstidspunkt").asLocalDate()
+                                periode.path("skjæringstidspunkt").asLocalDate(),
+                                periode.path("orgnummer").asText(),
                             )
                         }.toTypedArray()
                     ).asExecute
