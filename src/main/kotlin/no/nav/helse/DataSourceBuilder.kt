@@ -25,6 +25,7 @@ internal class DataSourceBuilder(val env: Environment.DatabaseEnvironment) {
     private fun runMigration(dataSource: DataSource, initSql: String? = null) {
         Flyway.configure()
             .dataSource(dataSource)
+            .lockRetryCount(-1)
             .initSql(initSql)
             .load()
             .migrate()
