@@ -1,5 +1,6 @@
 val junitJupiterVersion = "5.7.1"
 val testcontainersVersion = "1.16.2"
+val rapidsAndRiversVersion = "2022122313141671797650.f806f770805a"
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -7,13 +8,22 @@ plugins {
 
 group = "no.helse"
 
+val githubUser: String by project
+val githubPassword: String by project
+
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
+    maven {
+        url = uri("https://maven.pkg.github.com/navikt/*")
+        credentials {
+            username = githubUser
+            password = githubPassword
+        }
+    }
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2022.04.05-09.40.11a466d7ac70")
+    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("no.nav:vault-jdbc:1.3.10")
     implementation("org.flywaydb:flyway-core:8.4.1")
@@ -67,6 +77,6 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "7.0"
+        gradleVersion = "7.4.2"
     }
 }
