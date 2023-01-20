@@ -18,7 +18,7 @@ class AnnulleringRiver(
         River(rapidApplication).apply {
             validate {
                 it.demandValue("@event_name", "annullering")
-                it.requireKey("saksbehandler.oid", "fagsystemId", "begrunnelser", "gjelderSisteSkjæringstidspunkt", "@opprettet")
+                it.requireKey("saksbehandler.oid", "fagsystemId", "begrunnelser", "@opprettet")
                 it.interestedIn("kommentar")
             }
         }.register(this)

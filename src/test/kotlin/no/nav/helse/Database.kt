@@ -20,7 +20,7 @@ fun DataSource.annulleringer(): List<Annullering> {
         this.run(
             queryOf(
                 """
-SELECT saksbehandler, fagsystem_id, begrunnelser, kommentar, opprettet, gjelder_siste_skjæringstidspunkt
+SELECT saksbehandler, fagsystem_id, begrunnelser, kommentar, opprettet
 FROM annullering a
 ORDER BY a.opprettet DESC
     """
@@ -37,7 +37,6 @@ fun Row.annullering() =
         begrunnelser = stringList("begrunnelser"),
         kommentar = stringOrNull("kommentar"),
         opprettet = localDateTime("opprettet"),
-        gjelderSisteSkjæringstidspunkt = boolean("gjelder_siste_skjæringstidspunkt"),
     )
 
 fun Row.stringList(column: String) =
