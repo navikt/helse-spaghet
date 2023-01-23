@@ -3,7 +3,7 @@ val testcontainersVersion = "1.16.2"
 val rapidsAndRiversVersion = "2022122313141671797650.f806f770805a"
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.7.21"
 }
 
 group = "no.helse"
