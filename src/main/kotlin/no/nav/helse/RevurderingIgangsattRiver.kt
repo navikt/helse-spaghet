@@ -15,7 +15,7 @@ class RevurderingIgangsattRiver(
     init {
         River(rapidApplication).apply {
             validate {
-                it.demandAny("@event_name", listOf("revurdering_igangsatt", "overstyring_igangsatt"))
+                it.demandValue("@event_name", "overstyring_igangsatt")
                 it.demandValue("typeEndring", "REVURDERING")
                 it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
                 it.require("@opprettet", JsonNode::asLocalDateTime)
