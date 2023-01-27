@@ -104,7 +104,7 @@ class RevurderingE2ETest {
         kilde: UUID = UUID.randomUUID(),
         årsak: String = "KORRIGERT_SØKNAD"
     ) = """{
-        "@event_name":"revurdering_igangsatt",
+        "@event_name":"overstyring_igangsatt",
         "fødselsnummer":"fnr",
         "aktørId":"aktorId",
         "revurderingId": "$revurderingId",
