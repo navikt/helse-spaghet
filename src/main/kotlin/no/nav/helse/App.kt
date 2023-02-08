@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
-import io.ktor.client.features.json.*
+import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -41,8 +41,8 @@ suspend fun main() {
                 }
             }
 
-            install(JsonFeature) {
-                this.serializer = JacksonSerializer(objectMapper)
+            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                jackson()
             }
         },
         accessToken = env.slack.accessToken

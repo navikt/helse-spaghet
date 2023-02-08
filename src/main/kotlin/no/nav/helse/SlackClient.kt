@@ -2,9 +2,11 @@ package no.nav.helse
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.userAgent
@@ -14,7 +16,7 @@ class SlackClient(private val httpClient: HttpClient, private val accessToken: S
         channel: String,
         text: String,
         threadTs: String? = null
-    ) = httpClient.post<MessageResponse>("https://slack.com/api/chat.postMessage") {
+    ) = httpClient.post("https://slack.com/api/chat.postMessage") {
         userAgent("navikt/spaghet")
         accept(ContentType.Application.Json.withParameter("charset", "UTF-8"))
         contentType(ContentType.Application.Json.withParameter("charset", "UTF-8"))
@@ -26,9 +28,8 @@ class SlackClient(private val httpClient: HttpClient, private val accessToken: S
         threadTs?.also {
             message.put("thread_ts", it)
         }
-        body = message
-
-    }
+        setBody(message)
+    }.body<MessageResponse>()
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
