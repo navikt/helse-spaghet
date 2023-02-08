@@ -33,38 +33,38 @@ suspend fun main() {
 
     val dataSourceBuilder = DataSourceBuilder(env.db)
     val dataSource = dataSourceBuilder.getDataSource()
-    val slackClient = SlackClient(
-        httpClient = HttpClient(Apache) {
-            engine {
-                customizeClient {
-                    setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-                }
-            }
-
-            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                jackson()
-            }
-        },
-        accessToken = env.slack.accessToken
-    )
-
-    val channel = env.slack.raportChannel
-    GlobalScope.launch {
-        while (isActive) {
-            val iGår = LocalDate.now().minusDays(1)
-            log.info("er rapportert i går: ${dataSource.erRapportert(iGår)}")
-            if (!dataSource.erRapportert(iGår)) {
-                dataSource.settRapportert(iGår)
-                Rapport(dataSource.lagRapport(iGår), env.miljø).meldinger.forEach { melding ->
-                    val result = slackClient.postMessage(channel, melding.tekst)
-                    melding.tråd.forEach { trådmelding ->
-                        slackClient.postMessage(channel, trådmelding, result.ts)
-                    }
-                }
-            }
-            delay(Duration.ofMinutes(10L).toMillis())
-        }
-    }
+//    val slackClient = SlackClient(
+//        httpClient = HttpClient(Apache) {
+//            engine {
+//                customizeClient {
+//                    setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
+//                }
+//            }
+//
+//            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+//                jackson()
+//            }
+//        },
+//        accessToken = env.slack.accessToken
+//    )
+//
+//    val channel = env.slack.raportChannel
+//    GlobalScope.launch {
+//        while (isActive) {
+//            val iGår = LocalDate.now().minusDays(1)
+//            log.info("er rapportert i går: ${dataSource.erRapportert(iGår)}")
+//            if (!dataSource.erRapportert(iGår)) {
+//                dataSource.settRapportert(iGår)
+//                Rapport(dataSource.lagRapport(iGår), env.miljø).meldinger.forEach { melding ->
+//                    val result = slackClient.postMessage(channel, melding.tekst)
+//                    melding.tråd.forEach { trådmelding ->
+//                        slackClient.postMessage(channel, trådmelding, result.ts)
+//                    }
+//                }
+//            }
+//            delay(Duration.ofMinutes(10L).toMillis())
+//        }
+//    }
 
     RapidApplication.create(env.raw)
         .setupRiver(dataSource)
