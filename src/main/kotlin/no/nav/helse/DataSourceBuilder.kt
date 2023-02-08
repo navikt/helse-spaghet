@@ -1,11 +1,11 @@
 package no.nav.helse
 
 import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import javax.sql.DataSource
-import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration as createDataSource
 
-internal class DataSourceBuilder(val env: Environment.DatabaseEnvironment) {
+internal class DataSourceBuilder(private val env: Environment.DatabaseEnvironment) {
     private val hikariConfig = HikariConfig().apply {
         jdbcUrl = env.jdbcUrl
         maximumPoolSize = 3
@@ -13,27 +13,21 @@ internal class DataSourceBuilder(val env: Environment.DatabaseEnvironment) {
         idleTimeout = 10001
         connectionTimeout = 1000
         maxLifetime = 30001
+        username = env.username
+        password = env.password
     }
 
-    fun getDataSource(role: Role = Role.User) =
-        createDataSource(hikariConfig, env.vaultMountPath, role.asRole(env.databaseName))
+    fun getDataSource() = HikariDataSource(hikariConfig)
 
     fun migrate() {
-        runMigration(getDataSource(Role.Admin), """SET ROLE "${Role.Admin.asRole(env.databaseName)}"""")
+        runMigration(getDataSource())
     }
 
-    private fun runMigration(dataSource: DataSource, initSql: String? = null) {
+    private fun runMigration(dataSource: DataSource) {
         Flyway.configure()
             .dataSource(dataSource)
             .lockRetryCount(-1)
-            .initSql(initSql)
             .load()
             .migrate()
-    }
-
-    enum class Role {
-        Admin, User, ReadOnly;
-
-        fun asRole(databaseName: String) = "$databaseName-${name.toLowerCase()}"
     }
 }

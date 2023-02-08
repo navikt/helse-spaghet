@@ -60,7 +60,6 @@ internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>): D
 
     Flyway.configure()
         .dataSource(dataSource)
-        .placeholders(mapOf("spesialist_oid" to UUID.randomUUID().toString()))
         .load()
         .migrate()
 

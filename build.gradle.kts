@@ -1,5 +1,6 @@
 val junitJupiterVersion = "5.7.1"
 val testcontainersVersion = "1.16.2"
+val postgresqlVersion = "42.5.1"
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -13,9 +14,9 @@ repositories {
 }
 
 dependencies {
+    implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.github.navikt:rapids-and-rivers:2022.04.05-09.40.11a466d7ac70")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("no.nav:vault-jdbc:1.3.10")
     implementation("org.flywaydb:flyway-core:8.4.1")
     implementation("com.github.seratch:kotliquery:1.3.1")
     implementation("io.ktor:ktor-client-apache:1.6.6")

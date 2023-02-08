@@ -25,18 +25,20 @@ spec:
     min: 1
     max: 1
     cpuThresholdPercentage: 90
-  ingresses:
-    - https://spaghet.dev-fss.nais.io
   kafka:
     pool: nav-dev
   prometheus:
     enabled: true
     path: /metrics
-  webproxy: true
   secureLogs:
     enabled: true
-  vault:
-    enabled: true
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        diskAutoresize: true
+        databases:
+          - name: spaghet
+            envVarPrefix: DATABASE
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
@@ -44,13 +46,5 @@ spec:
       value: tbd-spaghet-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: DATABASE_HOST
-      value: b27dbvl015.preprod.local
-    - name: DATABASE_PORT
-      value: "5432"
-    - name: DATABASE_NAME
-      value: spaghet
-    - name: VAULT_MOUNTPATH
-      value: postgresql/preprod-fss/
     - name: RAPPORTERING_CHANNEL
       value: C014D9S8DD5

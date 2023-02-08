@@ -11,8 +11,8 @@ import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
 
 class E2eTestApp(
-    var rapid: TestRapid = TestRapid(),
-    var listAppender: ListAppender<ILoggingEvent> = ListAppender(),
+    private var rapid: TestRapid = TestRapid(),
+    private var listAppender: ListAppender<ILoggingEvent> = ListAppender(),
     private val embeddedPostgres: PostgreSQLContainer<Nothing> = embeddedPostgres(),
     val dataSource: DataSource = setupDataSourceMedFlyway(embeddedPostgres)
 ) {
