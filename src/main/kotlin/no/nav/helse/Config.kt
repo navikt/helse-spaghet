@@ -3,7 +3,7 @@ package no.nav.helse
 fun setUpEnvironment() = Environment(
     raw = System.getenv(),
     db = Environment.DatabaseEnvironment(
-        databaseName = System.getenv("DATABASE_NAME"),
+        databaseName = System.getenv("DATABASE_DATABASE"),
         databaseHost = System.getenv("DATABASE_HOST"),
         databasePort = System.getenv("DATABASE_PORT"),
         username = System.getenv("DATABASE_USERNAME"),
