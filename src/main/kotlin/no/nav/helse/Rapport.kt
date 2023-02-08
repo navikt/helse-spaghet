@@ -120,7 +120,7 @@ class Rapport(
         private val antallUtenWarnings: Int,
         private val type: String
     ) : Printbar {
-        override fun tilMelding() = """${type.replace("_", " ").toLowerCase().capitalize()}: $antall ($antallUtenWarnings uten warnings)"""
+        override fun tilMelding() = """${type.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }}: $antall ($antallUtenWarnings uten warnings)"""
     }
 
     data class Warning(
