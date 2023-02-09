@@ -22,8 +22,8 @@ spec:
       cpu: 50m
       memory: 128Mi
   replicas:
-    min: 0
-    max: 0
+    min: 1
+    max: 1
     cpuThresholdPercentage: 90
   kafka:
     pool: nav-prod
@@ -41,25 +41,6 @@ spec:
         diskType: SSD
         name: spaghet
         tier: db-custom-22-135168
-        flags:
-          - name: temp_file_limit
-            value: "10240000"
-          - name: work_mem
-            value: "15728640" # If this value is specified without units, it is taken as kilobytes
-          - name: maintenance_work_mem
-            value: "94371840" # If this value is specified without units, it is taken as kilobytes
-          - name: autovacuum_work_mem
-            value: "25165824" # If this value is specified without units, it is taken as kilobytes
-          - name: random_page_cost
-            value: "1.2"
-          - name: max_worker_processes
-            value: "16"
-          - name: max_parallel_workers_per_gather
-            value: "4"
-          - name: max_parallel_workers
-            value: "12"
-          - name: max_parallel_maintenance_workers
-            value: "8"
         databases:
           - name: spaghet
             envVarPrefix: DATABASE
@@ -70,5 +51,3 @@ spec:
       value: tbd-spaghet-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: RAPPORTERING_CHANNEL
-      value: C014D9S8DD5

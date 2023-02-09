@@ -46,5 +46,3 @@ spec:
       value: tbd-spaghet-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: RAPPORTERING_CHANNEL
-      value: C014D9S8DD5
