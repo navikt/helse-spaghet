@@ -22,24 +22,31 @@ spec:
       cpu: 50m
       memory: 128Mi
   replicas:
-    min: 0
-    max: 0
+    min: 1
+    max: 1
     cpuThresholdPercentage: 90
-  ingresses:
-    - https://spaghet.prod-fss.nais.io
   kafka:
     pool: nav-prod
   prometheus:
     enabled: true
     path: /metrics
-  webproxy: true
   secureLogs:
     enabled: true
-  vault:
-    enabled: true
-    paths:
-      - mountPath: /var/run/secrets/nais.io/service_user
-        kvPath: /serviceuser/data/prod/srvspaghet
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_14
+        diskAutoresize: true
+        pointInTimeRecovery: true
+        diskSize: 100
+        diskType: SSD
+        name: spaghet
+        tier: db-custom-22-135185
+        flags:
+          - name: temp_file_limit
+            value: "5120000"
+        databases:
+          - name: spaghet
+            envVarPrefix: DATABASE
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
@@ -47,13 +54,5 @@ spec:
       value: tbd-spaghet-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
-    - name: DATABASE_HOST
-      value: a01dbvl013.adeo.no
-    - name: DATABASE_PORT
-      value: "5432"
-    - name: DATABASE_NAME
-      value: spaghet
-    - name: VAULT_MOUNTPATH
-      value: postgresql/prod-fss/
     - name: RAPPORTERING_CHANNEL
       value: C014D9S8DD5

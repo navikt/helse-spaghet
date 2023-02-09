@@ -32,7 +32,7 @@ suspend fun main() {
     val env = setUpEnvironment()
 
     val dataSourceBuilder = DataSourceBuilder(env.db)
-    val dataSource = dataSourceBuilder.getDataSource()
+//    val dataSource = dataSourceBuilder.getDataSource()
 //    val slackClient = SlackClient(
 //        httpClient = HttpClient(Apache) {
 //            engine {
@@ -66,10 +66,13 @@ suspend fun main() {
 //        }
 //    }
 
-    RapidApplication.create(env.raw)
-        .setupRiver(dataSource)
-        .setupMigration(dataSourceBuilder)
-        .start()
+    dataSourceBuilder.migrate()
+
+
+//    RapidApplication.create(env.raw)
+//        .setupRiver(dataSource)
+//        .setupMigration(dataSourceBuilder)
+//        .start()
 }
 
 fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {

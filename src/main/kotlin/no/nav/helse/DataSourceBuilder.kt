@@ -20,7 +20,9 @@ internal class DataSourceBuilder(private val env: Environment.DatabaseEnvironmen
     fun getDataSource() = HikariDataSource(hikariConfig)
 
     fun migrate() {
-        runMigration(getDataSource())
+        getDataSource().use {
+            runMigration(it)
+        }
     }
 
     private fun runMigration(dataSource: DataSource) {
