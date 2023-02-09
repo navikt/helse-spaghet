@@ -70,8 +70,6 @@ object TestData {
         val kontekstType: String? = null
     ) {
         fun aktivitet(it: Aktivitet) = copy(aktiviteter = aktiviteter + it)
-        fun forrigeTilstand(it: String) = copy(forrigeTilstand = it)
-        fun gjeldendeTilstand(it: String) = copy(gjeldendeTilstand = it)
         fun kontekstType(it: String) = copy(kontekstType = it)
         fun toJson() =
             """{
@@ -81,8 +79,6 @@ object TestData {
             "@id": "$meldingsId",
             "@forårsaket_av": {"id": "$forårsaketAv"}
          }""".trimMargin()
-
-
     }
 
     data class Aktivitet(

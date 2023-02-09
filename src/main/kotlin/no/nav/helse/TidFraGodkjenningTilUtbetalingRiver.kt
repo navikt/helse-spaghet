@@ -73,7 +73,7 @@ class TidFraGodkjenningTilUtbetalingRiver(
         try {
             this.asLocalDateTime()
         } catch (_: DateTimeParseException) {
-            LocalDateTime.from(TidFraGodkjenningTilUtbetalingRiver.legacyDateFormat.parse(this.asText()))
+            LocalDateTime.from(legacyDateFormat.parse(this.asText()))
         }
 
 }

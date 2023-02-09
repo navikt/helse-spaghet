@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.prometheus.client.Counter
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import javax.sql.DataSource
 
 class GodkjenningLøsningRiver(
@@ -19,7 +18,6 @@ class GodkjenningLøsningRiver(
     val utbetalingType: String
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
-        private val sikkerLogg = LoggerFactory.getLogger("tjenestekall")
         init {
             River(rapid).apply {
                 validate {

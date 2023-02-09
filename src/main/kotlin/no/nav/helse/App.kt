@@ -5,21 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
-import io.ktor.serialization.jackson.jackson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.ProxySelector
-import java.time.Duration
-import java.time.LocalDate
 import javax.sql.DataSource
 
 val objectMapper: ObjectMapper = jacksonObjectMapper()
@@ -28,51 +17,16 @@ val objectMapper: ObjectMapper = jacksonObjectMapper()
 val log: Logger = LoggerFactory.getLogger("spaghet")
 
 
-suspend fun main() {
+fun main() {
     val env = setUpEnvironment()
 
     val dataSourceBuilder = DataSourceBuilder(env.db)
-//    val dataSource = dataSourceBuilder.getDataSource()
-//    val slackClient = SlackClient(
-//        httpClient = HttpClient(Apache) {
-//            engine {
-//                customizeClient {
-//                    setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-//                }
-//            }
-//
-//            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-//                jackson()
-//            }
-//        },
-//        accessToken = env.slack.accessToken
-//    )
-//
-//    val channel = env.slack.raportChannel
-//    GlobalScope.launch {
-//        while (isActive) {
-//            val iGår = LocalDate.now().minusDays(1)
-//            log.info("er rapportert i går: ${dataSource.erRapportert(iGår)}")
-//            if (!dataSource.erRapportert(iGår)) {
-//                dataSource.settRapportert(iGår)
-//                Rapport(dataSource.lagRapport(iGår), env.miljø).meldinger.forEach { melding ->
-//                    val result = slackClient.postMessage(channel, melding.tekst)
-//                    melding.tråd.forEach { trådmelding ->
-//                        slackClient.postMessage(channel, trådmelding, result.ts)
-//                    }
-//                }
-//            }
-//            delay(Duration.ofMinutes(10L).toMillis())
-//        }
-//    }
+    val dataSource = dataSourceBuilder.getDataSource()
 
-    dataSourceBuilder.migrate()
-
-
-//    RapidApplication.create(env.raw)
-//        .setupRiver(dataSource)
-//        .setupMigration(dataSourceBuilder)
-//        .start()
+    RapidApplication.create(env.raw)
+        .setupRiver(dataSource)
+        .setupMigration(dataSourceBuilder)
+        .start()
 }
 
 fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {

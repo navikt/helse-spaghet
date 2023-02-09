@@ -1,7 +1,6 @@
 val junitJupiterVersion = "5.7.1"
 val testcontainersVersion = "1.16.2"
 val postgresqlVersion = "42.5.1"
-val ktorVersion = "2.2.3"
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -20,9 +19,6 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
     implementation("com.github.seratch:kotliquery:1.3.1")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")

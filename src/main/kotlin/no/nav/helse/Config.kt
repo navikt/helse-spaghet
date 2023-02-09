@@ -15,12 +15,6 @@ class Environment(
     val raw: Map<String, String>,
     val db: DatabaseEnvironment
 ) {
-    val miljø = raw["NAIS_CLUSTER_NAME"]?.split("-")?.firstOrNull() ?: "ukjent miljø"
-
-    data class SlackEnvironment(
-        val accessToken: String,
-        val raportChannel: String
-    )
 
     class DatabaseEnvironment(
         val databaseName: String,

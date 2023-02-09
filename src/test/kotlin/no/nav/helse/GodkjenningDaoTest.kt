@@ -63,15 +63,6 @@ class GodkjenningDaoTest {
                 .asList)
     }
 
-    private fun finnWarnings(id: Long) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf("SELECT * FROM warning_for_godkjenning WHERE godkjenning_ref=?;", id)
-                .map {
-                    it.string("tekst")
-                }
-                .asList)
-    }
-
     private fun finnBegrunnelser(id: Long) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf("SELECT * FROM begrunnelse WHERE godkjenning_ref=?;", id)
