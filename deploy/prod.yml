@@ -40,7 +40,7 @@ spec:
         diskSize: 100
         diskType: SSD
         name: spaghet
-        tier: db-custom-22-135168
+        tier: db-custom-6-26624
         databases:
           - name: spaghet
             envVarPrefix: DATABASE
