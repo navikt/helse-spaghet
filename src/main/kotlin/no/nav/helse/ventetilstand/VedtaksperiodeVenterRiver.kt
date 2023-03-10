@@ -1,14 +1,14 @@
 package no.nav.helse.ventetilstand
 
-import com.fasterxml.jackson.databind.JsonNode
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
+import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sql.DataSource
 
-class VedtaksperiodeVenterRiver (
+internal class VedtaksperiodeVenterRiver (
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
-    ) : River.PacketListener {
+    private val vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao
+) : River.PacketListener {
 
     init {
         River(rapidApplication).apply {
@@ -31,6 +31,28 @@ class VedtaksperiodeVenterRiver (
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        TODO("Not yet implemented")
+        val ny = packet.vedtaksperiodeVenter
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+        val gammel = vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId)
+        if (ny == gammel) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+        vedtaksperiodeVentetilstandDao.venter(ny, packet.hendelse)
+        logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+    }
+
+    private companion object {
+        val logger = LoggerFactory.getLogger(VedtaksperiodeVenterRiver::class.java)
+        val JsonMessage.vedtaksperiodeVenter get() = VedtaksperiodeVenter(
+            vedtaksperiodeId = UUID.fromString(this["vedtaksperiodeId"].asText()),
+            fødselsnummer = this["fødselsnummer"].asText(),
+            organisasjonsnummer = this["organisasjonsnummer"].asText(),
+            ventetSiden = this["ventetSiden"].asLocalDateTime(),
+            venterTil = this["venterTil"].asLocalDateTime(),
+            venterPå = VenterPå(
+                vedtaksperiodeId = UUID.fromString(this["venterPå.vedtaksperiodeId"].asText()),
+                organisasjonsnummer = this["venterPå.organisasjonsnummer"].asText(),
+                hva = this["venterPå.venteårsak.hva"].asText(),
+                hvorfor = this["venterPå.venteårsak.hvorfor"].takeUnless { it.isMissingOrNull() }?.asText()
+            )
+        )
     }
 }

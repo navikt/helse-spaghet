@@ -4,14 +4,15 @@ CREATE TABLE vedtaksperiode_ventetilstand
     hendelse                    JSONB,
     venter                      BOOLEAN,
     vedtaksperiodeId            UUID NOT NULL,
+    fodselsnummer              VARCHAR NOT NULL,
     organisasjonsnummer         VARCHAR NOT NULL,
     tidsstempel                 TIMESTAMP DEFAULT now() NOT NULL,
     ventetSiden                 TIMESTAMP,
     venterTil                   TIMESTAMP,
-    venterPåVedtaksperiodeId    UUID,
-    venterPåOrganisasjonsnummer VARCHAR,
-    venterPåHva                 VARCHAR,
-    venterPåHvorfor             VARCHAR
+    venterPaVedtaksperiodeId    UUID,
+    venterPaOrganisasjonsnummer VARCHAR,
+    venterPaHva                 VARCHAR,
+    venterPaHvorfor             VARCHAR
 );
 
 
