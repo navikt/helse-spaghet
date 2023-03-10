@@ -4,14 +4,13 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.uuid
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
-import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
-import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
-import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao
+import no.nav.helse.ventetilstand.*
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.LocalDateTime
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,6 +56,64 @@ class VedtaksperiodeVentetilstandTest {
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING"))
         assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
         assertEquals("UTBETALING", vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId)!!.venterPå.hva)
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertEquals(3, hendelseIderFor(vedtaksperiodeId).size)
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+    }
+
+    @Test
+    fun `Begynner å vente på nytt`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertEquals(3, hendelseIderFor(vedtaksperiodeId).size)
+    }
+
+    @Test
+    fun `lagrer riktig ting`() {
+        val vedtaksperiodeId = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        val venterPåVedtaksperiodeId = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "TESTING"))
+        val forventet = VedtaksperiodeVenter.opprett(
+            vedtaksperiodeId = vedtaksperiodeId,
+            fødselsnummer = "11111111111",
+            organisasjonsnummer = "123456789",
+            ventetSiden = LocalDateTime.parse("2023-03-04T21:34:17"),
+            venterTil = LocalDateTime.parse("9999-12-31T23:59:59"),
+            venterPå = VenterPå(
+                vedtaksperiodeId = venterPåVedtaksperiodeId,
+                organisasjonsnummer = "987654321",
+                hva = "TESTING",
+                hvorfor = "TESTOLINI"
+            )
+        )
+        assertEquals(forventet, vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+    }
+
+    @Test
+    fun `Ignorerer urelevante vedtaksperiode_endret`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertEquals(0, hendelseIderFor(vedtaksperiodeId).size)
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
+        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
     }
 
     @Language("JSON")
@@ -76,9 +133,9 @@ class VedtaksperiodeVentetilstandTest {
             }
           },
           "@id": "${UUID.randomUUID()}",
-          "fødselsnummer": "1111111111111"
+          "fødselsnummer": "11111111111"
         }
-    """.trimIndent()
+    """
 
     @Language("JSON")
     private fun vedtaksperiodeEndret(vedtaksperiodeId: UUID) = """
