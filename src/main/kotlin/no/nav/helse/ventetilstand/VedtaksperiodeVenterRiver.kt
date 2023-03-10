@@ -41,7 +41,7 @@ internal class VedtaksperiodeVenterRiver (
 
     private companion object {
         val logger = LoggerFactory.getLogger(VedtaksperiodeVenterRiver::class.java)
-        val JsonMessage.vedtaksperiodeVenter get() = VedtaksperiodeVenter(
+        val JsonMessage.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = UUID.fromString(this["vedtaksperiodeId"].asText()),
             fødselsnummer = this["fødselsnummer"].asText(),
             organisasjonsnummer = this["organisasjonsnummer"].asText(),

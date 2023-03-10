@@ -5,7 +5,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.uuid
 import org.intellij.lang.annotations.Language
-import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -32,7 +31,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                     "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
                     "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
                     "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
-                    "venterTil" to vedtaksperiodeVenter.venterTil.coerceAtMost(LiksomMAX),
+                    "venterTil" to vedtaksperiodeVenter.venterTil,
                     "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
                     "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
                     "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
@@ -72,9 +71,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer)  
         """
 
-        private val LiksomMAX = LocalDateTime.MAX.withYear(9999)
-
-        val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter(
+        val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = this.uuid("vedtaksperiodeId"),
             fødselsnummer = this.string("fodselsnummer"),
             organisasjonsnummer = this.string("organisasjonsnummer"),

@@ -1,5 +1,8 @@
 package no.nav.helse
 
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import no.nav.helse.Util.uuid
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
@@ -15,10 +18,10 @@ import java.util.UUID
 class VedtaksperiodeVentetilstandTest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val vedtaksperiodeDao = VedtaksperiodeVentetilstandDao(dataSource)
+    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
     private val river = TestRapid().apply {
-        VedtaksperiodeVenterRiver(this, vedtaksperiodeDao)
-        VedtaksperiodeEndretRiver(this, vedtaksperiodeDao)
+        VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
+        VedtaksperiodeEndretRiver(this, vedtaksperiodeVentetilstandDao)
     }
 
     @AfterAll
@@ -31,16 +34,33 @@ class VedtaksperiodeVentetilstandTest {
     @Test
     fun `vedtaksperiode venter og går videre`(){
         val vedtaksperiodeId = UUID.randomUUID()
-        val venterPå = UUID.randomUUID()
-        assertNull(vedtaksperiodeDao.hentOmVenter(vedtaksperiodeId))
-        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPå))
-        assertNotNull(vedtaksperiodeDao.hentOmVenter(vedtaksperiodeId))
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertNull(vedtaksperiodeDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+    }
+
+    @Test
+    fun `Gjentatte like vedtaksperiodeVenter lagres ikke, men så fort noe endres lagres det`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        assertEquals(0, hendelseIderFor(vedtaksperiodeId).size)
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING"))
+        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
+        assertEquals("UTBETALING", vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId)!!.venterPå.hva)
     }
 
     @Language("JSON")
-    private fun vedtaksperiodeVenter(vedtaksperiodeId: UUID, venterPå: UUID) = """
+    private fun vedtaksperiodeVenter(vedtaksperiodeId: UUID, venterPåVedtaksperiodeId: UUID, venterPå: String = "GODKJENNING") = """
         {
           "@event_name": "vedtaksperiode_venter",
           "organisasjonsnummer": "123456789",
@@ -48,11 +68,11 @@ class VedtaksperiodeVentetilstandTest {
           "ventetSiden": "2023-03-04T21:34:17.96322",
           "venterTil": "+999999999-12-31T23:59:59.999999999",
           "venterPå": {
-            "vedtaksperiodeId": "$venterPå",
+            "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
             "organisasjonsnummer": "987654321",
             "venteårsak": {
-              "hva": "GODKJENNING",
-              "hvorfor": null
+              "hva": "$venterPå",
+              "hvorfor": "TESTOLINI"
             }
           },
           "@id": "${UUID.randomUUID()}",
@@ -71,6 +91,11 @@ class VedtaksperiodeVentetilstandTest {
           "@id": "${UUID.randomUUID()}",
           "fødselsnummer": "11111111111"
         } 
-    """.trimIndent()
+    """
 
+    private fun hendelseIderFor(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.list(queryOf("SELECT hendelseId FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId", mapOf(
+            "vedtaksperiodeId" to vedtaksperiodeId
+        ))) { it.uuid("hendelseId")}.toSet()
+    }
 }
