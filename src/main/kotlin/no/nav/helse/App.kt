@@ -7,6 +7,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
+import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -42,6 +44,8 @@ fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)
     OverlappendeInfotrygdperiodeEtterInfotrygdendringRiver(this, dataSource)
+    VedtaksperiodeVenterRiver(this, dataSource)
+    VedtaksperiodeEndretRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {

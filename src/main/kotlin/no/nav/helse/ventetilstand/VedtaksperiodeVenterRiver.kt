@@ -4,15 +4,17 @@ import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
 import java.util.*
+import javax.sql.DataSource
 
 internal class VedtaksperiodeVenterRiver (
     rapidApplication: RapidsConnection,
-    private val vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao
+    dataSource: DataSource
 ) : River.PacketListener {
+    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidApplication).apply {
-            validate { it.requireValue("@event_name", "vedtaksperiode_venter") }
+            validate { it.demandValue("@event_name", "vedtaksperiode_venter") }
             validate { it.requireKey(
                 "venterPå.venteårsak.hva",
                 "venterPå.vedtaksperiodeId",

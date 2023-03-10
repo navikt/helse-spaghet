@@ -7,15 +7,17 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 import java.util.*
+import javax.sql.DataSource
 
 internal class VedtaksperiodeEndretRiver(
     rapidApplication: RapidsConnection,
-    private val vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao,
+    dataSource: DataSource
 ) : River.PacketListener {
+    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidApplication).apply {
-            validate { it.requireValue("@event_name", "vedtaksperiode_endret") }
+            validate { it.demandValue("@event_name", "vedtaksperiode_endret") }
             validate { it.requireKey(
                 "@id",
                 "vedtaksperiodeId",

@@ -20,8 +20,8 @@ class VedtaksperiodeVentetilstandTest {
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
     private val river = TestRapid().apply {
-        VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
-        VedtaksperiodeEndretRiver(this, vedtaksperiodeVentetilstandDao)
+        VedtaksperiodeVenterRiver(this, dataSource)
+        VedtaksperiodeEndretRiver(this, dataSource)
     }
 
     @AfterAll
