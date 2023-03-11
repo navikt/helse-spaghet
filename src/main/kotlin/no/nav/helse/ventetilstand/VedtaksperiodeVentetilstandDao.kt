@@ -55,23 +55,23 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         }
     }
 
-    private companion object {
+    internal companion object {
         @Language("PostgreSQL")
-        val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId ORDER BY tidsstempel DESC LIMIT 1"
+        private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId ORDER BY tidsstempel DESC LIMIT 1"
 
         @Language("PostgreSQL")
-        val VENTER = """
+        private val VENTER = """
             INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterPaVedtaksperiodeId, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor)
             VALUES (:hendelseId, :hendelse::jsonb, true, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer, :ventetSiden, :venterTil, :venterPaVedtaksperiodeId, :venterPaOrganisasjonsnummer, :venterPaHva, :venterPaHvorfor) 
         """
 
         @Language("PostgreSQL")
-        val VENTER_IKKE = """
+        private val VENTER_IKKE = """
             INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer)
             VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer)  
         """
 
-        val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
+        internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = this.uuid("vedtaksperiodeId"),
             fødselsnummer = this.string("fodselsnummer"),
             organisasjonsnummer = this.string("organisasjonsnummer"),
