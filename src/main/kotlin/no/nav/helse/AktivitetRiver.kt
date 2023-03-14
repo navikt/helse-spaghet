@@ -5,10 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
-import java.lang.Exception
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.*
 import javax.sql.DataSource
 
@@ -68,21 +65,26 @@ class AktivitetRiver(
         vedtaksperiodeId: UUID,
         melding: String,
         level: String,
-        tidsstempel:
-            LocalDateTime,
+        tidsstempel: LocalDateTime,
         kilde: UUID
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = """INSERT INTO vedtaksperiode_aktivitet(id, vedtaksperiode_id, melding, level, tidsstempel, kilde) VALUES(:id, :vedtaksperiode_id, :melding, :level, :tidsstempel, :kilde) ON CONFLICT DO NOTHING"""
-            session.run(queryOf(query, mapOf(
-                    "id" to id,
-                    "vedtaksperiode_id" to vedtaksperiodeId,
-                    "melding" to melding,
-                    "level" to level,
-                    "tidsstempel" to tidsstempel,
-                    "kilde" to kilde
-            )).asUpdate)
+            val query =
+                """INSERT INTO vedtaksperiode_aktivitet(id, vedtaksperiode_id, melding, level, tidsstempel, dato, kilde) VALUES(:id, :vedtaksperiode_id, :melding, :level, :tidsstempel, :dato, :kilde) ON CONFLICT DO NOTHING"""
+            session.run(
+                queryOf(
+                    query, mapOf(
+                        "id" to id,
+                        "vedtaksperiode_id" to vedtaksperiodeId,
+                        "melding" to melding,
+                        "level" to level,
+                        "tidsstempel" to tidsstempel,
+                        "dato" to tidsstempel.toLocalDate(),
+                        "kilde" to kilde
+                    )
+                ).asUpdate
+            )
         }
     }
 
