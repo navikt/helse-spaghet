@@ -22,8 +22,7 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
           "@id": "${UUID.randomUUID()}",
           "@behovId": "$id",
           "@behov": [
-            "Godkjenning"
-          ],
+            "Godkjenning"],
           "aktørId": "1000000000000",
           "fødselsnummer": "$fødselsnummer",
           "organisasjonsnummer": "987654321",
@@ -70,7 +69,10 @@ fun løsningNyttFormat(
                     "automatiskBehandling": $automatiskBehandlet,
                     "begrunnelser": [
                             "Arbeidsgiverperiode beregnet feil"
-                    ]
+                    ],
+                  "refusjontype": "FULL_REFUSJON"
+            }
+          },
                 }
             }"""))
             .put("@besvart", "2020-06-02T13:00:00.000000")

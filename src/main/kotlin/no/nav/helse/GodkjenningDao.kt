@@ -22,9 +22,10 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                             kommentar,
                             periodetype,
                             inntektskilde,
-                            utbetaling_type
+                            utbetaling_type,
+                            refusjon_type
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     løsning.vedtaksperiodeId,
                     løsning.aktørId,
@@ -36,7 +37,8 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                     løsning.godkjenning.kommentar,
                     løsning.periodetype,
                     løsning.inntektskilde,
-                    løsning.utbetalingType
+                    løsning.utbetalingType,
+                    løsning.refusjonType
                 ).asUpdateAndReturnGeneratedKey
             )
             løsning.godkjenning.begrunnelser?.forEach { begrunnelse ->

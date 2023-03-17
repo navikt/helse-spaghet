@@ -65,6 +65,13 @@ class VedtaksperiodeGodkjentE2ETest {
         assertEquals("UTBETALING", finnUtbetalingType(vedtaksperiodeId))
     }
 
+    @Test
+    fun `lagrer refusjontype i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        assertEquals("FULL_REFUSJON", finnRefusjonType(vedtaksperiodeId))
+    }
+
     private fun hentWarnings(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -89,6 +96,13 @@ class VedtaksperiodeGodkjentE2ETest {
     private fun finnUtbetalingType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("utbetaling_type") }
+            .asSingle)
+    }
+
+
+    private fun finnRefusjonType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
+            .map { it.stringOrNull("refusjon_type") }
             .asSingle)
     }
 
@@ -175,7 +189,8 @@ class VedtaksperiodeGodkjentE2ETest {
       "årsak": null,
       "begrunnelser": null,
       "kommentar": null,
-      "makstidOppnådd": false
+      "makstidOppnådd": false,
+      "refusjontype": "FULL_REFUSJON"
     }
   },
   "Godkjenning": {

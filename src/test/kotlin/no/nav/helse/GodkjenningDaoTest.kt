@@ -41,7 +41,8 @@ class GodkjenningDaoTest {
                 begrunnelser = listOf("Begrunnelse", "Begrunnelse2", "Annet"),
                 kommentar = "Feil første fraværsdato"
             ),
-            utbetalingType = "UTBETALING"
+            utbetalingType = "UTBETALING",
+            refusjonType = "FULL_REFUSJON"
         )
 
         dataSource.insertGodkjenning(løsning)
