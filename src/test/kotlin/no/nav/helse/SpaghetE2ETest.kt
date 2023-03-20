@@ -114,6 +114,18 @@ class SpaghetE2ETest {
     }
 
     @Test
+    fun `godkjenningsbehov blir lest fra rapid uten refusjonstype`() {
+        val fødselsnummer = "1243356"
+        val vedtaksperiodeId = UUID.randomUUID()
+        val id = UUID.randomUUID()
+        river.sendTestMessage(behovNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
+        river.sendTestMessage(løsningNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id, refusjonstype = null))
+
+        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsning(id))
+        assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsningBegrunnelse(id))
+    }
+
+    @Test
     fun `persisterer periodetype for nye godkjenninger`() {
         val id = UUID.randomUUID()
         river.sendTestMessage(behovNyttFormat("8756876", UUID.randomUUID(), "FORLENGELSE", id))

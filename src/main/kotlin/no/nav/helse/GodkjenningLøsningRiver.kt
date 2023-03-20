@@ -16,7 +16,7 @@ class GodkjenningLøsningRiver(
     val inntektskilde: String,
     val godkjenning: Godkjenning,
     val utbetalingType: String,
-    val refusjonType: String
+    val refusjonType: String?
 ) {
     class Factory(rapid: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
         init {
@@ -32,9 +32,9 @@ class GodkjenningLøsningRiver(
                         "Godkjenning.periodetype",
                         "Godkjenning.inntektskilde",
                         "Godkjenning.utbetalingtype",
-                        "@løsning.Godkjenning.refusjontype",
                         "@løsning.Godkjenning.godkjenttidspunkt",
                     )
+                    it.interestedIn("@løsning.Godkjenning.refusjontype")
                 }
             }.register(this)
         }
@@ -78,7 +78,7 @@ class GodkjenningLøsningRiver(
                 periodetype = packet["Godkjenning.periodetype"].asText(),
                 inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
                 utbetalingType = packet["Godkjenning.utbetalingtype"].asText(),
-                refusjonType = packet["@løsning.Godkjenning.refusjontype"].asText(),
+                refusjonType = packet["@løsning.Godkjenning.refusjontype"].takeIf { !it.isMissingOrNull() }?.asText(),
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 

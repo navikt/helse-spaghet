@@ -56,6 +56,7 @@ fun løsningNyttFormat(
         vedtaksperiodeId: UUID,
         periodetype: String,
         id: UUID = UUID.randomUUID(),
+        refusjonstype: String? = "FULL_REFUSJON",
         automatiskBehandlet: Boolean = false,
         saksbehandlerIdent: String = "Z999999",
 ) =
@@ -70,7 +71,7 @@ fun løsningNyttFormat(
                     "begrunnelser": [
                             "Arbeidsgiverperiode beregnet feil"
                     ],
-                  "refusjontype": "FULL_REFUSJON"
+                  "refusjontype": ${refusjonstype?.let { "\"$it\"" }}
             }
           },
                 }
