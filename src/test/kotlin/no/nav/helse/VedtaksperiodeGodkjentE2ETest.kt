@@ -2,6 +2,7 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.helse.Util.uuid
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
@@ -72,6 +73,15 @@ class VedtaksperiodeGodkjentE2ETest {
         assertEquals("FULL_REFUSJON", finnRefusjonType(vedtaksperiodeId))
     }
 
+    @Test
+    fun `lagrer saksbehandleroverstyringer i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val saksbehandleroverstyringer = listOf(UUID.randomUUID(), UUID.randomUUID())
+        river.sendTestMessage(godkjenning(vedtaksperiodeId, saksbehandleroverstyringer))
+        assertTrue(finnErSaksbehandleroverstyringer(vedtaksperiodeId)!!)
+        assertEquals(saksbehandleroverstyringer, finnGodkjenningOverstyringer(vedtaksperiodeId))
+    }
+
     private fun hentWarnings(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -91,6 +101,24 @@ class VedtaksperiodeGodkjentE2ETest {
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("inntektskilde") }
             .asSingle)
+    }
+
+    private fun finnErSaksbehandleroverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
+            .map {
+                it.boolean("er_saksbehandleroverstyringer")
+            }
+            .asSingle)
+    }
+
+    private fun finnGodkjenningOverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+        session.run(queryOf("""
+            SELECT * FROM godkjenning_overstyringer go
+            INNER JOIN godkjenning g ON g.id = go.godkjenning_ref
+            WHERE g.vedtaksperiode_id=?;""".trimMargin(), vedtaksperiodeId
+        )
+        .map { it.uuid("overstyring_hendelse_id") }
+        .asList)
     }
 
     private fun finnUtbetalingType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
@@ -175,7 +203,7 @@ class VedtaksperiodeGodkjentE2ETest {
 }"""
 
     @Language("JSON")
-    private fun godkjenning(vedtaksperiodeId: UUID) = """{
+    private fun godkjenning(vedtaksperiodeId: UUID, saksbehandleroverstyringer: List<UUID> = emptyList()) = """{
   "@behov": [
     "Godkjenning"
   ],
@@ -190,7 +218,8 @@ class VedtaksperiodeGodkjentE2ETest {
       "begrunnelser": null,
       "kommentar": null,
       "makstidOppnådd": false,
-      "refusjontype": "FULL_REFUSJON"
+      "refusjontype": "FULL_REFUSJON",
+      "saksbehandleroverstyringer": [${saksbehandleroverstyringer.joinToString { """"$it"""" }}]
     }
   },
   "Godkjenning": {

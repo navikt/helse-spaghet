@@ -23,9 +23,10 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                             periodetype,
                             inntektskilde,
                             utbetaling_type,
-                            refusjon_type
+                            refusjon_type,
+                            er_saksbehandleroverstyringer
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     løsning.vedtaksperiodeId,
                     løsning.aktørId,
@@ -38,13 +39,26 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                     løsning.periodetype,
                     løsning.inntektskilde,
                     løsning.utbetalingType,
-                    løsning.refusjonType
+                    løsning.refusjonType,
+                    løsning.saksbehandleroverstyringer.isNotEmpty()
                 ).asUpdateAndReturnGeneratedKey
             )
             løsning.godkjenning.begrunnelser?.forEach { begrunnelse ->
                 transaction.run(
                     queryOf("INSERT INTO begrunnelse(godkjenning_ref, tekst) VALUES(?, ?);", godkjenningId, begrunnelse)
                         .asUpdate
+                )
+            }
+            løsning.saksbehandleroverstyringer.forEach {
+                transaction.run(
+                    queryOf("""
+                        INSERT INTO godkjenning_overstyringer(godkjenning_ref, overstyring_hendelse_id) 
+                        VALUES(:godkjenningRef, :overstyringHendelseId);""",
+                        mapOf(
+                            "godkjenningRef" to godkjenningId,
+                            "overstyringHendelseId" to it
+                        )
+                    ).asUpdate
                 )
             }
         }
