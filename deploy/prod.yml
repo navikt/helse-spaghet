@@ -44,6 +44,8 @@ spec:
         databases:
           - name: spaghet
             envVarPrefix: DATABASE
+            users:
+              - name: spaghetti
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
