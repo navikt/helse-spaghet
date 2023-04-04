@@ -4,13 +4,13 @@ WITH sistePerVedtaksperiodeId AS (
     ORDER BY vedtaksperiodeId, tidsstempel DESC
 )
 SELECT
-    vedtaksperiodeId,
-    AGE(now(), ventetSiden) as ventetI,
-    concat(venterPaHva, ' fordi ' || NULLIF(venterPaHvorfor, ''), venterPaHvorfor) as årsak,
-    (CASE WHEN(vedtaksperiodeId = venterpavedtaksperiodeId) THEN 'seg selv' ELSE 'annen' END) venterPaVedtaksperiode,
-    (CASE WHEN(organisasjonsnummer = venterPaOrganisasjonsnummer) THEN 'samme' ELSE 'annen' END) venterPaArbeidsgiver
+    --count(1),                                                             ** Kommenter inn denne istedenfor * om man vil ha antall stuck per årsak
+    *,
+    concat(venterPaHva, ' fordi ' || NULLIF(venterPaHvorfor, '')) as årsak
 FROM sistePerVedtaksperiodeId
-WHERE venter = true
-AND ventetSiden < now() - INTERVAL '3 MONTHS'
-AND NOT (venterPaHva = 'INNTEKTSMELDING' AND venterPaHvorfor IS NULL)
-ORDER BY ventetSiden
+WHERE venter = true                                                         -- Kun de som venter nå
+AND ventetSiden < now() - INTERVAL '3 MONTHS'                               -- Ventet minst 3 måneder
+AND date_part('Year', ventertil) = 9999                                     -- Har ingen timeout, så blir ikke fanget opp av makstid ved påminnelser
+AND NOT venterpahva = 'GODKJENNING'                                         -- Har ingen timeout på å vente på godkjenning, men de er heller ikke stuck
+AND NOT venterpahvorfor = 'VIL_UTBETALES'                                   -- Alle AUU'er som vil utbetales, egentlig bør tas med for å få oversikt over alt som er stuck
+--GROUP BY årsak                                                            ** Kommenter inn denne om man vil ha antall stuck per årsak
