@@ -63,12 +63,14 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         private val VENTER = """
             INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterPaVedtaksperiodeId, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor)
             VALUES (:hendelseId, :hendelse::jsonb, true, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer, :ventetSiden, :venterTil, :venterPaVedtaksperiodeId, :venterPaOrganisasjonsnummer, :venterPaHva, :venterPaHvorfor) 
+            ON CONFLICT (hendelseId) DO NOTHING
         """
 
         @Language("PostgreSQL")
         private val VENTER_IKKE = """
             INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer)
-            VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer)  
+            VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer)
+            ON CONFLICT (hendelseId) DO NOTHING 
         """
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(

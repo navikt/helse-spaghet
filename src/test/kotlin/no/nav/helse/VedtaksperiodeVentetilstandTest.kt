@@ -9,6 +9,7 @@ import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao.Companion.vedta
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
@@ -29,6 +30,14 @@ class VedtaksperiodeVentetilstandTest {
         river.stop()
         dataSource.connection.close()
         embeddedPostgres.close()
+    }
+
+    @BeforeEach
+    fun reset() {
+        river.reset()
+        sessionOf(dataSource).use {
+            it.run(queryOf("truncate table vedtaksperiode_ventetilstand").asExecute)
+        }
     }
 
     @Test
@@ -152,11 +161,35 @@ class VedtaksperiodeVentetilstandTest {
         assertEquals("UTBETALING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId3 }.venterPå.hva)
     }
 
+    @Test
+    fun `ignorerer vedtaksperiode_venter med id som allerede er håndtert`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        val hendelseId = UUID.randomUUID()
+        val melding = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING", hendelseId)
+        val melding2 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "GODKJENNING", hendelseId)
+        river.sendTestMessage(melding)
+        river.sendTestMessage(melding2)
+        assertEquals("UTBETALING", hentDeSomVenter().single().venterPå.hva)
+    }
+
+    @Test
+    fun `ignorerer vedtaksperiode_endret med id som allerede er håndtert`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val hendelseId = UUID.randomUUID()
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "GODKJENNING", hendelseId)
+        val vedtaksperiodeEndret = vedtaksperiodeEndret(vedtaksperiodeId, hendelseId)
+        river.sendTestMessage(vedtaksperiodeVenter)
+        river.sendTestMessage(vedtaksperiodeEndret)
+        assertEquals("GODKJENNING", hentDeSomVenter().single().venterPå.hva)
+    }
+
     @Language("JSON")
     private fun vedtaksperiodeVenter(
         vedtaksperiodeId: UUID,
         venterPåVedtaksperiodeId: UUID,
-        venterPå: String = "GODKJENNING"
+        venterPå: String = "GODKJENNING",
+        hendelseId: UUID = UUID.randomUUID()
     ) = """
         {
           "@event_name": "vedtaksperiode_venter",
@@ -172,20 +205,20 @@ class VedtaksperiodeVentetilstandTest {
               "hvorfor": "TESTOLINI"
             }
           },
-          "@id": "${UUID.randomUUID()}",
+          "@id": "$hendelseId",
           "fødselsnummer": "11111111111"
         }
     """
 
     @Language("JSON")
-    private fun vedtaksperiodeEndret(vedtaksperiodeId: UUID) = """
+    private fun vedtaksperiodeEndret(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID()) = """
          {
           "@event_name": "vedtaksperiode_endret",
           "organisasjonsnummer": "123456789",
           "vedtaksperiodeId": "$vedtaksperiodeId",
           "gjeldendeTilstand": "AVVENTER_INNTEKTSMELDING",
           "forrigeTilstand": "AVVENTER_INFOTRYGDHISTORIKK",
-          "@id": "${UUID.randomUUID()}",
+          "@id": "$hendelseId",
           "fødselsnummer": "11111111111"
         } 
     """
