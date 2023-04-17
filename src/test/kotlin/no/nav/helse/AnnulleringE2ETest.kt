@@ -7,6 +7,7 @@ import no.nav.helse.TestData.fagsystemId
 import no.nav.helse.TestData.kommentar
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class AnnulleringE2ETest {
     @Test
@@ -72,5 +73,21 @@ class AnnulleringE2ETest {
                 .sendTilRapid()
             assertEquals("Kremfjes", dataSource.annulleringer()[0].kommentar)
         }
+    }
+
+    @Test
+    fun `Folk som skriver identer i oid-feltet skal ikke ta ned spaghet`() {
+        val feilMelding = """{
+            "@event_name": "annullering",
+            "saksbehandler": {"oid": "X000000"},
+            "fagsystemId": "ABC",
+            "begrunnelser": ["because"],
+            "@opprettet": "${LocalDateTime.now()}"
+         }""".trimMargin()
+        e2eTest {
+            rapid.sendTestMessage(feilMelding)
+            assertEquals(0, dataSource.annulleringer().size)
+        }
+
     }
 }
