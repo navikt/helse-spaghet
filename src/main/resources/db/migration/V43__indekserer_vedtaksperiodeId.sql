@@ -1,0 +1,1 @@
+CREATE INDEX funksjonell_feil_vedtaksperiodeId_idx ON funksjonell_feil(vedtaksperiode_id);
