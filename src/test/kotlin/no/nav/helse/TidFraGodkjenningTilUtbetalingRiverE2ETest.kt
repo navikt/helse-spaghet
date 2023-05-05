@@ -1,7 +1,5 @@
 package no.nav.helse
 
-import io.micrometer.prometheus.PrometheusMeterRegistry
-import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -20,7 +18,7 @@ class TidFraGodkjenningTilUtbetalingRiverE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-        .setupRiver(dataSource)
+        .setupRivers(dataSource)
 
     @AfterAll
     fun tearDown() {

@@ -26,12 +26,12 @@ fun main() {
     val dataSource = dataSourceBuilder.getDataSource()
 
     RapidApplication.create(env.raw)
-        .setupRiver(dataSource)
+        .setupRivers(dataSource)
         .setupMigration(dataSourceBuilder)
         .start()
 }
 
-fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
+fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     AnnulleringRiver(this, dataSource)
     GodkjenningLøsningRiver.Factory(this, dataSource)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
@@ -46,6 +46,7 @@ fun <T : RapidsConnection> T.setupRiver(dataSource: DataSource) = apply {
     OverlappendeInfotrygdperiodeEtterInfotrygdendringRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
+    SøknadHåndtertRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {

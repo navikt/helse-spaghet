@@ -15,7 +15,7 @@ class HendelseIkkeHåndtertE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
-        .setupRiver(dataSource)
+        .setupRivers(dataSource)
 
     @AfterAll
     fun tearDown() {

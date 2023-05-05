@@ -19,7 +19,7 @@ class E2eTestApp(
 
     private fun start() {
         mockLog()
-        rapid.setupRiver(dataSource)
+        rapid.setupRivers(dataSource)
         rapid.failOnExceptions()
         rapid.start()
     }
