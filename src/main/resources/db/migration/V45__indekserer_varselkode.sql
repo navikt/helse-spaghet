@@ -1,0 +1,1 @@
+CREATE INDEX funksjonell_feil_varselkode_idx ON funksjonell_feil(varselkode);

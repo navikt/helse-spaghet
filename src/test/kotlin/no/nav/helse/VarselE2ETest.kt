@@ -11,7 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class FunksjonellFeilE2eTest {
+internal class VarselE2ETest {
     private val embeddedPostgres = embeddedPostgres()
     private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
     private val river = TestRapid()
@@ -25,15 +25,15 @@ class FunksjonellFeilE2eTest {
     }
 
     @Test
-    fun `lagrer funksjonelle feil`() {
+    fun `lagrer varsel`() {
         river.sendTestMessage(aktivitetsloggNyAktivitet())
-        assertEquals(1, tellFunksjonellFeil())
+        assertEquals(1, tellVarsel())
     }
 
-    private fun tellFunksjonellFeil(): Int {
+    private fun tellVarsel(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = "SELECT COUNT(*) FROM funksjonell_feil"
+            val query = "SELECT COUNT(*) FROM varsel"
             requireNotNull(
                 session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
             )
@@ -42,11 +42,11 @@ class FunksjonellFeilE2eTest {
 
     private fun aktivitetsloggNyAktivitet() = """
         {
-          "@event_name": "aktivitetslogg_ny_aktivitet",
-          "aktiviteter": [
+        "@event_name": "aktivitetslogg_ny_aktivitet",
+        "aktiviteter": [
             {
-              "nivå": "FUNKSJONELL_FEIL",
-              "melding": "Har mer enn 25 % avvik",
+              "nivå": "VARSEL",
+              "melding": "Yrkesskade oppgitt i søknaden",
               "kontekster": [
                 {
                   "konteksttype": "Vedtaksperiode",
@@ -55,10 +55,10 @@ class FunksjonellFeilE2eTest {
                   }
                 }
               ],
-              "varselkode": "RV_IV_2"
+              "varselkode": "RV_YS_1"
             }
-          ],
-          "@opprettet": "2023-05-05T13:22:49.709928663"
+        ],
+        "@opprettet": "2023-05-08T10:18:42.439435518"
         }
     """
 }
