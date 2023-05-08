@@ -17,6 +17,7 @@ val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 val log: Logger = LoggerFactory.getLogger("spaghet")
+val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
 
 fun main() {
@@ -47,7 +48,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     VedtaksperiodeVenterRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)
-    FunksjonellFeilRiver(this, dataSource)
+    FunksjonellFeilOgVarselRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
