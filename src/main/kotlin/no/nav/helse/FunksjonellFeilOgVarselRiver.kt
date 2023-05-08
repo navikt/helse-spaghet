@@ -38,7 +38,7 @@ class FunksjonellFeilOgVarselRiver(
                     ?.get("kontekstmap")
                     ?.get("vedtaksperiodeId")
                     ?.let { UUID.fromString(it.asText()) }
-                    ?: return log.error("Fant ingen vedtaksperiodeId knyttet til funksjonell feil")
+                    ?: return@forEach log.info("Fant ingen vedtaksperiodeId knyttet til funksjonell feil")
 
                 val nivå = aktivitet.path("nivå").asText()
                 val melding = aktivitet.path("melding").asText()
