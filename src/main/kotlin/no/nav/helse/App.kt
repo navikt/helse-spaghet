@@ -48,7 +48,6 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     VedtaksperiodeEndretRiver(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)
     FunksjonellFeilRiver(this, dataSource)
-    VarselRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {

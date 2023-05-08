@@ -31,7 +31,7 @@ class FunksjonellFeilRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
-            .filter { it["nivå"].asText() == "FUNKSJONELL_FEIL" }
+            .filter { it["nivå"].asText() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
             .forEach { aktivitet ->
                 val vedtaksperiodeId = aktivitet["kontekster"]
                     .firstOrNull { kontektst -> kontektst["konteksttype"].asText() == "Vedtaksperiode" }
@@ -43,22 +43,25 @@ class FunksjonellFeilRiver(
                 val nivå = aktivitet.path("nivå").asText()
                 val melding = aktivitet.path("melding").asText()
                 val varselkode = aktivitet.path("varselkode").asText()
-                insertFunksjonellFeil(vedtaksperiodeId, varselkode, nivå, melding, opprettet)
-                log.info("Lagret funksjonell feil på vedtaksperiode $vedtaksperiodeId")
+                when (nivå) {
+                    "FUNKSJONELL_FEIL" -> insert(vedtaksperiodeId, varselkode, nivå, melding,"funksjonell_feil", opprettet)
+                    "VARSEL" -> insert(vedtaksperiodeId, varselkode, nivå, melding, "varsel", opprettet)
+                }
             }
     }
 
-    private fun insertFunksjonellFeil(
+    private fun insert(
         vedtaksperiodeId: UUID,
         varselkode: String,
         nivå: String,
         melding: String,
+        tabellNavn: String,
         opprettet: LocalDateTime
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query =
-                """INSERT INTO funksjonell_feil(vedtaksperiode_id, varselkode, nivå, melding, opprettet) VALUES(:vedtaksperiode_id, :varselkode, :nivaa, :melding, :opprettet)"""
+                """INSERT INTO $tabellNavn(vedtaksperiode_id, varselkode, nivå, melding, opprettet) VALUES(:vedtaksperiode_id, :varselkode, :nivaa, :melding, :opprettet)"""
             session.run(
                 queryOf(
                     query, mapOf(
@@ -71,5 +74,6 @@ class FunksjonellFeilRiver(
                 ).asExecute
             )
         }
+        log.info("Lagret $tabellNavn på vedtaksperiode $vedtaksperiodeId")
     }
 }
