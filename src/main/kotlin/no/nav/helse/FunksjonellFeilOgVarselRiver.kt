@@ -18,7 +18,8 @@ class FunksjonellFeilOgVarselRiver(
                 it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
                 it.requireKey("@opprettet")
                 it.requireArray("aktiviteter") {
-                    requireKey("nivå", "melding", "varselkode")
+                    requireKey("nivå", "melding")
+                    interestedIn("varselkode")
                     requireArray("kontekster") {
                         requireKey("konteksttype", "kontekstmap")
                     }
