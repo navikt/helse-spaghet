@@ -28,11 +28,6 @@ class FunksjonellFeilOgVarselRiver(
         }.register(this)
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext) {
-        log.error("Forstod ikke aktivitetslogg_ny_aktivitet (se sikkerlogg for detaljer)")
-        sikkerlogg.error("Forstod ikke aktivitetslogg_ny_aktivitet:\n${problems.toExtendedReport()}")
-    }
-
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
