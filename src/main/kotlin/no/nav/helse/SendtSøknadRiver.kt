@@ -23,31 +23,31 @@ class SendtSøknadRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val flexId = packet["id"].asUuid()
+        val dokumentId = packet["id"].asUuid()
         val hendelseId = packet["@id"].asUuid()
-        val kort_soknad = packet["@event_name"].asText() == "sendt_søknad_arbeidsgiver"
-        insertSøknad(flexId, hendelseId, kort_soknad)
+        val kortSoknad = packet["@event_name"].asText() == "sendt_søknad_arbeidsgiver"
+        insertSøknad(dokumentId, hendelseId, kortSoknad)
     }
 
     private fun insertSøknad(
-        flexId: UUID,
+        dokumentId: UUID,
         hendelseId: UUID,
-        kort_soknad: Boolean
+        kortSoknad: Boolean
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query =
-                """INSERT INTO soknad(flexId, hendelseId, kort_soknad) VALUES(:flexId, :hendelseId, :kort_soknad)"""
+                """INSERT INTO soknad(dokument_id, hendelse_id, kort_soknad) VALUES(:dokumentId, :hendelseId, :kortSoknad)"""
             session.run(
                 queryOf(
                     query, mapOf(
-                        "flexId" to flexId,
+                        "dokumentId" to dokumentId,
                         "hendelseId" to hendelseId,
-                        "kort_soknad" to kort_soknad
+                        "kortSoknad" to kortSoknad
                     )
                 ).asExecute
             )
         }
-        log.info("Lagrer soknad med flexId $flexId og hendelseId $hendelseId")
+        log.info("Lagrer soknad med dokumentId $dokumentId og hendelseId $hendelseId")
     }
 }
