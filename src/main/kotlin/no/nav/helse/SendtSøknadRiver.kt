@@ -48,6 +48,6 @@ class SendtSøknadRiver(
                 ).asExecute
             )
         }
-        log.info("Lagrer soknad med dokumentId $dokumentId og hendelseId $hendelseId")
+        log.info("Lagrer søknad med dokumentId $dokumentId og hendelseId $hendelseId")
     }
 }
