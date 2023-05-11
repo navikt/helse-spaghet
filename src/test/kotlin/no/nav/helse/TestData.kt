@@ -84,14 +84,16 @@ object TestData {
     data class Aktivitet(
         val melding: String = "Uffda, dette ble rart",
         val alvorlighetsgrad: String = Nivå.VARSEL.name,
+        val varselkode: String? = "RV_IV_1",
         val tidsstempel: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
         val kontekster: List<Map<String, Any>> = emptyList()
     ) {
         fun error() = copy (alvorlighetsgrad = FUNKSJONELL_FEIL.name)
-        fun info()  = copy (alvorlighetsgrad = INFO.name)
+        fun info()  = copy (alvorlighetsgrad = INFO.name, varselkode = null)
         fun toJson() = """{
             "melding" : "$melding",
             "nivå" : "$alvorlighetsgrad",
+            ${ if (varselkode != null) """ "varselkode": "$varselkode", """ else """"""}
             "tidsstempel" : "$tidsstempel",
             "kontekster": ${kontekster.map { kontekst ->
                 """{
