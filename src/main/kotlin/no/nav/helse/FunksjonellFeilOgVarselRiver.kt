@@ -1,7 +1,9 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
@@ -27,19 +29,16 @@ class FunksjonellFeilOgVarselRiver(
             }
         }.register(this)
     }
-
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        sikkerlogg.info("Leser inn aktivitetslogg_ny_aktivitet ${packet}")
+        sikkerlogg.info("Leser inn {}", keyValue("hendelse", packet.toJson()))
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
             .filter { it["nivå"].asText() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
+            .distinctBy { Triple(it["nivå"].asText(), it.finnVedtaksperiodeId(), it["varselkode"].asText()) }
             .forEach { aktivitet ->
-                val vedtaksperiodeId = aktivitet["kontekster"]
-                    .firstOrNull { kontektst -> kontektst["konteksttype"].asText() == "Vedtaksperiode" }
-                    ?.get("kontekstmap")
-                    ?.get("vedtaksperiodeId")
-                    ?.let { UUID.fromString(it.asText()) }
-                    ?: return@forEach log.info("Fant ingen vedtaksperiodeId knyttet til funksjonell feil")
+                val vedtaksperiodeId = aktivitet
+                    .finnVedtaksperiodeId()
+                    ?: return@forEach sikkerlogg.info("Fant ingen vedtaksperiodeId knyttet til funksjonell feil på {}", keyValue("hendelse", packet.toJson()))
 
                 val nivå = aktivitet.path("nivå").asText()
                 val melding = aktivitet.path("melding").asText()
@@ -50,6 +49,12 @@ class FunksjonellFeilOgVarselRiver(
                 }
             }
     }
+
+    private fun JsonNode.finnVedtaksperiodeId() = this["kontekster"]
+        .firstOrNull { kontektst -> kontektst["konteksttype"].asText() == "Vedtaksperiode" }
+            ?.get("kontekstmap")
+            ?.get("vedtaksperiodeId")
+            ?.let { UUID.fromString(it.asText()) }
 
     private fun insert(
         vedtaksperiodeId: UUID,
