@@ -29,6 +29,7 @@ class FunksjonellFeilOgVarselRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
+        sikkerlogg.info("Leser inn aktivitetslogg_ny_aktivitet ${packet}")
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
             .filter { it["nivå"].asText() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
