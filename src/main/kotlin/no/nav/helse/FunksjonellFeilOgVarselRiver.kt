@@ -67,7 +67,7 @@ class FunksjonellFeilOgVarselRiver(
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query =
-                """INSERT INTO $tabellNavn(vedtaksperiode_id, varselkode, nivå, melding, opprettet) VALUES(:vedtaksperiode_id, :varselkode, :nivaa, :melding, :opprettet)"""
+                """INSERT INTO $tabellNavn(vedtaksperiode_id, varselkode, nivaa, melding, opprettet) VALUES(:vedtaksperiode_id, :varselkode, :nivaa, :melding, :opprettet)"""
             session.run(
                 queryOf(
                     query, mapOf(
