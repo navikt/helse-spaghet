@@ -46,6 +46,10 @@ spec:
             envVarPrefix: DATABASE
             users:
               - name: spaghetti
+              - name: bigquery_datastream
+        flags:
+          - name: cloudsql.logical_decoding
+            value: "on"
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
