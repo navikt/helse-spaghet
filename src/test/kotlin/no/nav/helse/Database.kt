@@ -13,7 +13,10 @@ import org.testcontainers.containers.PostgreSQLContainer
 import java.util.*
 import javax.sql.DataSource
 
-fun embeddedPostgres() = PostgreSQLContainer<Nothing>("postgres:14").also { it.start() }
+fun embeddedPostgres() = PostgreSQLContainer<Nothing>("postgres:14").apply {
+    setCommand("-c", "wal_level=logical")
+    start()
+}
 
 fun DataSource.annulleringer(): List<Annullering> {
     return this.withSession {
