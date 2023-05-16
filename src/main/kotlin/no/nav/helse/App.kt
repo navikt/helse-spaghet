@@ -40,7 +40,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     TidFraGodkjenningTilUtbetalingRiver(this, dataSource)
     TilstandendringRiver(this, dataSource)
     AktivitetRiver(this, dataSource)
-    VarselVedVedtakRiver(this, dataSource)
+    WarningsVedVedtakRiver(this, dataSource)
     HendelseIkkeHåndtertRiver(this, dataSource)
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)
