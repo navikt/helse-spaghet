@@ -13,10 +13,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-val objectMapper: ObjectMapper = jacksonObjectMapper()
+internal val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-val log: Logger = LoggerFactory.getLogger("spaghet")
+internal val log: Logger = LoggerFactory.getLogger("spaghet")
 val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
 
@@ -40,7 +40,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     TidFraGodkjenningTilUtbetalingRiver(this, dataSource)
     TilstandendringRiver(this, dataSource)
     AktivitetRiver(this, dataSource)
-    WarningsVedVedtakRiver(this, dataSource)
+    VarselVedVedtakRiver(this, dataSource)
     HendelseIkkeHåndtertRiver(this, dataSource)
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)

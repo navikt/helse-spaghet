@@ -5,8 +5,6 @@ import io.ktor.utils.io.*
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import net.logstash.logback.argument.StructuredArgument
-import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
