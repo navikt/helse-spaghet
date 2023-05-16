@@ -47,7 +47,7 @@ class OverlappendeInfotrygdperiodeEtterInfotrygdendringRiver(
 
         val infotrygdperioder = packet["infotrygdperioder"]
 
-        log.info("Legger inn data fra overlappende_infotrygdperiode_etter_infotrygdendring i databasen")
+        logg.info("Legger inn data fra overlappende_infotrygdperiode_etter_infotrygdendring i databasen")
 
         sessionOf(dataSource).use {
             it.transaction { session ->

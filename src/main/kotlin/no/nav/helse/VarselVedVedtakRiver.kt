@@ -47,7 +47,7 @@ class VarselVedVedtakRiver(
                 ?: throw RuntimeException("Forventet godkjenning for vedtaksperiode $vedtaksperiodeId")
 
             session.insertVarsel(godkjenningId, varsel)
-            log.info("Lagret varsel for godkjenningId=$godkjenningId, vedtaksperiode=$vedtaksperiodeId")
+            logg.info("Lagret varsel for godkjenningId=$godkjenningId, vedtaksperiode=$vedtaksperiodeId")
         }
     }
 

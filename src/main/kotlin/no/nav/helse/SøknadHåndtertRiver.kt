@@ -28,7 +28,7 @@ class SøknadHåndtertRiver(
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         insertSøknadHåndtert(søknadHendelseId, vedtaksperiodeId, opprettet)
-        log.info("Lagrer kobling mellom søknad $søknadHendelseId og vedtaksperiode $vedtaksperiodeId")
+        logg.info("Lagrer kobling mellom søknad $søknadHendelseId og vedtaksperiode $vedtaksperiodeId")
     }
 
     private fun insertSøknadHåndtert(søknadHendelseId: UUID, vedtaksperiodeId: UUID, opprettet: LocalDateTime) {

@@ -37,7 +37,7 @@ class VedtaksperiodeTilGodkjenningRiver(
         val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
         val id = UUID.fromString(json["@behovId"].asText())
         insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
-        log.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
+        logg.info("Lagret godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
     private fun insertGodkjenningsbehov(

@@ -16,8 +16,8 @@ import javax.sql.DataSource
 internal val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-internal val log: Logger = LoggerFactory.getLogger("spaghet")
-val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
+internal val logg: Logger = LoggerFactory.getLogger("spaghet")
+internal val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
 
 fun main() {

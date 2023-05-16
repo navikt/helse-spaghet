@@ -80,6 +80,6 @@ class FunksjonellFeilOgVarselRiver(
                 ).asExecute
             )
         }
-        log.info("Lagret $tabellNavn på vedtaksperiode $vedtaksperiodeId")
+        logg.info("Lagret $tabellNavn på vedtaksperiode $vedtaksperiodeId")
     }
 }

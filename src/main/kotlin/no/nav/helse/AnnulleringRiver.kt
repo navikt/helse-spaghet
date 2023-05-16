@@ -34,6 +34,6 @@ class AnnulleringRiver(
         dataSource.withSession {
             this.insertAnnullering(annullering)
         }
-        log.info("Lagret annullering for fagsystemId=${annullering.fagsystemId}")
+        logg.info("Lagret annullering for fagsystemId=${annullering.fagsystemId}")
     }
 }

@@ -41,9 +41,9 @@ class VedtaksperiodeBehandletRiver(
                     insertBegrunnelser(session, behovId, løsning)
                 }
             }
-            log.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
+            logg.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
         } catch (err: PSQLException) {
-            log.warn("Klarte ikke lagre løsning for godkjenningsbehov {}, mest sannsynlig fordi opprinnelig behov ikke er lagret (eller at vi inserter løsning med feil foreign key): {}", keyValue("behovId", behovId), err.message, err)
+            logg.warn("Klarte ikke lagre løsning for godkjenningsbehov {}, mest sannsynlig fordi opprinnelig behov ikke er lagret (eller at vi inserter løsning med feil foreign key): {}", keyValue("behovId", behovId), err.message, err)
         }
     }
 

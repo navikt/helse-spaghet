@@ -86,7 +86,7 @@ class GodkjenningLøsningRiver(
                 godkjenning = tilGodkjenning(packet["@løsning.Godkjenning"])
             )
 
-            log.info("Lagrer godkjenning for {}", keyValue("vedtaksperiodeId", løsning.vedtaksperiodeId))
+            logg.info("Lagrer godkjenning for {}", keyValue("vedtaksperiodeId", løsning.vedtaksperiodeId))
 
             if (løsning.godkjenning.godkjent) {
                 godkjentCounter.inc()

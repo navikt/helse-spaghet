@@ -30,14 +30,14 @@ class HendelseIkkeHåndtertRiver(
         val årsaker = packet["årsaker"].takeUnless(JsonNode::isMissingOrNull)
             ?.map { it.asText() } ?: emptyList()
 
-        if (årsaker.isEmpty()) log.warn("Mangler årsaker i hendelse_ikke_håndtert")
+        if (årsaker.isEmpty()) logg.warn("Mangler årsaker i hendelse_ikke_håndtert")
 
         dataSource.withSession {
             årsaker.forEach { årsak ->
                 this.insertHendelseIkkeHåndtertÅrsak(hendelseId, opprettet, årsak)
             }
         }
-        log.info("Lagret hendelse_ikke_håndtert for hendelseId=${hendelseId}")
+        logg.info("Lagret hendelse_ikke_håndtert for hendelseId=${hendelseId}")
     }
 
     fun Session.insertHendelseIkkeHåndtertÅrsak(hendelseId: UUID, opprettet: LocalDateTime, årsak: String) {

@@ -35,7 +35,7 @@ class RevurderingFerdigstiltRiver(
             UUID.fromString(periode.path("vedtaksperiodeId").asText()) to periode.path("status").asText()
         }
 
-        log.info("Legger inn data fra revurdering_ferdigstilt i databasen")
+        logg.info("Legger inn data fra revurdering_ferdigstilt i databasen")
 
         sessionOf(dataSource).use {
             it.transaction { session ->

@@ -45,7 +45,7 @@ class RevurderingIgangsattRiver(
         val periodeForEndringTom = packet["periodeForEndringTom"].asLocalDate()
         val berørtePerioder = packet["berørtePerioder"]
 
-        log.info("Legger inn data fra revurdering_igangsatt i databasen")
+        logg.info("Legger inn data fra revurdering_igangsatt i databasen")
 
         sessionOf(dataSource).use {
             it.transaction { session ->

@@ -56,7 +56,7 @@ class AktivitetRiver(
                         )
                     }
         } catch (e: Exception) {
-            log.error("Feilet ved inserting av aktiviteter for id=${packet["@id"].asText()}", e)
+            logg.error("Feilet ved inserting av aktiviteter for id=${packet["@id"].asText()}", e)
         }
     }
 
