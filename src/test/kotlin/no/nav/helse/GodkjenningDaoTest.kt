@@ -28,13 +28,13 @@ class GodkjenningDaoTest {
 
     @Test
     fun `lagrer begrunnelser for godkjenninger`() {
-        val løsning = GodkjenningLøsningRiver(
+        val løsning = Godkjenningsbehov(
             vedtaksperiodeId = UUID.randomUUID(),
             aktørId = "aktørId",
             fødselsnummer = "fødselsnummer",
             periodetype = "FORLENGELSE",
             inntektskilde = "EN_ARBEIDSGIVER",
-            godkjenning = GodkjenningLøsningRiver.Godkjenning(
+            løsning = Godkjenningsbehov.Løsning(
                 godkjent = false,
                 saksbehandlerIdent = "Z999999",
                 godkjentTidspunkt = LocalDateTime.now(),
@@ -51,7 +51,7 @@ class GodkjenningDaoTest {
 
         val godkjenninger = finnGodkjenninger(løsning.vedtaksperiodeId)
         assertEquals(1, godkjenninger.size)
-        assertEquals(løsning.godkjenning.begrunnelser, finnBegrunnelser(godkjenninger.first().id))
+        assertEquals(løsning.løsning.begrunnelser, finnBegrunnelser(godkjenninger.first().id))
         assertFalse(godkjenninger.first().erSaksbehandleroverstyringer)
         assertEquals(emptyList<UUID>(), finnGodkjenningOverstyringer(godkjenninger.first().id))
     }
@@ -59,13 +59,13 @@ class GodkjenningDaoTest {
     @Test
     fun `lagrer saksbehandleroverstyringer for godkjenning`() {
         val saksbehandleroverstyringer = listOf(UUID.randomUUID())
-        val løsning = GodkjenningLøsningRiver(
+        val løsning = Godkjenningsbehov(
             vedtaksperiodeId = UUID.randomUUID(),
             aktørId = "aktørId",
             fødselsnummer = "fødselsnummer",
             periodetype = "FORLENGELSE",
             inntektskilde = "EN_ARBEIDSGIVER",
-            godkjenning = GodkjenningLøsningRiver.Godkjenning(
+            løsning = Godkjenningsbehov.Løsning(
                 godkjent = false,
                 saksbehandlerIdent = "Z999999",
                 godkjentTidspunkt = LocalDateTime.now(),

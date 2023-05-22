@@ -34,7 +34,7 @@ fun main() {
 
 fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     AnnulleringRiver(this, dataSource)
-    GodkjenningLøsningRiver.Factory(this, dataSource)
+    GodkjenningLøsningRiver(this, dataSource)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
     TidFraGodkjenningTilUtbetalingRiver(this, dataSource)

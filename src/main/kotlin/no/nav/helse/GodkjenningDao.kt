@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
-fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
+fun DataSource.insertGodkjenning(behov: Godkjenningsbehov) =
     using(sessionOf(this, returnGeneratedKey = true)) { session ->
         session.transaction { transaction ->
             val godkjenningId = transaction.run(
@@ -28,28 +28,28 @@ fun DataSource.insertGodkjenning(løsning: GodkjenningLøsningRiver) =
                         )
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
-                    løsning.vedtaksperiodeId,
-                    løsning.aktørId,
-                    løsning.fødselsnummer,
-                    løsning.godkjenning.saksbehandlerIdent,
-                    løsning.godkjenning.godkjentTidspunkt,
-                    løsning.godkjenning.godkjent,
-                    løsning.godkjenning.årsak,
-                    løsning.godkjenning.kommentar,
-                    løsning.periodetype,
-                    løsning.inntektskilde,
-                    løsning.utbetalingType,
-                    løsning.refusjonType,
-                    løsning.saksbehandleroverstyringer.isNotEmpty()
+                    behov.vedtaksperiodeId,
+                    behov.aktørId,
+                    behov.fødselsnummer,
+                    behov.løsning.saksbehandlerIdent,
+                    behov.løsning.godkjentTidspunkt,
+                    behov.løsning.godkjent,
+                    behov.løsning.årsak,
+                    behov.løsning.kommentar,
+                    behov.periodetype,
+                    behov.inntektskilde,
+                    behov.utbetalingType,
+                    behov.refusjonType,
+                    behov.saksbehandleroverstyringer.isNotEmpty()
                 ).asUpdateAndReturnGeneratedKey
             )
-            løsning.godkjenning.begrunnelser?.forEach { begrunnelse ->
+            behov.løsning.begrunnelser?.forEach { begrunnelse ->
                 transaction.run(
                     queryOf("INSERT INTO begrunnelse(godkjenning_ref, tekst) VALUES(?, ?);", godkjenningId, begrunnelse)
                         .asUpdate
                 )
             }
-            løsning.saksbehandleroverstyringer.forEach {
+            behov.saksbehandleroverstyringer.forEach {
                 transaction.run(
                     queryOf("""
                         INSERT INTO godkjenning_overstyringer(godkjenning_ref, overstyring_hendelse_id) 
