@@ -1,0 +1,1 @@
+ALTER TABLE varsel RENAME TO regelverksvarsel;

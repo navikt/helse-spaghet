@@ -33,7 +33,7 @@ internal class VarselE2ETest {
     private fun tellVarsel(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = "SELECT COUNT(*) FROM varsel"
+            val query = "SELECT COUNT(*) FROM regelverksvarsel"
             requireNotNull(
                 session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
             )

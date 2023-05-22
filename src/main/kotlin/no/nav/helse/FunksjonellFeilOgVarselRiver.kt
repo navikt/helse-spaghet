@@ -45,7 +45,7 @@ class FunksjonellFeilOgVarselRiver(
                 val varselkode = aktivitet.path("varselkode").asText()
                 when (nivå) {
                     "FUNKSJONELL_FEIL" -> insert(vedtaksperiodeId, varselkode, nivå, melding,"funksjonell_feil", opprettet)
-                    "VARSEL" -> insert(vedtaksperiodeId, varselkode, nivå, melding, "varsel", opprettet)
+                    "VARSEL" -> insert(vedtaksperiodeId, varselkode, nivå, melding, "regelverksvarsel", opprettet)
                 }
             }
     }
