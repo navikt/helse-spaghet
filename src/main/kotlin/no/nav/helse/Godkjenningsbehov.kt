@@ -12,7 +12,8 @@ class Godkjenningsbehov(
     val løsning: Løsning,
     val utbetalingType: String,
     val refusjonType: String?,
-    val saksbehandleroverstyringer: List<UUID>
+    val saksbehandleroverstyringer: List<UUID>,
+    val behandlingId: UUID
 ) {
 
     data class Løsning(

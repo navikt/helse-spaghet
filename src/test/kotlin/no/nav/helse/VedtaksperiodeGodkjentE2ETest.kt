@@ -203,7 +203,11 @@ class VedtaksperiodeGodkjentE2ETest {
 }"""
 
     @Language("JSON")
-    private fun godkjenning(vedtaksperiodeId: UUID, saksbehandleroverstyringer: List<UUID> = emptyList()) = """{
+    private fun godkjenning(
+        vedtaksperiodeId: UUID,
+        saksbehandleroverstyringer: List<UUID> = emptyList(),
+        behandlingId: UUID = UUID.randomUUID()
+    ) = """{
   "@behov": [
     "Godkjenning"
   ],
@@ -231,6 +235,7 @@ class VedtaksperiodeGodkjentE2ETest {
       "kontekster": []
     }
   },
+  "behandlingId": "$behandlingId",
   "vedtaksperiodeId": "$vedtaksperiodeId",
   "aktørId": "1234",
   "fødselsnummer": "1234567901"

@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import kotliquery.*
+import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -8,9 +9,8 @@ import javax.sql.DataSource
 fun DataSource.insertGodkjenning(behov: Godkjenningsbehov) =
     using(sessionOf(this, returnGeneratedKey = true)) { session ->
         session.transaction { transaction ->
-            val godkjenningId = transaction.run(
-                queryOf(
-                    """
+            @Language("PostgreSQL")
+            val query = """
                         INSERT INTO godkjenning(
                             vedtaksperiode_id,
                             aktor_id,
@@ -24,10 +24,14 @@ fun DataSource.insertGodkjenning(behov: Godkjenningsbehov) =
                             inntektskilde,
                             utbetaling_type,
                             refusjon_type,
-                            er_saksbehandleroverstyringer
+                            er_saksbehandleroverstyringer,
+                            behandling_id
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                    """,
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """
+            val godkjenningId = transaction.run(
+                queryOf(
+                    query,
                     behov.vedtaksperiodeId,
                     behov.aktørId,
                     behov.fødselsnummer,
@@ -40,7 +44,8 @@ fun DataSource.insertGodkjenning(behov: Godkjenningsbehov) =
                     behov.inntektskilde,
                     behov.utbetalingType,
                     behov.refusjonType,
-                    behov.saksbehandleroverstyringer.isNotEmpty()
+                    behov.saksbehandleroverstyringer.isNotEmpty(),
+                    behov.behandlingId
                 ).asUpdateAndReturnGeneratedKey
             )
             behov.løsning.begrunnelser?.forEach { begrunnelse ->

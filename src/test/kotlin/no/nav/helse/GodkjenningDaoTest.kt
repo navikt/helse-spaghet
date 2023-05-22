@@ -27,7 +27,8 @@ class GodkjenningDaoTest {
     }
 
     @Test
-    fun `lagrer begrunnelser for godkjenninger`() {
+    fun `lagrer informasjon fra godkjenninger`() {
+        val behandlingId = UUID.randomUUID()
         val løsning = Godkjenningsbehov(
             vedtaksperiodeId = UUID.randomUUID(),
             aktørId = "aktørId",
@@ -44,7 +45,8 @@ class GodkjenningDaoTest {
             ),
             utbetalingType = "UTBETALING",
             refusjonType = "FULL_REFUSJON",
-            saksbehandleroverstyringer = emptyList()
+            saksbehandleroverstyringer = emptyList(),
+            behandlingId = behandlingId
         )
 
         dataSource.insertGodkjenning(løsning)
@@ -54,6 +56,7 @@ class GodkjenningDaoTest {
         assertEquals(løsning.løsning.begrunnelser, finnBegrunnelser(godkjenninger.first().id))
         assertFalse(godkjenninger.first().erSaksbehandleroverstyringer)
         assertEquals(emptyList<UUID>(), finnGodkjenningOverstyringer(godkjenninger.first().id))
+        assertEquals(behandlingId, godkjenninger.first().behandlingId)
     }
 
     @Test
@@ -75,7 +78,8 @@ class GodkjenningDaoTest {
             ),
             utbetalingType = "UTBETALING",
             refusjonType = "FULL_REFUSJON",
-            saksbehandleroverstyringer = saksbehandleroverstyringer
+            saksbehandleroverstyringer = saksbehandleroverstyringer,
+            behandlingId = UUID.randomUUID()
         )
 
         dataSource.insertGodkjenning(løsning)
@@ -93,7 +97,8 @@ class GodkjenningDaoTest {
                     TestGodkjenningDto(
                         id = it.long("id"),
                         kommentar = it.stringOrNull("kommentar"),
-                        erSaksbehandleroverstyringer = it.boolean("er_saksbehandleroverstyringer")
+                        erSaksbehandleroverstyringer = it.boolean("er_saksbehandleroverstyringer"),
+                        behandlingId = it.uuid("behandling_id")
                     )
                 }
                 .asList)
@@ -120,6 +125,7 @@ class GodkjenningDaoTest {
     data class TestGodkjenningDto(
         val id: Long,
         val kommentar: String?,
-        val erSaksbehandleroverstyringer: Boolean
+        val erSaksbehandleroverstyringer: Boolean,
+        val behandlingId: UUID
     )
 }

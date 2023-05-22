@@ -1,0 +1,1 @@
+ALTER TABLE godkjenning ADD COLUMN behandling_id uuid;

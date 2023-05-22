@@ -77,6 +77,7 @@ fun løsningNyttFormat(
                 }
             }"""))
             .put("@besvart", "2020-06-02T13:00:00.000000")
+            .put("behandlingId", "${UUID.randomUUID()}")
     }.toString()
 
 @Language("JSON")
