@@ -9,6 +9,8 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
+import java.lang.IllegalStateException
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -26,30 +28,39 @@ class VedtaksperiodeGodkjentE2ETest {
     }
 
     @Test
-    fun `lagrer warnings i database`() {
+    fun `lagrer varsel i database`() {
         val vedtaksperiodeId = UUID.randomUUID()
         river.sendTestMessage(godkjenning(vedtaksperiodeId))
-        river.sendTestMessage(vedtaksperiodeGodkjent(vedtaksperiodeId))
-        assertEquals(listOf("Arbeidsuførhet, aktivitetsplikt og/eller medvirkning må vurderes. Se forklaring på vilkårs-siden.", "Perioden er lagt inn i Infotrygd, men ikke utbetalt. Fjern fra Infotrygd hvis det utbetales via speil."), hentWarnings(vedtaksperiodeId))
+        river.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
+        assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer warnings for avvisning i database`() {
+    fun `lagrer varsel uten behandlingId i database`() {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
-        river.sendTestMessage(vedtaksperiodeAvvist(vedtaksperiodeId))
-        assertEquals(listOf("Bruker har mottatt AAP innenfor 6 måneder av skjæringstidspunkt. Kontroller at brukeren har rett til sykepenger", "Det finnes åpne oppgaver på sykepenger i Gosys"), hentWarnings(vedtaksperiodeId))
+        river.sendTestMessage(varselEndretUtenBehandlingId(vedtaksperiodeId, varseltittel = "En tittel"))
+        assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
-    fun `assosieres med en godkjenning i database`() {
+    fun `ugyldig varselkode kaster exception`() {
         val vedtaksperiodeId = UUID.randomUUID()
-        val vedtaksperiodeId2 = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
-        river.sendTestMessage(godkjenning(vedtaksperiodeId2))
-        river.sendTestMessage(vedtaksperiodeGodkjent(vedtaksperiodeId))
-        river.sendTestMessage(vedtaksperiodeGodkjent(vedtaksperiodeId2))
-        assertEquals(listOf("Arbeidsuførhet, aktivitetsplikt og/eller medvirkning må vurderes. Se forklaring på vilkårs-siden.", "Perioden er lagt inn i Infotrygd, men ikke utbetalt. Fjern fra Infotrygd hvis det utbetales via speil."), hentWarnings(vedtaksperiodeId))
+
+        assertDoesNotThrow {
+            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "SB_EX_1"))
+            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "RV_SY_1"))
+        }
+
+        assertThrows<IllegalStateException> {
+            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "EN_KODE"))
+        }
+    }
+
+    @Test
+    fun `lagrer varsel for avvisning i database`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        river.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
+        assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
@@ -82,17 +93,14 @@ class VedtaksperiodeGodkjentE2ETest {
         assertEquals(saksbehandleroverstyringer, finnGodkjenningOverstyringer(vedtaksperiodeId))
     }
 
-    private fun hentWarnings(vedtaksperiodeId: UUID) : List<String> =
+    private fun hentVarsler(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = """
-                SELECT w.* FROM warning_for_godkjenning w
-                 JOIN GODKJENNING g ON g.id = w.godkjenning_ref
-                 WHERE g.vedtaksperiode_id = :vedtaksperiodeId
-                ;
-                """.trimIndent()
+                SELECT * FROM varsel WHERE vedtaksperiode_id = :vedtaksperiodeId
+                """
             return session.run(queryOf(query, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
-                .map { it.string("melding") }
+                .map { it.string("tittel") }
                 .asList
             )
         }
@@ -134,73 +142,38 @@ class VedtaksperiodeGodkjentE2ETest {
             .asSingle)
     }
 
-
     @Language("JSON")
-    private fun vedtaksperiodeGodkjent(vedtaksperiodeId: UUID) = """
-    {
-      "@event_name": "vedtaksperiode_godkjent",
-      "@opprettet": "2021-01-01T01:01:01.721176",
-      "@id": "6e9ffa77-a25f-44a4-42bc-cc88c6610c2e",
-      "fødselsnummer": "1234567901",
-      "vedtaksperiodeId": "$vedtaksperiodeId",
-      "warnings": [
-        {
-          "melding": "Arbeidsuførhet, aktivitetsplikt og/eller medvirkning må vurderes. Se forklaring på vilkårs-siden.",
-          "kilde": "Spesialist"
-        },
-        {
-          "melding": "Perioden er lagt inn i Infotrygd, men ikke utbetalt. Fjern fra Infotrygd hvis det utbetales via speil.",
-          "kilde": "Spleis"
-        }
-      ],
-      "periodetype": "OVERGANG_FRA_IT",
-      "saksbehandlerIdent": "F123456",
-      "saksbehandlerEpost": "siri.saksbehandler@nav.no",
-      "automatiskBehandling": false,
-      "system_read_count": 0,
-      "system_participating_services": [
-        {
-          "service": "spesialist",
-          "instance": "spesialist-7dfb74c754-w7rsk",
-          "time": "2021-01-01T01:01:38.721232"
-        }
-      ]
-    }
+    private fun varselEndret(vedtaksperiodeId: UUID, varseltittel: String = "En tittel", varselkode: String = "SB_EX_1") = """
+       {
+         "@event_name": "varsel_endret", 
+         "@opprettet": "2021-05-27T12:20:09.12384379", 
+         "@id": "a38fec49-2d1d-402e-832c-6017a71e625f", 
+         "fødselsnummer": "12345678901",
+         "vedtaksperiode_id": "$vedtaksperiodeId",
+         "varseltittel": "$varseltittel",
+         "varselkode": "$varselkode",
+         "forrige_status": "VURDERT",
+         "gjeldende_status": "GODKJENT",
+         "varsel_id": "${UUID.randomUUID()}",
+         "behandling_id": "${UUID.randomUUID()}"
+       }
     """
 
     @Language("JSON")
-    private fun vedtaksperiodeAvvist(vedtaksperiodeId: UUID) = """{
-  "@event_name": "vedtaksperiode_avvist",
-  "@opprettet": "2021-05-27T12:20:09.12384379",
-  "@id": "4b47c841-aa08-4cab-b13a-1fefd2024b24",
-  "fødselsnummer": "12345678901",
-  "vedtaksperiodeId": "$vedtaksperiodeId",
-  "warnings": [
-    {
-      "melding": "Bruker har mottatt AAP innenfor 6 måneder av skjæringstidspunkt. Kontroller at brukeren har rett til sykepenger",
-      "kilde": "Spleis"
-    },
-    {
-      "melding": "Det finnes åpne oppgaver på sykepenger i Gosys",
-      "kilde": "Spesialist"
-    }
-  ],
-  "saksbehandlerIdent": "V12345",
-  "saksbehandlerEpost": "mille.mellomleder@nav.no",
-  "automatiskBehandling": false,
-  "årsak": "Feil vurdering og/eller beregning",
-  "begrunnelser": ["No shirt, no shoes, no service"],
-  "kommentar": "",
-  "periodetype": "OVERGANG_FRA_IT",
-  "system_read_count": 0,
-  "system_participating_services": [
-    {
-      "service": "spesialist",
-      "instance": "spesialist-1234567890a-skpjd",
-      "time": "2021-02-13T11:27:29.123456789"
-    }
-  ]
-}"""
+    private fun varselEndretUtenBehandlingId(vedtaksperiodeId: UUID, varseltittel: String = "En tittel", varselkode: String = "SB_EX_1") = """
+       {
+         "@event_name": "varsel_endret", 
+         "@opprettet": "2021-05-27T12:20:09.12384379", 
+         "@id": "a38fec49-2d1d-402e-832c-6017a71e625f", 
+         "fødselsnummer": "12345678901",
+         "vedtaksperiode_id": "$vedtaksperiodeId",
+         "varseltittel": "$varseltittel",
+         "varselkode": "$varselkode",
+         "forrige_status": "VURDERT",
+         "gjeldende_status": "GODKJENT",
+         "varsel_id": "${UUID.randomUUID()}"
+       }
+    """
 
     @Language("JSON")
     private fun godkjenning(
