@@ -1,5 +1,6 @@
 package no.nav.helse.ventetilstand
 
+import kotliquery.Query
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -55,6 +56,12 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         }
     }
 
+    internal fun stuck() = sessionOf(dataSource).use { session ->
+        session.list(Query(STUCK)) { row ->
+            row.vedtaksperiodeVenter
+        }
+    }
+
     internal companion object {
         @Language("PostgreSQL")
         private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId ORDER BY tidsstempel DESC LIMIT 1"
@@ -71,6 +78,19 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer)
             VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer)
             ON CONFLICT (hendelseId) DO NOTHING 
+        """
+
+        @Language("PostgreSQL")
+        private val STUCK = """
+            WITH sistePerVedtaksperiodeId AS (
+                SELECT DISTINCT ON (vedtaksperiodeId) *
+                FROM vedtaksperiode_ventetilstand
+                ORDER BY vedtaksperiodeId, tidsstempel DESC
+            )
+            SELECT * FROM sistePerVedtaksperiodeId
+            WHERE venter = true
+            AND venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP')
+            AND venterPaHvorfor not in ('VIL_UTBETALES', 'ALLEREDE_UTBETALT', 'VIL_AVSLUTTES')
         """
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
