@@ -48,7 +48,8 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         vedtaksperiodeId: UUID,
         venterPåVedtaksperiodeId: UUID,
         venterPå: String = "GODKJENNING",
-        hendelseId: UUID = UUID.randomUUID()
+        hendelseId: UUID = UUID.randomUUID(),
+        fødselsnummer: String = "11111111111"
     ) = """
         {
           "@event_name": "vedtaksperiode_venter",
@@ -65,12 +66,12 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
             }
           },
           "@id": "$hendelseId",
-          "fødselsnummer": "11111111111"
+          "fødselsnummer": "$fødselsnummer"
         }
     """
 
     @Language("JSON")
-    protected fun vedtaksperiodeEndret(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID()) = """
+    protected fun vedtaksperiodeEndret(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID(), fødselsnummer: String = "11111111111") = """
          {
           "@event_name": "vedtaksperiode_endret",
           "organisasjonsnummer": "123456789",
@@ -78,7 +79,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
           "gjeldendeTilstand": "AVVENTER_INNTEKTSMELDING",
           "forrigeTilstand": "AVVENTER_INFOTRYGDHISTORIKK",
           "@id": "$hendelseId",
-          "fødselsnummer": "11111111111"
+          "fødselsnummer": "$fødselsnummer"
         } 
     """
 
@@ -91,8 +92,11 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
             )
         ) { it.uuid("hendelseId") }.toSet()
     }
+    protected val antallRader get() = sessionOf(dataSource).use { session ->
+        session.run(queryOf("SELECT count(*) FROM vedtaksperiode_ventetilstand").map { row -> row.int(1) }.asSingle)
+    }
 
-    protected fun hentDeSomVenter(): Set<VedtaksperiodeVenter> {
+    protected fun hentDeSomVenterBasertPåTimestamp(): Set<VedtaksperiodeVenter> {
         @Language("PostgreSQL")
         val SQL = """
             WITH sistePerVedtaksperiodeId AS (
@@ -112,6 +116,21 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         }.toSet()
     }
 
+    protected fun hentDeSomVenterBasertPåGjeldende(): Set<VedtaksperiodeVenter> {
+        @Language("PostgreSQL")
+        val SQL = """
+            SELECT * FROM vedtaksperiode_ventetilstand
+            WHERE gjeldende = true
+            AND venter = true
+        """
+
+        return sessionOf(dataSource).use { session ->
+            session.list(queryOf(SQL)) { row ->
+                row.vedtaksperiodeVenter
+            }
+        }.toSet()
+    }
+
     protected fun hentVedtaksperiodeIderSomVenter() =
-        hentDeSomVenter().map { it.vedtaksperiodeId }.toSet()
+        hentDeSomVenterBasertPåTimestamp().map { it.vedtaksperiodeId }.toSet()
 }
