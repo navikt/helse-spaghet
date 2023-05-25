@@ -35,13 +35,13 @@ internal class IdentifiserStuckVedtaksperioder (
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
-            if (stuck.isEmpty()) return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} sekunder på å sjekke at ingen vedtaksperioder er stuck")
+            if (stuck.isEmpty()) return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at ingen vedtaksperioder er stuck")
 
             val antallVedtaksperioder = stuck.size
             val venterPå = stuck.groupBy { it.fødselsnummer }.mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }.values
             val antallPersoner = venterPå.size
 
-            sikkerlogg.warn("Brukte ${tidsbruk.toString(SECONDS)} sekunder på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
+            sikkerlogg.warn("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
 
             var melding =
                 "\nDet finnes vedtaksperioder som ser ut til å være stuck!:\n" +
