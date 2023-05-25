@@ -10,5 +10,4 @@ WHERE hendelseId in (
          FROM vedtaksperiode_ventetilstand
          ORDER BY vedtaksperiodeId, tidsstempel DESC
     ) AS sistePerVedtaksperiodeId
-    WHERE venter = true
 )

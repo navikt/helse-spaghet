@@ -47,5 +47,10 @@ internal class VedtaksperiodeVentetilstandGjeldendeTest : AbstractVedtaksperiode
         assertEquals(2, venterFørMigrering.size)
         assertEquals("FIRE", venterFørMigrering.single { it.fødselsnummer == "0" }.venterPå.hva)
         assertEquals("FIRE", venterFørMigrering.single { it.fødselsnummer == "1" }.venterPå.hva)
+
+        // Også de som ikke venter er "gjeldende" 💡
+        val forventetGjeldende = vedtaksperioder.mapIndexed { fnr, vedtaksperiode -> vedtaksperiode to "$fnr" }.toMap()
+
+        assertEquals(forventetGjeldende, hentGjeldende())
     }
 }

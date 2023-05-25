@@ -130,6 +130,19 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
             }
         }.toSet()
     }
+    protected fun hentGjeldende(): Map<UUID, String> {
+        @Language("PostgreSQL")
+        val SQL = """
+            SELECT vedtaksperiodeId, fodselsnummer FROM vedtaksperiode_ventetilstand
+            WHERE gjeldende = true
+        """
+
+        return sessionOf(dataSource).use { session ->
+            session.list(queryOf(SQL)) { row ->
+                row.uuid("vedtaksperiodeId") to row.string("fodselsnummer")
+            }
+        }.toMap()
+    }
 
     protected fun hentVedtaksperiodeIderSomVenter() =
         hentDeSomVenterBasertPåTimestamp().map { it.vedtaksperiodeId }.toSet()
