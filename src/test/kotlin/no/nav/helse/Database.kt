@@ -8,9 +8,10 @@ import kotliquery.sessionOf
 import no.nav.helse.Util.uuid
 import no.nav.helse.Util.withSession
 import org.flywaydb.core.Flyway
+import org.flywaydb.core.api.MigrationVersion
+import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.intellij.lang.annotations.Language
 import org.testcontainers.containers.PostgreSQLContainer
-import java.util.*
 import javax.sql.DataSource
 
 fun embeddedPostgres() = PostgreSQLContainer<Nothing>("postgres:14").apply {
@@ -46,7 +47,8 @@ fun Row.stringList(column: String) =
     objectMapper.readTree(string(column))
         .map { it.asText()!! }
 
-internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>): DataSource {
+internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>) = setupFlyway(postgres, MigrationVersion.LATEST).first
+internal fun setupFlyway(postgres: PostgreSQLContainer<Nothing>, target: MigrationVersion = MigrationVersion.LATEST): Pair<DataSource, FluentConfiguration> {
     val hikariConfig = HikariConfig().apply {
         jdbcUrl = postgres.jdbcUrl
         username = postgres.username
@@ -61,13 +63,12 @@ internal fun setupDataSourceMedFlyway(postgres: PostgreSQLContainer<Nothing>): D
 
     val dataSource = HikariDataSource(hikariConfig)
 
-    Flyway.configure()
-        .dataSource(dataSource)
-        .load()
-        .migrate()
+    val flyway = Flyway.configure().dataSource(dataSource)
+
+    flyway.target(target).load().migrate()
 
     dataSource.createTruncateFunction()
-    return dataSource
+    return dataSource to flyway
 }
 
 private fun DataSource.createTruncateFunction() {
