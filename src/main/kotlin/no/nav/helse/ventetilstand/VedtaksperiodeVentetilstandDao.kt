@@ -89,8 +89,16 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             )
             SELECT * FROM sistePerVedtaksperiodeId
             WHERE venter = true
-            AND venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP')
-            AND (venterPaHvorfor is null OR venterPaHvorfor not in ('VIL_UTBETALES', 'ALLEREDE_UTBETALT', 'VIL_AVSLUTTES'))
+            AND (
+                (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
+                    OR
+                (date_part('Year', ventertil) = 9999 AND ventetSiden < now() - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
+            )
+            AND (
+                (venterPaHvorfor is null)
+                    OR
+                (venterPaHvorfor not in ('VIL_UTBETALES', 'ALLEREDE_UTBETALT', 'VIL_AVSLUTTES'))
+            )
         """
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(

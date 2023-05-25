@@ -44,12 +44,15 @@ internal class IdentifiserStuckVedtaksperioder (
             sikkerlogg.warn("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
 
             var melding =
-                "\nDet finnes vedtaksperioder som ser ut til å være stuck!:\n" +
-                "Totalt $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer.\n\n"
+                "\nDet er vedtaksperioder som ser ut til å være stuck! :helene-redteam:\n" +
+                "Totalt $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer.\n" +
+                "Vedtaksperiodene det ventes på per person:\n\n"
 
             venterPå.forEach {
                 melding += "\t- ${it.vedtaksperiodeId} venter på ${it.snygg}"
             }
+
+            if (tidsbruk.inWholeSeconds > 2) melding += "\n\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:\n\n"
 
             melding += "\n\n - Deres erbødig SPaghet :spaghet:"
 
