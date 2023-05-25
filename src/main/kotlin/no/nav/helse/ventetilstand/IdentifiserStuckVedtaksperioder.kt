@@ -49,10 +49,10 @@ internal class IdentifiserStuckVedtaksperioder (
                 "Vedtaksperiodene det ventes på per person:\n\n"
 
             venterPå.forEach {
-                melding += "\t- ${it.vedtaksperiodeId} venter på ${it.snygg}"
+                melding += "\t- ${it.vedtaksperiodeId} venter på ${it.snygg}\n"
             }
 
-            if (tidsbruk.inWholeSeconds > 2) melding += "\n\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:\n\n"
+            if (tidsbruk.inWholeSeconds > 2) melding += "\n\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:"
 
             melding += "\n\n - Deres erbødig SPaghet :spaghet:"
 
