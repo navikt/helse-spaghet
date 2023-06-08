@@ -2,6 +2,7 @@ package no.nav.helse.ventetilstand
 
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import javax.sql.DataSource
 import kotlin.time.DurationUnit.SECONDS
 import kotlin.time.ExperimentalTime
@@ -48,8 +49,8 @@ internal class IdentifiserStuckVedtaksperioder (
                 "Totalt $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer.\n" +
                 "Vedtaksperiodene det ventes på per person:\n\n"
 
-            venterPå.forEach {
-                melding += "\t- ${it.vedtaksperiodeId} venter på ${it.snygg}\n"
+            venterPå.forEachIndexed { index, it ->
+                melding += "\t${index+1}) ${it.kibanaUrl} venter på ${it.snygg}\n"
             }
 
             if (tidsbruk.inWholeSeconds > 2) melding += "\n\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:"
@@ -71,5 +72,8 @@ internal class IdentifiserStuckVedtaksperioder (
     private companion object {
         val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
+        private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
+            "<$url|$vedtaksperiodeId>"
+        }
     }
 }

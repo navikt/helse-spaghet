@@ -89,6 +89,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             )
             SELECT * FROM sistePerVedtaksperiodeId
             WHERE venter = true
+            AND ventetsiden < now() - INTERVAL '5 MINUTES'
             AND (
                 (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
                     OR
