@@ -15,10 +15,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         return sessionOf(dataSource).use { session ->
              session.single(
                  queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
-             ){ row ->
-                if (!row.boolean("venter")) null
-                else row.vedtaksperiodeVenter
-             }
+             ){ row -> row.vedtaksperiodeVenter }
         }
     }
 
@@ -65,7 +62,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
     internal companion object {
         @Language("PostgreSQL")
-        private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId ORDER BY tidsstempel DESC LIMIT 1"
+        private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId AND gjeldende = true AND venter = true"
 
         @Language("PostgreSQL")
         private val VENTER = """
@@ -92,13 +89,10 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         @Language("PostgreSQL")
         private val STUCK = """
-            WITH sistePerVedtaksperiodeId AS (
-                SELECT DISTINCT ON (vedtaksperiodeId) *
-                FROM vedtaksperiode_ventetilstand
-                ORDER BY vedtaksperiodeId, tidsstempel DESC
-            )
-            SELECT * FROM sistePerVedtaksperiodeId
-            WHERE venter = true
+            SELECT * FROM vedtaksperiode_ventetilstand
+            WHERE gjeldende = true
+            AND venter = true
+            AND ventetSiden < now() - INTERVAL '5 MINUTES'
             AND (
                 (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
                     OR
