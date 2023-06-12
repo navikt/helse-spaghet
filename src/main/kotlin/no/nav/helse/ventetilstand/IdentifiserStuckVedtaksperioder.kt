@@ -49,7 +49,7 @@ internal class IdentifiserStuckVedtaksperioder (
 
             val antallPersoner = venterPå.size
 
-            sikkerlogg.warn("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
+            sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
 
             var melding =
                 "\nDet er vedtaksperioder som ser ut til å være stuck! :helene-redteam:\n" +

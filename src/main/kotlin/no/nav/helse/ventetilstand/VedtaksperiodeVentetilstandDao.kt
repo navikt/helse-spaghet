@@ -92,11 +92,11 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             SELECT * FROM vedtaksperiode_ventetilstand
             WHERE gjeldende = true
             AND venter = true
-            AND ventetSiden < now() - INTERVAL '5 MINUTES'
+            AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES'
             AND (
                 (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
                     OR
-                (date_part('Year', ventertil) = 9999 AND ventetSiden < now() - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
+                (date_part('Year', ventertil) = 9999 AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
             )
             AND (
                 (venterPaHvorfor is null)
