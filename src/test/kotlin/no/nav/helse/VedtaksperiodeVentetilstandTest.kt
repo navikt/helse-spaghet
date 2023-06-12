@@ -125,7 +125,7 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         assertEquals(3, hendelseIderFor(vedtaksperiodeId3).size)
 
         assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId3), hentVedtaksperiodeIderSomVenter())
-        val venteårsaker = hentDeSomVenterBasertPåTimestamp()
+        val venteårsaker = hentDeSomVenter()
         assertEquals("GODKJENNING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId1 }.venterPå.hva)
         assertEquals("UTBETALING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId3 }.venterPå.hva)
     }
@@ -139,7 +139,7 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         val melding2 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "GODKJENNING", hendelseId)
         river.sendTestMessage(melding)
         river.sendTestMessage(melding2)
-        assertEquals("UTBETALING", hentDeSomVenterBasertPåTimestamp().single().venterPå.hva)
+        assertEquals("UTBETALING", hentDeSomVenter().single().venterPå.hva)
     }
 
     @Test
@@ -150,6 +150,6 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         val vedtaksperiodeEndret = vedtaksperiodeEndret(vedtaksperiodeId, hendelseId)
         river.sendTestMessage(vedtaksperiodeVenter)
         river.sendTestMessage(vedtaksperiodeEndret)
-        assertEquals("GODKJENNING", hentDeSomVenterBasertPåTimestamp().single().venterPå.hva)
+        assertEquals("GODKJENNING", hentDeSomVenter().single().venterPå.hva)
     }
 }

@@ -9,6 +9,7 @@ import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao.Companion.vedta
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.containers.PostgreSQLContainer
@@ -96,7 +97,14 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         session.run(queryOf("SELECT count(*) FROM vedtaksperiode_ventetilstand").map { row -> row.int(1) }.asSingle)
     }
 
-    protected fun hentDeSomVenterBasertPåTimestamp(): Set<VedtaksperiodeVenter> {
+    protected fun hentDeSomVenter(): Set<VedtaksperiodeVenter> {
+        val venterBasertPåTimestamp = hentDeSomVenterBasertPåTimestamp()
+        val venterBasertPåGjeldende = hentDeSomVenterBasertPåGjeldende()
+        assertEquals(venterBasertPåTimestamp, venterBasertPåGjeldende) { "De som venter basert på timestamp og gjeldende er ikke like!" }
+        return venterBasertPåGjeldende
+    }
+
+    private fun hentDeSomVenterBasertPåTimestamp(): Set<VedtaksperiodeVenter> {
         @Language("PostgreSQL")
         val SQL = """
             WITH sistePerVedtaksperiodeId AS (
@@ -115,8 +123,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
             }
         }.toSet()
     }
-
-    protected fun hentDeSomVenterBasertPåGjeldende(): Set<VedtaksperiodeVenter> {
+    private fun hentDeSomVenterBasertPåGjeldende(): Set<VedtaksperiodeVenter> {
         @Language("PostgreSQL")
         val SQL = """
             SELECT * FROM vedtaksperiode_ventetilstand
@@ -145,5 +152,5 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     }
 
     protected fun hentVedtaksperiodeIderSomVenter() =
-        hentDeSomVenterBasertPåTimestamp().map { it.vedtaksperiodeId }.toSet()
+        hentDeSomVenter().map { it.vedtaksperiodeId }.toSet()
 }

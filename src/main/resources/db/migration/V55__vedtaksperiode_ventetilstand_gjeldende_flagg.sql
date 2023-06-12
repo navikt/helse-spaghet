@@ -6,7 +6,7 @@ SET gjeldende = true
 WHERE hendelseId in (
     SELECT hendelseId
     FROM (
-         SELECT DISTINCT ON (vedtaksperiodeId) *
+         SELECT DISTINCT ON (vedtaksperiodeId) hendelseId
          FROM vedtaksperiode_ventetilstand
          ORDER BY vedtaksperiodeId, tidsstempel DESC
     ) AS sistePerVedtaksperiodeId
