@@ -3,6 +3,7 @@ package no.nav.helse.ventetilstand
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.*
 import javax.sql.DataSource
 import kotlin.time.DurationUnit.SECONDS
 import kotlin.time.ExperimentalTime
@@ -39,7 +40,13 @@ internal class IdentifiserStuckVedtaksperioder (
             if (stuck.isEmpty()) return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at ingen vedtaksperioder er stuck")
 
             val antallVedtaksperioder = stuck.size
-            val venterPå = stuck.groupBy { it.fødselsnummer }.mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }.values
+            val venterPå = stuck
+                .groupBy { it.fødselsnummer }
+                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
+                .values
+                .filterNot { it.ikkeStuckLikevel }
+                .takeUnless { it.isEmpty() } ?: return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at ingen vedtaksperioder er stuck")
+
             val antallPersoner = venterPå.size
 
             sikkerlogg.warn("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
@@ -70,10 +77,16 @@ internal class IdentifiserStuckVedtaksperioder (
     }
 
     private companion object {
-        val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
             "<$url|$vedtaksperiodeId>"
         }
+        /** Liste med perioder vi har manuelt sjekket at ikke er stuck tross at de gir treff på spørringen **/
+        private val IKKE_STUCK_LIKEVEL = setOf(
+            IkkeStuckLikevel(UUID.fromString("0b8efbb2-8d31-4291-9911-f394a7d9b69a"), "INNTEKTSMELDING", "MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE")
+        )
+        private val VenterPå.ikkeStuckLikevel get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in IKKE_STUCK_LIKEVEL
+        private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
     }
 }
