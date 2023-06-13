@@ -25,7 +25,9 @@ internal class IdentifiserStuckVedtaksperioder (
         River(rapidsConnection).apply {
             validate {
                 it.demandValue("@event_name", "halv_time")
-                it.demandValue("time", 8)
+                it.demand("time") { time ->
+                    check(time.asInt() in setOf(8, 13))
+                }
                 it.demandValue("minutt", 30)
                 it.rejectValues("ukedag", listOf("SATURDAY", "SUNDAY"))
                 it.requireKey("system_participating_services")
