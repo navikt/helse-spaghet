@@ -43,9 +43,11 @@ internal class IdentifiserStuckVedtaksperioder (
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
+            "Sjekket om vedtaksperioder er stuck på grunn av '${packet.eventname}'. Det tok ${tidsbruk.toString(SECONDS)}".let {
+                if (tidsbruk.inWholeSeconds > 2) sikkerlogg.error(it) else sikkerlogg.info(it)
+            }
             if (stuck.isEmpty()) return ingentingStuck(packet, context)
 
-            val antallVedtaksperioder = stuck.size
             val venterPå = stuck
                 .groupBy { it.fødselsnummer }
                 .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
@@ -53,21 +55,14 @@ internal class IdentifiserStuckVedtaksperioder (
                 .filterNot { it.ikkeStuckLikevel }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
 
-            val antallPersoner = venterPå.size
-
-            sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
-
             var melding =
-                "\n\nDet er ${antallVedtaksperioder.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
-                "Fordelt på ${antallPersoner.personer}:\n\n"
+                "\n\nDet er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
+                "Fordelt på ${venterPå.size.personer}:\n\n"
 
             venterPå.forEachIndexed { index, it ->
-                melding += "\t${index+1}) ${it.kibanaUrl} venter på ${it.snygg}\n"
+                melding += "\t${index+1}) ${it.kibanaUrl} venter på ${it.snygg}"
+                if (venterPå.lastIndex != index) melding += "\n"
             }
-
-            melding += if (tidsbruk.inWholeSeconds > 2) "\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:\n\n" else "\n"
-
-            melding += " - Deres erbødig SPaghet :spaghet:"
 
             context.sendPåSlack(packet, ERROR, melding)
         } catch (exception: Exception) {
@@ -95,11 +90,11 @@ internal class IdentifiserStuckVedtaksperioder (
                 "system_participating_services" to packet["system_participating_services"]
             )).toJson()
 
-            publish(slackmelding)
+            publish("$slackmelding\n\n - Deres erbødig SPaghet :spaghet:")
         }
-        private val JsonMessage.spoutet get() = get("@event_name").asText() == "identifiser_stuck_vedtaksperioder"
+        private val JsonMessage.eventname get() = get("@event_name").asText()
         private fun ingentingStuck(packet: JsonMessage, context: MessageContext) {
-            if (packet.spoutet) return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
+            if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
             sikkerlogg.info("Ingen vedtaksperioder er stuck per ${LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)}")
         }
 
