@@ -2,7 +2,11 @@ package no.nav.helse.ventetilstand
 
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
+import org.slf4j.event.Level.ERROR
+import org.slf4j.event.Level.INFO
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.sql.DataSource
 import kotlin.time.DurationUnit.SECONDS
@@ -39,7 +43,7 @@ internal class IdentifiserStuckVedtaksperioder (
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
-            if (stuck.isEmpty()) return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at ingen vedtaksperioder er stuck")
+            if (stuck.isEmpty()) return ingentingStuck(packet, context)
 
             val antallVedtaksperioder = stuck.size
             val venterPå = stuck
@@ -47,14 +51,14 @@ internal class IdentifiserStuckVedtaksperioder (
                 .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
                 .values
                 .filterNot { it.ikkeStuckLikevel }
-                .takeUnless { it.isEmpty() } ?: return sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at ingen vedtaksperioder er stuck")
+                .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
 
             val antallPersoner = venterPå.size
 
             sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
 
             var melding =
-                "\nDet er vedtaksperioder som ser ut til å være stuck! :helene-redteam:\n" +
+                "\n\nDet er vedtaksperioder som ser ut til å være stuck! :helene-redteam:\n" +
                 "Totalt $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer.\n" +
                 "Vedtaksperiodene det ventes på per person:\n\n"
 
@@ -66,13 +70,7 @@ internal class IdentifiserStuckVedtaksperioder (
 
             melding += "\n\n - Deres erbødig SPaghet :spaghet:"
 
-            val slackmelding = JsonMessage.newMessage("slackmelding", mapOf(
-                "melding" to melding,
-                "level" to "ERROR",
-                "system_participating_services" to packet["system_participating_services"]
-            )).toJson()
-
-            context.publish(slackmelding)
+            context.sendPåSlack(packet, ERROR, melding)
         } catch (exception: Exception) {
             sikkerlogg.error("Feil ved identifisering av stuck vedtaksperioder", exception)
         }
@@ -90,5 +88,20 @@ internal class IdentifiserStuckVedtaksperioder (
         )
         private val VenterPå.ikkeStuckLikevel get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in IKKE_STUCK_LIKEVEL
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
+
+        private fun MessageContext.sendPåSlack(packet: JsonMessage, level: Level, melding: String) {
+            val slackmelding = JsonMessage.newMessage("slackmelding", mapOf(
+                "melding" to melding,
+                "level" to level.name,
+                "system_participating_services" to packet["system_participating_services"]
+            )).toJson()
+
+            publish(slackmelding)
+        }
+        private val JsonMessage.spoutet get() = get("@event_name").asText() == "identifiser_stuck_vedtaksperioder"
+        private fun ingentingStuck(packet: JsonMessage, context: MessageContext) {
+            if (packet.spoutet) return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
+            sikkerlogg.info("Ingen vedtaksperioder er stuck per ${LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)}")
+        }
     }
 }
