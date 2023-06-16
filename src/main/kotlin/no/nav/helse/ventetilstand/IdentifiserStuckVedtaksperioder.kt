@@ -58,17 +58,16 @@ internal class IdentifiserStuckVedtaksperioder (
             sikkerlogg.info("Brukte ${tidsbruk.toString(SECONDS)} på å sjekke at $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer er stuck. Varsler på Slack")
 
             var melding =
-                "\n\nDet er vedtaksperioder som ser ut til å være stuck! :helene-redteam:\n" +
-                "Totalt $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner personer.\n" +
-                "Vedtaksperiodene det ventes på per person:\n\n"
+                "\n\nDet er ${antallVedtaksperioder.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
+                "Fordelt på ${antallPersoner.personer}:\n\n"
 
             venterPå.forEachIndexed { index, it ->
                 melding += "\t${index+1}) ${it.kibanaUrl} venter på ${it.snygg}\n"
             }
 
-            if (tidsbruk.inWholeSeconds > 2) melding += "\n\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:"
+            melding += if (tidsbruk.inWholeSeconds > 2) "\nDette tok meg ${tidsbruk.toString(SECONDS)} å finne ut av, så nå forventer jeg en innsats også fra deres side :meow_tired:\n\n" else "\n"
 
-            melding += "\n\n - Deres erbødig SPaghet :spaghet:"
+            melding += " - Deres erbødig SPaghet :spaghet:"
 
             context.sendPåSlack(packet, ERROR, melding)
         } catch (exception: Exception) {
@@ -103,5 +102,8 @@ internal class IdentifiserStuckVedtaksperioder (
             if (packet.spoutet) return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
             sikkerlogg.info("Ingen vedtaksperioder er stuck per ${LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)}")
         }
+
+        private val Int.personer get() = if (this == 1) "én person" else "$this personer"
+        private val Int.vedtaksperioder get() = if (this == 1) "én vedtaksperiode" else "$this vedtaksperioder"
     }
 }
