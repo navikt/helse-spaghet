@@ -13,7 +13,7 @@ import kotlin.time.DurationUnit.SECONDS
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
-internal class IdentifiserStuckVedtaksperioder (
+internal class  IdentifiserStuckVedtaksperioder (
     rapidsConnection: RapidsConnection,
     dataSource: DataSource
 ): River.PacketListener {
@@ -52,7 +52,7 @@ internal class IdentifiserStuckVedtaksperioder (
                 .groupBy { it.fødselsnummer }
                 .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
                 .values
-                .filterNot { it.ikkeStuckLikevel }
+                .filterNot { it.ikkeStuckLikevel || it.skalIkkeMaseMensBrukerKontaktes }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
 
             var melding =
@@ -80,7 +80,13 @@ internal class IdentifiserStuckVedtaksperioder (
         private val IKKE_STUCK_LIKEVEL = setOf(
             IkkeStuckLikevel(UUID.fromString("0b8efbb2-8d31-4291-9911-f394a7d9b69a"), "INNTEKTSMELDING", "MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE")
         )
+
+        /** Liste med perioder som er stuck, men bruker kontaktes av saksbehandler for å avvente ny informasjon som kan endre på stuck-situasjonen **/
+        private val AVVENTER_MENS_BRUKER_KONTAKTES = setOf(
+            IkkeStuckLikevel(UUID.fromString("5ebbc6c5-9604-4081-8663-e13cc76bc345"), "INNTEKTSMELDING", "MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE")
+        )
         private val VenterPå.ikkeStuckLikevel get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in IKKE_STUCK_LIKEVEL
+        private val VenterPå.skalIkkeMaseMensBrukerKontaktes get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_BRUKER_KONTAKTES
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
 
         private fun MessageContext.sendPåSlack(packet: JsonMessage, level: Level, melding: String) {
