@@ -52,7 +52,7 @@ internal class  IdentifiserStuckVedtaksperioder (
                 .groupBy { it.fødselsnummer }
                 .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
                 .values
-                .filterNot { it.ikkeStuckLikevel || it.skalIkkeMaseMensArbeidsgiverKontaktes }
+                .filterNot {  it.skalIkkeMase }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
 
             var melding =
@@ -76,17 +76,12 @@ internal class  IdentifiserStuckVedtaksperioder (
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
             "<$url|$vedtaksperiodeId>"
         }
-        /** Liste med perioder vi har manuelt sjekket at ikke er stuck tross at de gir treff på spørringen **/
-        private val IKKE_STUCK_LIKEVEL = setOf(
-            IkkeStuckLikevel(UUID.fromString("0b8efbb2-8d31-4291-9911-f394a7d9b69a"), "INNTEKTSMELDING", "MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE")
-        )
 
         /** Liste med perioder som er stuck, men bruker kontaktes av saksbehandler for å avvente ny informasjon som kan endre på stuck-situasjonen **/
         private val AVVENTER_MENS_AG_KONTAKTES = setOf(
             IkkeStuckLikevel(UUID.fromString("744d16d4-2e90-430f-a4f7-f6bdb7d1c07c"), "INNTEKTSMELDING", "MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE")
         )
-        private val VenterPå.ikkeStuckLikevel get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in IKKE_STUCK_LIKEVEL
-        private val VenterPå.skalIkkeMaseMensArbeidsgiverKontaktes get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_AG_KONTAKTES
+        private val VenterPå.skalIkkeMase get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_AG_KONTAKTES
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
 
         private fun MessageContext.sendPåSlack(packet: JsonMessage, level: Level, melding: String) {
