@@ -29,7 +29,6 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, dataSource)
         VedtaksperiodeEndretRiver(this, dataSource)
-        PersonAvstemmingRiver(this, dataSource)
     }
 
     @AfterAll
