@@ -29,6 +29,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, dataSource)
         VedtaksperiodeEndretRiver(this, dataSource)
+        PersonAvstemmingRiver(this, dataSource)
     }
 
     @AfterAll
@@ -81,6 +82,27 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
           "forrigeTilstand": "AVVENTER_INFOTRYGDHISTORIKK",
           "@id": "$hendelseId",
           "fødselsnummer": "$fødselsnummer"
+        } 
+    """
+
+    @Language("JSON")
+    protected fun personAvstemt(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID(), fødselsnummer: String = "11111111111") = """
+         {
+          "@event_name": "person_avstemt",
+          "arbeidsgivere": [
+            {
+              "organisasjonsnummer": "123456789",
+              "forkastedeVedtaksperioder": [
+                {
+                  "id": "$vedtaksperiodeId",
+                  "tilstand": "TIL_INFOTRYGD"
+                }
+              ]
+            }
+          ],
+          "@id": "$hendelseId",
+          "fødselsnummer": "$fødselsnummer",
+          "aktørId": "aktørId"
         } 
     """
 

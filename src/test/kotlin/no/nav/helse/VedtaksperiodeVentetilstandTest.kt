@@ -21,6 +21,17 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
     }
 
     @Test
+    fun `vedtaksperiode venter og blir forkastet`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        river.sendTestMessage(personAvstemt(vedtaksperiodeId))
+        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+    }
+
+    @Test
     fun `Gjentatte like vedtaksperiodeVenter lagres ikke, men så fort noe endres lagres det`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()

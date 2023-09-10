@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.ventetilstand.IdentifiserStuckVedtaksperioder
+import no.nav.helse.ventetilstand.PersonAvstemmingRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
 import org.slf4j.Logger
@@ -47,6 +48,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     RevurderingFerdigstiltRiver(this, dataSource)
     OverlappendeInfotrygdperiodeEtterInfotrygdendringRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, dataSource)
+    PersonAvstemmingRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
     IdentifiserStuckVedtaksperioder(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)
