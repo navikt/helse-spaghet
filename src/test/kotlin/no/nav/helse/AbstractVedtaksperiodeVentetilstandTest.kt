@@ -28,6 +28,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
 
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, dataSource)
+        VedtaksperiodeVenterIkkeRiver(this, dataSource)
         VedtaksperiodeEndretRiver(this, dataSource)
     }
 
@@ -85,23 +86,11 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     """
 
     @Language("JSON")
-    protected fun personAvstemt(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID(), fødselsnummer: String = "11111111111") = """
+    protected fun vedtaksperiodeVenterIkke(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID()) = """
          {
-          "@event_name": "person_avstemt",
-          "arbeidsgivere": [
-            {
-              "organisasjonsnummer": "123456789",
-              "forkastedeVedtaksperioder": [
-                {
-                  "id": "$vedtaksperiodeId",
-                  "tilstand": "TIL_INFOTRYGD"
-                }
-              ]
-            }
-          ],
-          "@id": "$hendelseId",
-          "fødselsnummer": "$fødselsnummer",
-          "aktørId": "aktørId"
+          "@event_name": "vedtaksperiode_venter_ikke",
+          "vedtaksperiodeId": "$vedtaksperiodeId",
+          "@id": "$hendelseId"
         } 
     """
 
@@ -113,9 +102,6 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
                 )
             )
         ) { it.uuid("hendelseId") }.toSet()
-    }
-    protected val antallRader get() = sessionOf(dataSource).use { session ->
-        session.run(queryOf("SELECT count(*) FROM vedtaksperiode_ventetilstand").map { row -> row.int(1) }.asSingle)
     }
 
     protected fun hentDeSomVenter(): Set<VedtaksperiodeVenter> {
@@ -157,19 +143,6 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
                 row.vedtaksperiodeVenter
             }
         }.toSet()
-    }
-    protected fun hentGjeldende(): Map<UUID, String> {
-        @Language("PostgreSQL")
-        val SQL = """
-            SELECT vedtaksperiodeId, fodselsnummer FROM vedtaksperiode_ventetilstand
-            WHERE gjeldende = true
-        """
-
-        return sessionOf(dataSource).use { session ->
-            session.list(queryOf(SQL)) { row ->
-                row.uuid("vedtaksperiodeId") to row.string("fodselsnummer")
-            }
-        }.toMap()
     }
 
     protected fun hentVedtaksperiodeIderSomVenter() =

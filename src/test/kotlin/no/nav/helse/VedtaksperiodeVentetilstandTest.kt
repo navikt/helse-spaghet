@@ -152,4 +152,16 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         river.sendTestMessage(vedtaksperiodeEndret)
         assertEquals("GODKJENNING", hentDeSomVenter().single().venterPå.hva)
     }
+
+    @Test
+    fun `venter ikke lengre når vi får eksplisitt signal på at vedtaksperiode ikke venter`() {
+        assertEquals(emptySet<VedtaksperiodeVenter>(), hentDeSomVenter())
+        val vedtaksperiodeId = UUID.randomUUID()
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "HJELP", UUID.randomUUID())
+        river.sendTestMessage(vedtaksperiodeVenter)
+        assertEquals("HJELP", hentDeSomVenter().single().venterPå.hva)
+        val vedtaksperiodeVenterIkke = vedtaksperiodeVenterIkke(vedtaksperiodeId)
+        river.sendTestMessage(vedtaksperiodeVenterIkke)
+        assertEquals(emptySet<VedtaksperiodeVenter>(), hentDeSomVenter())
+    }
 }
