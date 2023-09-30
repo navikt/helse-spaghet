@@ -1,9 +1,9 @@
-val junitJupiterVersion = "5.7.1"
-val testcontainersVersion = "1.16.2"
-val postgresqlVersion = "42.5.1"
+val junitJupiterVersion = "5.10.0"
+val testcontainersVersion = "1.19.0"
+val postgresqlVersion = "42.6.0"
 
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.9.10"
 }
 
 group = "no.helse"
@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.github.navikt:rapids-and-rivers:2023050308441683096263.f5a276d7bd28")
+    implementation("com.github.navikt:rapids-and-rivers:2023093008351696055717.ffdec6aede3d")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
     implementation("com.github.seratch:kotliquery:1.3.1")
@@ -49,9 +49,8 @@ tasks {
 
         doLast {
             configurations.runtimeClasspath.get().forEach {
-                val file = File("$buildDir/libs/${it.name}")
-                if (!file.exists())
-                    it.copyTo(file)
+                val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
+                if (!file.exists()) it.copyTo(file)
             }
         }
     }
@@ -64,6 +63,6 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "7.0"
+        gradleVersion = "8.3"
     }
 }
