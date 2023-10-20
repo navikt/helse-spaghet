@@ -92,10 +92,13 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             SELECT * FROM vedtaksperiode_ventetilstand
             WHERE gjeldende = true
             AND venter = true
+            -- Må ha ventet minst 5 minutter før vi anser det som stuck
             AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES'
             AND (
+                -- Om vi venter på en av disse tingene skal det alltid være alarm
                 (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
                     OR
+                -- Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler
                 (date_part('Year', ventertil) = 9999 AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
             )
             AND (
