@@ -100,6 +100,10 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                     OR
                 -- Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler
                 (date_part('Year', ventertil) = 9999 AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
+                    OR 
+                -- Om maksdato er nådd så tyder det på at vi er en periode som ikke kan forkastes tross at maksdato er nådd.
+                -- Trekker fra ekstra 10 dager for å være sikker på at den ikke bare venter på å få en påminnelse fra Spock før den forkastes
+                (date_part('Year', ventertil) != 9999 AND ventertil < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '10 DAYS')
             )
         """
 
