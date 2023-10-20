@@ -101,11 +101,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                 -- Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler
                 (date_part('Year', ventertil) = 9999 AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva != 'GODKJENNING')
             )
-            AND (
-                (venterPaHvorfor is null)
-                    OR
-                (venterPaHvorfor not in ('VIL_UTBETALES', 'ALLEREDE_UTBETALT', 'VIL_AVSLUTTES'))
-            )
         """
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.containers.PostgreSQLContainer
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -23,7 +24,6 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     private val embeddedPostgres = embeddedPostgres()
     private val db = configureDb(embeddedPostgres)
     private val dataSource = db.first
-    protected val flyway = db.second
     protected val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
 
     protected val river = TestRapid().apply {
@@ -51,20 +51,22 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         venterPåVedtaksperiodeId: UUID,
         venterPå: String = "GODKJENNING",
         hendelseId: UUID = UUID.randomUUID(),
-        fødselsnummer: String = "11111111111"
+        fødselsnummer: String = "11111111111",
+        venterPåHvorfor: String = "TESTOLINI",
+        ventetSiden: LocalDateTime = LocalDateTime.parse("2023-03-04T21:34:17.96322")
     ) = """
         {
           "@event_name": "vedtaksperiode_venter",
           "organisasjonsnummer": "123456789",
           "vedtaksperiodeId": "$vedtaksperiodeId",
-          "ventetSiden": "2023-03-04T21:34:17.96322",
+          "ventetSiden": "$ventetSiden",
           "venterTil": "+999999999-12-31T23:59:59.999999999",
           "venterPå": {
             "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
             "organisasjonsnummer": "987654321",
             "venteårsak": {
               "hva": "$venterPå",
-              "hvorfor": "TESTOLINI"
+              "hvorfor": "$venterPåHvorfor"
             }
           },
           "@id": "$hendelseId",
