@@ -72,14 +72,26 @@ internal class OppsummerVedtaksperiodeVenter (
                 "\n\nDet er $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner sykmeldte som venter i systemet ⏳\n\n"
 
             val antallPropper = propper.sumOf { it.antall }
-            melding += "Av disse er det $antallPropper som venter på noe direkte:\n"
+            melding += "Av disse er det $antallPropper som venter på noen direkte:\n"
+            propper.groupBy { it.venterPå }.mapValues { (_, gruppe) -> gruppe.sumOf { it.antall } }.entries.sortedByDescending { it.value }.forEach { (venterPå, antall) ->
+                melding += "${antall.fintAntall} venter på $venterPå ${antall.finProsentAv(antallPropper)}\n"
+            }
+
+            melding += "\nNærmere bestemt venter de på:\n"
             propper.forEach { (årsak, antall) ->
                 melding += "${antall.fintAntall} venter på ${årsak.finÅrsak} ${antall.finProsentAv(antallPropper)}\n"
             }
 
-            melding += "\n\nDe resterende $ettergølgende står bak en av ☝️ og venter tålmodig :sonic-waiting:\n"
+            melding += "\nDe resterende $ettergølgende står bak en av ☝️ og venter tålmodig :sonic-waiting:\n"
 
             return melding
+        }
+
+        private val Ventegruppe.venterPå get() = when {
+            årsak.startsWith("INNTEKTSMELDING") -> "arbeidsgiver :briefcase:"
+            årsak.startsWith("GODKJENNING") -> "saksbehandler :female-office-worker:"
+            årsak.startsWith("SØKNAD") -> "sykmeldte :pepesick:"
+            else -> "tverrfaglig manuell hjelp :maxi-nut-cracker: :david-gun: :eminott_aminott_nottland_onduty:"
         }
 
         @JvmStatic
