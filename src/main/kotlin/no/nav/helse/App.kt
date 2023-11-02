@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.ventetilstand.*
 import no.nav.helse.ventetilstand.IdentifiserStuckVedtaksperioder
 import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeVenterIkkeRiver
@@ -51,6 +52,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     VedtaksperiodeVenterIkkeRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
     IdentifiserStuckVedtaksperioder(this, dataSource)
+    OppsummerVedtaksperiodeVenter(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)
     FunksjonellFeilOgVarselRiver(this, dataSource)
     SendtSøknadRiver(this, dataSource)

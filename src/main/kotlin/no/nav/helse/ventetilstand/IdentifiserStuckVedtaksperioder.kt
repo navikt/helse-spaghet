@@ -1,8 +1,8 @@
 package no.nav.helse.ventetilstand
 
 import no.nav.helse.rapids_rivers.*
+import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import org.slf4j.LoggerFactory
-import org.slf4j.event.Level
 import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
 import java.time.LocalDateTime
@@ -13,7 +13,7 @@ import kotlin.time.DurationUnit.SECONDS
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
-internal class  IdentifiserStuckVedtaksperioder (
+internal class IdentifiserStuckVedtaksperioder (
     rapidsConnection: RapidsConnection,
     dataSource: DataSource
 ): River.PacketListener {
@@ -84,15 +84,6 @@ internal class  IdentifiserStuckVedtaksperioder (
         private val VenterPå.skalIkkeMase get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_AG_KONTAKTES
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
 
-        private fun MessageContext.sendPåSlack(packet: JsonMessage, level: Level, melding: String) {
-            val slackmelding = JsonMessage.newMessage("slackmelding", mapOf(
-                "melding" to "$melding\n\n - Deres erbødig SPaghet :spaghet:",
-                "level" to level.name,
-                "system_participating_services" to packet["system_participating_services"]
-            )).toJson()
-
-            publish(slackmelding)
-        }
         private val JsonMessage.eventname get() = get("@event_name").asText()
         private fun ingentingStuck(packet: JsonMessage, context: MessageContext) {
             if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")

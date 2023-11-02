@@ -60,6 +60,18 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         }
     }
 
+    internal data class Ventegruppe(val årsak: String, val antall: Int, val propp: Boolean)
+    internal fun oppsummering() = sessionOf(dataSource).use { session ->
+        val oppsummering = session.list(Query(OPPSUMMERING)) { row ->
+            Ventegruppe(årsak = row.string("arsak"), propp = row.boolean("propp"), antall = row.int("antall"))
+        }
+
+        val antallPersoner = session.single(Query(ANTALL_PERSONER_SOM_VENTER)) { row ->
+            row.int("antallPersoner")
+        } ?: 0
+        oppsummering to antallPersoner
+    }
+
     internal companion object {
         @Language("PostgreSQL")
         private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId AND gjeldende = true AND venter = true"
@@ -105,6 +117,24 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                 -- Trekker fra ekstra 10 dager for å være sikker på at den ikke bare venter på å få en påminnelse fra Spock før den forkastes
                 (date_part('Year', ventertil) != 9999 AND ventertil < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '10 DAYS')
             )
+        """
+
+        @Language("PostgreSQL")
+        private val OPPSUMMERING = """
+            SELECT TRIM(TRAILING '_FORDI_' FROM concat(venterpahva, '_FORDI_', venterpahvorfor)) as arsak, vedtaksperiodeid = venterpavedtaksperiodeid as propp, count(1) as antall
+            FROM vedtaksperiode_ventetilstand
+            WHERE venter = true AND gjeldende = true AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
+            GROUP BY arsak, propp
+            ORDER BY antall DESC
+        """
+
+
+        @Language("PostgreSQL")
+        private val ANTALL_PERSONER_SOM_VENTER = """
+            SELECT count(distinct fodselsnummer) as antallPersoner
+            FROM vedtaksperiode_ventetilstand WHERE venter = true AND gjeldende = true
+            AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES'  -- Mulig de bare er i transit
+
         """
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
