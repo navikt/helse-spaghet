@@ -8,6 +8,7 @@ import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.INFO
 import javax.sql.DataSource
+import kotlin.random.Random.Default.nextInt
 
 internal class OppsummerVedtaksperiodeVenter (
     rapidsConnection: RapidsConnection,
@@ -47,7 +48,7 @@ internal class OppsummerVedtaksperiodeVenter (
             val antallPropper = propper.sumOf { it.antall }
             melding += "Av disse er det $antallPropper som venter på noe direkte:\n"
             propper.forEach { (årsak, antall) ->
-                melding += "${antall.fintAntall} venter på ${årsak.finÅrsak} ${antall.finprosentAv(antallPropper)}\n"
+                melding += "${antall.fintAntall} venter på ${årsak.finÅrsak} ${antall.finProsentAv(antallPropper)}\n"
             }
 
             melding += "\n\nDe resterende $ettergølgende står bak en av ☝️ og venter tålmodig :sonic-waiting:\n"
@@ -63,13 +64,16 @@ internal class OppsummerVedtaksperiodeVenter (
         private val Int.fintAntall get() = "$this".padStart(10,' ')
         private val String.skummel get() = setOf("hjelp", "utbetaling", "beregning").any { this.startsWith(it) }
         private val String.finÅrsak get() = replace("_", " ").lowercase().let {
-            if (it.skummel) "$it :pepe-hmm:"
+            if (it.skummel) "$it $etUndrendeSmilefjes"
             else it
         }
 
-        private fun Int.finprosentAv(total: Int) = ((this.toDouble() / total) *100).let {
+        private val undrendeSmilefjes = setOf("hmm-skull", "hmmnani", "hmmmmm", "thinking-taco", "pepewtf", "gull_scream", "elmo_what", "pepewhat", "wait-what", "this-is-fine-fire", "huh_what_husky", "pepe-hmm").map { ":$it:" }
+        private val etUndrendeSmilefjes get() =  nextInt(undrendeSmilefjes.size - 1).let { undrendeSmilefjes[it] }
+
+        private fun Int.finProsentAv(total: Int) = ((this.toDouble() / total) * 100).let {
             val prosent = String.format("%.2f", it)
-            if (prosent == "0.00") ":pinching_hand:"
+            if ("0.00" == prosent || "0,00" == prosent) ""
             else "($prosent%)"
         }
     }
