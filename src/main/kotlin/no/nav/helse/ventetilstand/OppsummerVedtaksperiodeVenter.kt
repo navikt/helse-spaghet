@@ -62,7 +62,7 @@ internal class OppsummerVedtaksperiodeVenter (
         private val Int.fintAntall get() = "$this".padStart(10,' ')
         private val String.skummel get() = setOf("hjelp", "utbetaling", "beregning").any { this.startsWith(it) }
         private val String.finÅrsak get() = replace("_", " ").lowercase().let {
-            if (skummel) ":wide_eye_pepe: $it"
+            if (it.skummel) "$it :pepe-hmm:"
             else it
         }
     }
