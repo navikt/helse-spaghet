@@ -44,9 +44,10 @@ internal class OppsummerVedtaksperiodeVenter (
             var melding =
                 "\n\nDet er $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner sykmeldte som venter i systemet ⏳\n\n"
 
-            melding += "Av disse er det ${propper.sumOf { it.antall }} som venter på noe direkte:\n"
+            val antallPropper = propper.sumOf { it.antall }
+            melding += "Av disse er det $antallPropper som venter på noe direkte:\n"
             propper.forEach { (årsak, antall) ->
-                melding += "${antall.fintAntall} venter på ${årsak.finÅrsak}\n"
+                melding += "${antall.fintAntall} venter på ${årsak.finÅrsak} ${antall.finprosentAv(antallPropper)}\n"
             }
 
             melding += "\n\nDe resterende $ettergølgende står bak en av ☝️ og venter tålmodig :sonic-waiting:\n"
@@ -64,6 +65,12 @@ internal class OppsummerVedtaksperiodeVenter (
         private val String.finÅrsak get() = replace("_", " ").lowercase().let {
             if (it.skummel) "$it :pepe-hmm:"
             else it
+        }
+
+        private fun Int.finprosentAv(total: Int) = ((this.toDouble() / total) *100).let {
+            val prosent = String.format("%.2f", it)
+            if (prosent == "0.00") ":pinching_hand:"
+            else "($prosent%)"
         }
     }
 }
