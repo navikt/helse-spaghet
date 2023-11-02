@@ -39,21 +39,17 @@ internal class OppsummerVedtaksperiodeVenter (
 
             val antallVedtaksperioder = oppsummering.sumOf { it.antall }
             val propper = oppsummering.filter { it.propp }
-            val ettergølgende = oppsummering.filterNot { it.propp }
+            val ettergølgende = oppsummering.filterNot { it.propp }.sumOf { it.antall }
 
             var melding =
                 "\n\nDet er $antallVedtaksperioder vedtaksperioder fordelt på $antallPersoner sykmeldte som venter i systemet ⏳\n\n"
 
-            melding += "- ${propper.sumOf { it.antall }} av vedtaksperiodene er de som direkte venter på noe:\n:"
+            melding += "Av disse er det ${propper.sumOf { it.antall }} som venter på noe direkte:\n"
             propper.forEach { (årsak, antall) ->
                 melding += "${antall.fintAntall} venter på ${årsak.finÅrsak}\n"
             }
 
-            melding += "\n- ${ettergølgende.sumOf { it.antall }} av vedtaksperiodene står bak en av ☝️ og venter tålmodig:\n"
-            ettergølgende.forEachIndexed { index, (årsak, antall) ->
-                melding += "${antall.fintAntall} venter på ${årsak.finÅrsak}"
-                if (ettergølgende.lastIndex != index) melding += "\n"
-            }
+            melding += "\n\nDe resterende $ettergølgende står bak en av ☝️ og venter tålmodig :sonic-waiting:\n"
 
             context.sendPåSlack(packet, INFO, melding)
         } catch (exception: Exception) {
@@ -64,6 +60,10 @@ internal class OppsummerVedtaksperiodeVenter (
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val Int.fintAntall get() = "$this".padStart(10,' ')
-        private val String.finÅrsak get() = replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+        private val String.skummel get() = setOf("hjelp", "utbetaling", "beregning").any { this.startsWith(it) }
+        private val String.finÅrsak get() = replace("_", " ").lowercase().let {
+            if (skummel) ":wide_eye_pepe: $it"
+            else it
+        }
     }
 }
