@@ -16,7 +16,6 @@ spec:
     initialDelay: 5
   resources:
     limits:
-      cpu: 2000m
       memory: 512Mi
     requests:
       cpu: 50m
@@ -40,7 +39,7 @@ spec:
         diskSize: 100
         diskType: SSD
         name: spaghet
-        tier: db-custom-6-26624
+        tier: db-custom-4-16384
         databases:
           - name: spaghet
             envVarPrefix: DATABASE
