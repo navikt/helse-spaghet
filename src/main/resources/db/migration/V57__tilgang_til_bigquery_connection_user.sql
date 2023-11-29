@@ -9,7 +9,7 @@ END$$;
 DO $$ BEGIN
     IF EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'bigquery_connection_user')
     THEN
-        ALTER DEFAULT PRIVILEGES FOR USER spaghet IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO "bigquery_connection_user";
-        ALTER DEFAULT PRIVILEGES FOR USER spaghet IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO "bigquery_connection_user";
+        ALTER DEFAULT PRIVILEGES FOR USER spaghet2 IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO "bigquery_connection_user";
+        ALTER DEFAULT PRIVILEGES FOR USER spaghet2 IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO "bigquery_connection_user";
     END IF;
 END $$;
