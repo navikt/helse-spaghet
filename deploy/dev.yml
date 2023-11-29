@@ -33,7 +33,7 @@ spec:
     enabled: true
   gcp:
     sqlInstances:
-      - type: POSTGRES_14
+      - type: POSTGRES_15
         diskAutoresize: true
         databases:
           - name: spaghet
@@ -42,8 +42,8 @@ spec:
               - name: spaghetti
               - name: bigquery_datastream
         flags:
-            - name: cloudsql.logical_decoding
-              value: "on"
+          - name: cloudsql.logical_decoding
+            value: "on"
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
