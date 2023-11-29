@@ -46,6 +46,7 @@ spec:
             users:
               - name: spaghetti
               - name: bigquery_datastream
+              - name: bigquery_connection_user
         flags:
           - name: cloudsql.logical_decoding
             value: "on"
