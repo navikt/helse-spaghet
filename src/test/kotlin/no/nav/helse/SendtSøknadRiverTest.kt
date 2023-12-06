@@ -42,10 +42,31 @@ internal class SendtSøknadRiverTest {
     }
 
     @Test
-    fun `lagrer søknadArbeidsgiver `() {
+    fun `lagrer søknadArbeidsgiver`() {
         river.sendTestMessage(sendtSøknadArbeidsgiver())
         assertEquals(1, tellSøknader())
         assertTrue(erSøknadArbeidsgiver())
+    }
+
+    @Test
+    fun `lagrer søknadArbeidsledig`() {
+        river.sendTestMessage(sendtSøknadArbeidsledig())
+        assertEquals(1, tellSøknader())
+        assertFalse(erSøknadArbeidsgiver())
+    }
+
+    @Test
+    fun `lagrer søknadFrilanser`() {
+        river.sendTestMessage(sendtSøknadFrilanser())
+        assertEquals(1, tellSøknader())
+        assertFalse(erSøknadArbeidsgiver())
+    }
+
+    @Test
+    fun `lagrer søknadSelvstendigNæringsdrivende`() {
+        river.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
+        assertEquals(1, tellSøknader())
+        assertFalse(erSøknadArbeidsgiver())
     }
 
     private fun tellSøknader(): Int {
@@ -72,7 +93,9 @@ internal class SendtSøknadRiverTest {
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
-        "@event_name": "sendt_søknad_arbeidsgiver"
+        "@event_name": "sendt_søknad_arbeidsgiver", 
+        "type": "ARBEIDSTAKERE",
+        "arbeidssituasjon": "ARBEIDSTAKER"
         }
     """
 
@@ -80,7 +103,39 @@ internal class SendtSøknadRiverTest {
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
-        "@event_name": "sendt_søknad_nav"
+        "@event_name": "sendt_søknad_nav", 
+        "type": "ARBEIDSTAKERE",
+        "arbeidssituasjon": "ARBEIDSTAKER"
+        }
+    """
+
+    private fun sendtSøknadArbeidsledig() = """
+        {
+        "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
+        "@id": "162fc482-d871-4036-94af-a79112d82abe",
+        "@event_name": "sendt_søknad_arbeidsledig", 
+        "type": "ARBEIDSLEDIG",
+        "arbeidssituasjon": "ARBEIDSLEDIG"
+        }
+    """
+
+    private fun sendtSøknadFrilanser() = """
+        {
+        "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
+        "@id": "162fc482-d871-4036-94af-a79112d82abe",
+        "@event_name": "sendt_søknad_frilanser", 
+        "type": "SELVSTENDIGE_OG_FRILANSERE",
+        "arbeidssituasjon": "FRILANSER"
+        }
+    """
+
+    private fun sendtSøknadSelvstendigNæringsdrivende() = """
+        {
+        "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
+        "@id": "162fc482-d871-4036-94af-a79112d82abe",
+        "@event_name": "sendt_søknad_selvstendig", 
+        "type": "SELVSTENDIGE_OG_FRILANSERE",
+        "arbeidssituasjon": "SELVSTENDIG_NARINGSDRIVENDE"
         }
     """
 }
