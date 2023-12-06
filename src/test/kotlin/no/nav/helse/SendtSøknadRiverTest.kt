@@ -38,35 +38,35 @@ internal class SendtSøknadRiverTest {
     fun `lagrer søknadNav`() {
         river.sendTestMessage(sendtSøknadNav())
         assertEquals(1, tellSøknader())
-        assertFalse(erSøknadArbeidsgiver())
+        assertEquals("sendt_søknad_nav", eventName())
     }
 
     @Test
     fun `lagrer søknadArbeidsgiver`() {
         river.sendTestMessage(sendtSøknadArbeidsgiver())
         assertEquals(1, tellSøknader())
-        assertTrue(erSøknadArbeidsgiver())
+        assertEquals("sendt_søknad_arbeidsgiver", eventName())
     }
 
     @Test
     fun `lagrer søknadArbeidsledig`() {
         river.sendTestMessage(sendtSøknadArbeidsledig())
         assertEquals(1, tellSøknader())
-        assertFalse(erSøknadArbeidsgiver())
+        assertEquals("sendt_søknad_arbeidsledig", eventName())
     }
 
     @Test
     fun `lagrer søknadFrilanser`() {
         river.sendTestMessage(sendtSøknadFrilanser())
         assertEquals(1, tellSøknader())
-        assertFalse(erSøknadArbeidsgiver())
+        assertEquals("sendt_søknad_frilanser", eventName())
     }
 
     @Test
     fun `lagrer søknadSelvstendigNæringsdrivende`() {
         river.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
         assertEquals(1, tellSøknader())
-        assertFalse(erSøknadArbeidsgiver())
+        assertEquals("sendt_søknad_selvstendig", eventName())
     }
 
     private fun tellSøknader(): Int {
@@ -79,12 +79,12 @@ internal class SendtSøknadRiverTest {
         }
     }
 
-    private fun erSøknadArbeidsgiver(): Boolean {
+    private fun eventName(): String {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
-            val query = "SELECT kort_soknad FROM soknad"
+            val query = "SELECT event FROM soknad"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.boolean(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.string(1) }.asSingle)
             )
         }
     }

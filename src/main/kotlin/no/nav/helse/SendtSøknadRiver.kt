@@ -31,29 +31,29 @@ class SendtSøknadRiver(
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val dokumentId = packet["id"].asUuid()
         val hendelseId = packet["@id"].asUuid()
-        val kortSoknad = packet["@event_name"].asText() == "sendt_søknad_arbeidsgiver"
+        val eventName = packet["@event_name"].asText()
         val soknadstype = packet["type"].asText()
         val arbeidssituasjon = packet["arbeidssituasjon"].asText()
-        insertSøknad(dokumentId, hendelseId, kortSoknad, soknadstype, arbeidssituasjon)
+        insertSøknad(dokumentId, hendelseId, eventName, soknadstype, arbeidssituasjon)
     }
 
     private fun insertSøknad(
         dokumentId: UUID,
         hendelseId: UUID,
-        kortSoknad: Boolean,
+        eventName: String,
         soknadstype: String,
         arbeidssituasjon: String
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query =
-                """INSERT INTO soknad(dokument_id, hendelse_id, kort_soknad, soknadstype, arbeidssituasjon) VALUES(:dokumentId, :hendelseId, :kortSoknad, :soknadstype, :arbeidssituasjon)"""
+                """INSERT INTO soknad(dokument_id, hendelse_id, event, soknadstype, arbeidssituasjon) VALUES(:dokumentId, :hendelseId, :event, :soknadstype, :arbeidssituasjon)"""
             session.run(
                 queryOf(
                     query, mapOf(
                         "dokumentId" to dokumentId,
                         "hendelseId" to hendelseId,
-                        "kortSoknad" to kortSoknad,
+                        "event" to eventName,
                         "soknadstype" to soknadstype,
                         "arbeidssituasjon" to arbeidssituasjon
                     )
