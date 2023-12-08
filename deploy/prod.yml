@@ -35,6 +35,10 @@ spec:
     path: /metrics
   secureLogs:
     enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: spurtedu
   gcp:
     sqlInstances:
       - type: POSTGRES_15
