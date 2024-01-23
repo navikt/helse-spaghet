@@ -5,10 +5,12 @@ import no.nav.helse.AktivitetRiver.Nivå.FUNKSJONELL_FEIL
 import no.nav.helse.AktivitetRiver.Nivå.INFO
 import no.nav.helse.TestData.Aktivitet.Companion.toJson
 import no.nav.helse.Util.toJson
+import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.UUID.randomUUID
+import kotlin.random.Random.Default.nextLong
 
 object TestData {
     fun Annullering.toJson(): String =
@@ -59,6 +61,43 @@ object TestData {
 
 
     }
+
+    data class NyOppgave(
+        val id: Long = nextLong(),
+        val egenskaper: List<String> = listOf("SØKNAD", "EN_ARBEIDSGIVER", "UTBETALING_TIL_SYKMELDT"),
+        val fødselsnummer: String = "12345678910",
+        val tilstand: String = "AvventerSaksbehandler",
+    ) {
+        fun id(id: Long) = copy(id = id)
+        fun egenskaper(vararg egenskaper: String) = copy(egenskaper = egenskaper.toList())
+        fun fødselsnummer(fødselsnummer: String) = copy(fødselsnummer = fødselsnummer)
+        fun tilstand(tilstand: String) = copy(tilstand = tilstand)
+
+        @Language("JSON")
+        fun toJson() = """
+        {
+          "@event_name": "oppgave_oppdatert",
+          "hendelseId": "698bbf15-af2c-40e9-9e6c-0e93b1a30b61",
+          "oppgaveId": $id,
+          "tilstand": "$tilstand",
+          "fødselsnummer": "$fødselsnummer",
+          "egenskaper": [
+            ${egenskaper.joinToString{ """"$it""""}}
+          ],
+          "beslutter": {
+            "epostadresse": "beslutter@nav.no",
+            "oid": "5ba9ce8b-b834-4109-866c-e14d35a28d74"
+          },
+          "saksbehandler": {
+            "epostadresse": "saksbehandler@nav.no",
+            "oid": "3208409d-d6e7-442b-a010-d2b14bd8bfbe"
+          },
+          "@id": "0bfd3123-e9e7-4519-8f8c-d750b576aa99",
+          "@opprettet": "2024-01-23T12:16:16.944417"
+        }
+        """.trimIndent()
+    }
+
     data class NyAktivitet(
         val vedtaksperiodeId: UUID = randomUUID(),
         val aktiviteter: List<Aktivitet> = listOf(),
@@ -128,5 +167,6 @@ object TestData {
     }
     val vedtaksperiodeEndret = VedtaksperiodeEndret()
     val nyAktivitet = NyAktivitet()
+    val nyOppgave = NyOppgave()
     val aktivitet = Aktivitet()
 }

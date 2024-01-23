@@ -56,6 +56,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     SøknadHåndtertRiver(this, dataSource)
     FunksjonellFeilOgVarselRiver(this, dataSource)
     SendtSøknadRiver(this, dataSource)
+    OppgaveEndretRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
