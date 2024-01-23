@@ -1,0 +1,1 @@
+ALTER TABLE oppgave ADD PRIMARY KEY (id);
