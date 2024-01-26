@@ -49,8 +49,10 @@ internal class OppsummerVedtaksperiodeVenter (
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val Int.fintAntall get() = "$this".padStart(10,' ')
         private val String.skummel get() = setOf("hjelp", "utbetaling", "beregning").any { this.startsWith(it) }
+        private val String.stuck get() = this.endsWith("måneder")
         private val String.finÅrsak get() = replace("_", " ").lowercase().let {
             if (it.skummel) "$it $etUndrendeSmilefjes"
+            else if (it.stuck) ":alert: $it :alert:"
             else it
         }
 
