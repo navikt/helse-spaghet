@@ -121,7 +121,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         @Language("PostgreSQL")
         private val OPPSUMMERING = """
-            SELECT TRIM(TRAILING '_FORDI_' FROM concat(venterpahva, '_FORDI_', venterpahvorfor)) as arsak, vedtaksperiodeid = venterpavedtaksperiodeid as propp, count(1) as antall
+            SELECT concat(TRIM(TRAILING '_FORDI_' FROM concat(venterpahva, '_FORDI_', venterpahvorfor)), case when date_part('Year', ventertil) = 9999 AND ventetSiden <= (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' then '_SOM_IKKE_KAN_FORKASTES_OG_HAR_VENTET_MER_ENN_3_MÅNEDER' else '' end) as arsak, vedtaksperiodeid = venterpavedtaksperiodeid as propp, count(1) as antall
             FROM vedtaksperiode_ventetilstand
             WHERE venter = true AND gjeldende = true AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
             GROUP BY arsak, propp
