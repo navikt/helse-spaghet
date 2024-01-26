@@ -39,7 +39,7 @@ internal class OppsummerVedtaksperiodeVenter (
         try {
             val (oppsummering, antallPersoner) = dao.oppsummering()
             val melding = lagMelding(oppsummering, antallPersoner)
-            context.sendPåSlack(packet, INFO, melding)
+            context.sendPåSlack(packet, INFO, melding, channel = "GHHK05SSD")
         } catch (exception: Exception) {
             sikkerlogg.error("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
         }
