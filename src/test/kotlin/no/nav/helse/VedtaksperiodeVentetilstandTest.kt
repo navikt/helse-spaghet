@@ -176,4 +176,13 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         assertEquals("HJELP", stuck.venterPå.hva)
         assertEquals("VIL_UTBETALES", stuck.venterPå.hvorfor)
     }
+
+    @Test
+    fun `ingen alarm når vi er stuck pga inntektsmelding - vi får ikke gjort noe med dem uansett`() {
+        assertEquals(emptyList<VedtaksperiodeVenter>(), vedtaksperiodeVentetilstandDao.stuck())
+        val vedtaksperiodeId = UUID.randomUUID()
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "INNTEKTSMELDING", UUID.randomUUID())
+        river.sendTestMessage(vedtaksperiodeVenter)
+        assertEquals(emptyList<VedtaksperiodeVenter>(), vedtaksperiodeVentetilstandDao.stuck())
+    }
 }
