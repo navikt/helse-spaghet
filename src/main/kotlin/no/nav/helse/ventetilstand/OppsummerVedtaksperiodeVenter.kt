@@ -52,7 +52,7 @@ internal class OppsummerVedtaksperiodeVenter (
         private val String.stuck get() = this.endsWith("måneder")
         private val String.finÅrsak get() = replace("_", " ").lowercase().let {
             if (it.skummel) "$it $etUndrendeSmilefjes"
-            else if (it.stuck) ":alert: $it :alert:"
+            else if (it.stuck) "<https://www.nav.no/saksbehandlingstider#sykepenger|$it> :look-away:"
             else it
         }
 
