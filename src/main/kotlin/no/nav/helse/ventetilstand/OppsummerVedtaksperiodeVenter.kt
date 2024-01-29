@@ -29,7 +29,7 @@ internal class OppsummerVedtaksperiodeVenter (
                 it.demandValue("@event_name", "halv_time")
                 it.demandValue("time", 9)
                 it.demandValue("minutt", 30)
-                it.demandValue("ukedag", "FRIDAY")
+                it.demandAny("ukedag", listOf("MONDAY", "FRIDAY"))
                 it.requireKey("system_participating_services")
             }
         }.register(this)
