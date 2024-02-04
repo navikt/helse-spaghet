@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.github.navikt:rapids-and-rivers:2024020421571707080262.b74e641fd6dd")
+    implementation("com.github.navikt:rapids-and-rivers:2024020422121707081126.d834a5d05bb2")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
     implementation("com.github.seratch:kotliquery:1.3.1")
