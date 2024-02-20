@@ -4,6 +4,7 @@ import no.nav.helse.ventetilstand.VedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VenterPå
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -61,12 +62,14 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "TESTING"))
         val forventet = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = vedtaksperiodeId,
+            skjæringstidspunkt = LocalDate.parse("2019-01-01"),
             fødselsnummer = "11111111111",
             organisasjonsnummer = "123456789",
             ventetSiden = LocalDateTime.parse("2023-03-04T21:34:17"),
             venterTil = LocalDateTime.parse("9999-12-31T23:59:59"),
             venterPå = VenterPå(
                 vedtaksperiodeId = venterPåVedtaksperiodeId,
+                skjæringstidspunkt = LocalDate.parse("2018-01-01"),
                 organisasjonsnummer = "987654321",
                 hva = "TESTING",
                 hvorfor = "TESTOLINI"

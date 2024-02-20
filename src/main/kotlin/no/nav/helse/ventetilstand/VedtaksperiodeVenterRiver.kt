@@ -18,12 +18,14 @@ internal class VedtaksperiodeVenterRiver (
             validate { it.requireKey(
                 "venterPå.venteårsak.hva",
                 "venterPå.vedtaksperiodeId",
+                "venterPå.skjæringstidspunkt",
                 "venterPå.organisasjonsnummer"
             ) }
             validate { it.interestedIn("venterPå.venteårsak.hvorfor") }
             validate { it.requireKey(
                 "@id",
                 "vedtaksperiodeId",
+                "skjæringstidspunkt",
                 "organisasjonsnummer",
                 "ventetSiden",
                 "venterTil",
@@ -45,12 +47,14 @@ internal class VedtaksperiodeVenterRiver (
         val logger = LoggerFactory.getLogger(VedtaksperiodeVenterRiver::class.java)
         val JsonMessage.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = UUID.fromString(this["vedtaksperiodeId"].asText()),
+            skjæringstidspunkt = this["skjæringstidspunkt"].asLocalDate(),
             fødselsnummer = this["fødselsnummer"].asText(),
             organisasjonsnummer = this["organisasjonsnummer"].asText(),
             ventetSiden = this["ventetSiden"].asLocalDateTime(),
             venterTil = this["venterTil"].asLocalDateTime(),
             venterPå = VenterPå(
                 vedtaksperiodeId = UUID.fromString(this["venterPå.vedtaksperiodeId"].asText()),
+                skjæringstidspunkt = this["venterPå.skjæringstidspunkt"].asLocalDate(),
                 organisasjonsnummer = this["venterPå.organisasjonsnummer"].asText(),
                 hva = this["venterPå.venteårsak.hva"].asText(),
                 hvorfor = this["venterPå.venteårsak.hvorfor"].takeUnless { it.isMissingOrNull() }?.asText()

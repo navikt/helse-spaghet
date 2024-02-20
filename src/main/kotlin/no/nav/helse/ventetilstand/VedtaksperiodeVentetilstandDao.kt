@@ -24,11 +24,13 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             "hendelseId" to hendelse.id,
             "hendelse" to hendelse.hendelse,
             "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
+            "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
             "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
             "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
             "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
             "venterTil" to vedtaksperiodeVenter.venterTil,
             "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
+            "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
             "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
             "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
             "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
@@ -40,6 +42,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             "hendelseId" to hendelse.id,
             "hendelse" to hendelse.hendelse,
             "vedtaksperiodeId" to vedtaksperiodeVentet.vedtaksperiodeId,
+            "skjaeringstidspunkt" to vedtaksperiodeVentet.skjæringstidspunkt,
             "fodselsnummer" to vedtaksperiodeVentet.fødselsnummer,
             "organisasjonsnummer" to vedtaksperiodeVentet.organisasjonsnummer
         )))
@@ -78,15 +81,15 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         @Language("PostgreSQL")
         private val VENTER = """
-            INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterPaVedtaksperiodeId, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor, gjeldende)
-            VALUES (:hendelseId, :hendelse::jsonb, true, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer, :ventetSiden, :venterTil, :venterPaVedtaksperiodeId, :venterPaOrganisasjonsnummer, :venterPaHva, :venterPaHvorfor, true) 
+            INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, skjaeringstidspunkt, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterPaVedtaksperiodeId, venterPaSkjaeringstidspunkt, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor, gjeldende)
+            VALUES (:hendelseId, :hendelse::jsonb, true, :vedtaksperiodeId, :skjaeringstidspunkt, :fodselsnummer, :organisasjonsnummer, :ventetSiden, :venterTil, :venterPaVedtaksperiodeId, :venterPaSkjaeringstidspunkt, :venterPaOrganisasjonsnummer, :venterPaHva, :venterPaHvorfor, true) 
             ON CONFLICT (hendelseId) DO NOTHING
         """
 
         @Language("PostgreSQL")
         private val VENTER_IKKE = """
-            INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, fodselsnummer, organisasjonsnummer, gjeldende)
-            VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :fodselsnummer, :organisasjonsnummer, true)
+            INSERT INTO vedtaksperiode_ventetilstand(hendelseId, hendelse, venter, vedtaksperiodeId, skjaeringstidspunkt, fodselsnummer, organisasjonsnummer, gjeldende)
+            VALUES (:hendelseId, :hendelse::jsonb, false, :vedtaksperiodeId, :skjaeringstidspunkt, :fodselsnummer, :organisasjonsnummer, true)
             ON CONFLICT (hendelseId) DO NOTHING 
         """
 
@@ -139,12 +142,14 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         internal val Row.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = this.uuid("vedtaksperiodeId"),
+            skjæringstidspunkt = this.localDate("skjaeringstidspunkt"),
             fødselsnummer = this.string("fodselsnummer"),
             organisasjonsnummer = this.string("organisasjonsnummer"),
             ventetSiden = this.localDateTime("ventetSiden"),
             venterTil = this.localDateTime("venterTil"),
             venterPå = VenterPå(
                 vedtaksperiodeId = this.uuid("venterPaVedtaksperiodeId"),
+                skjæringstidspunkt = this.localDate("venterPaSkjaeringstidspunkt"),
                 organisasjonsnummer = this.string("venterPaOrganisasjonsnummer"),
                 hva = this.string("venterPaHva"),
                 hvorfor = this.stringOrNull("venterPaHvorfor")

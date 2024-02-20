@@ -59,10 +59,12 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
           "@event_name": "vedtaksperiode_venter",
           "organisasjonsnummer": "123456789",
           "vedtaksperiodeId": "$vedtaksperiodeId",
+          "skjæringstidspunkt": "2019-01-01",
           "ventetSiden": "$ventetSiden",
           "venterTil": "+999999999-12-31T23:59:59.999999999",
           "venterPå": {
             "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
+            "skjæringstidspunkt": "2018-01-01",
             "organisasjonsnummer": "987654321",
             "venteårsak": {
               "hva": "$venterPå",
