@@ -1,6 +1,6 @@
 val junitJupiterVersion = "5.10.2"
 val testcontainersVersion = "1.19.0"
-val postgresqlVersion = "42.6.0"
+val postgresqlVersion = "42.7.2"
 
 plugins {
     kotlin("jvm") version "1.9.22"
