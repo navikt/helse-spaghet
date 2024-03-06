@@ -47,7 +47,7 @@ class SendtSøknadRiver(
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query =
-                """INSERT INTO soknad(dokument_id, hendelse_id, event, soknadstype, arbeidssituasjon) VALUES(:dokumentId, :hendelseId, :event, :soknadstype, :arbeidssituasjon)"""
+                """INSERT INTO soknad(dokument_id, hendelse_id, event, soknadstype, arbeidssituasjon) VALUES(:dokumentId, :hendelseId, :event, :soknadstype, :arbeidssituasjon) ON CONFLICT DO NOTHING"""
             session.run(
                 queryOf(
                     query, mapOf(
