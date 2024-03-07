@@ -62,15 +62,21 @@ internal class IdentifiserStuckVedtaksperioder (
                 .filterNot {  it.value.skalIkkeMase }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
 
+
+            val antall = venterPå.size
+
             var melding =
                 "\n\nDet er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
-                "Fordelt på ${venterPå.size.personer}:\n\n"
+                "Fordelt på ${antall.personer}:\n\n"
 
             var index = 0
-            melding += venterPå.entries.joinToString(separator = "\n") { (fnr, vedtaksperiode) ->
+            melding += venterPå.entries.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiode) ->
                 index += 1
                 "\t$index) ${vedtaksperiode.kibanaUrl} venter på ${vedtaksperiode.snygg} ${fnr.spannerUrl?.let { "($it)" }}"
             }
+
+            if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
+
             context.sendPåSlack(packet, ERROR, melding)
         } catch (exception: Exception) {
             sikkerlogg.error("Feil ved identifisering av stuck vedtaksperioder", exception)
@@ -78,6 +84,7 @@ internal class IdentifiserStuckVedtaksperioder (
     }
 
     private companion object {
+        private val Maks = 50
         private val spurteDuClient = SpurteDuClient()
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
