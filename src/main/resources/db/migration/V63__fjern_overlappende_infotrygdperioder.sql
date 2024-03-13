@@ -1,0 +1,2 @@
+DROP TABLE overlappende_infotrygd_periode;
+DROP TABLE overlappende_infotrygdperiode_etter_infotrygdendring;

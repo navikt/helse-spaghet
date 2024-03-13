@@ -47,7 +47,6 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     HendelseIkkeHåndtertRiver(this, dataSource)
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)
-    OverlappendeInfotrygdperiodeEtterInfotrygdendringRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, dataSource)
     VedtaksperiodeVenterIkkeRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
