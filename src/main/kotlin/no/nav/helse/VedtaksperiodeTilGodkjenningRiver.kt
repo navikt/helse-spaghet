@@ -19,9 +19,9 @@ class VedtaksperiodeTilGodkjenningRiver(
     init {
         River(rapidApplication).apply {
             validate {
+                it.demandAll("@behov", listOf("Godkjenning"))
                 it.requireKey("@behovId", "@opprettet")
                 it.interestedIn("vedtaksperiodeId")
-                it.demandAll("@behov", listOf("Godkjenning"))
                 it.forbid("@løsning")
                 it.forbid("@final")
             }
