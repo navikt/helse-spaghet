@@ -95,10 +95,9 @@ internal class IdentifiserStuckVedtaksperioder (
             "<$url|spannerlink>"
         }
 
-        private val IkkeStuck = setOf(
-            IkkeStuckLikevel(UUID.fromString("e253e028-e722-4376-ac89-ac4a63211454"), "HJELP", "VIL_OMGJØRES_PGA_FERIE_I_INFOTRYGD")
-        )
-        private val VenterPå.skalIkkeMase get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in IkkeStuck
+        /** Liste med perioder som er stuck, men bruker kontaktes av saksbehandler for å avvente ny informasjon som kan endre på stuck-situasjonen **/
+        private val AVVENTER_MENS_AG_KONTAKTES = emptySet<IkkeStuckLikevel>()
+        private val VenterPå.skalIkkeMase get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_AG_KONTAKTES
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
