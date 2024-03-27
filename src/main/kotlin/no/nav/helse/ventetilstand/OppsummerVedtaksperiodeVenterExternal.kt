@@ -71,7 +71,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             """.trimIndent()
             val ventegrupper = oppsummering.groupBy { it.årsak }
             ventegrupper.forEach { (gruppe, data) ->
-                melding += "*Perioder som har ventet på ${gruppe.hvem()}* \n"
+                melding += "*Har ventet på ${gruppe.hvem()}* \n"
                 data.forEach {
                     melding += "\t ${it.bucket.emoji()} ${it.bucket.lowercase()}: *${it.antall}* \n"
                 }
