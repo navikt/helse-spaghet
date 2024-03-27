@@ -52,6 +52,13 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             else -> ""
         }
 
+        private fun String.hvem() = when(this) {
+            "INFORMASJON FRA ARBEIDSGIVER" -> "arbeidsgiver"
+            "SAKSBEHANDLER" -> "saksbehandler"
+            "SØKNAD" -> "den sykmeldte"
+            else -> this
+        }
+
         private fun lagMelding(oppsummering: List<VedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
             var melding = """
             God mandag! :monday: 
@@ -64,7 +71,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             """.trimIndent()
             val ventegrupper = oppsummering.groupBy { it.årsak }
             ventegrupper.forEach { (gruppe, data) ->
-                melding += "*Noen perioder venter på ${gruppe.lowercase()}:* \n"
+                melding += "*Noen perioder venter på ${gruppe.hvem()}:* \n"
                 data.forEach {
                     melding += "\t ${it.bucket.emoji()} Har ventet i ${it.bucket.lowercase()}: *${it.antall}* \n"
                 }
