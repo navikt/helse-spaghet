@@ -26,12 +26,15 @@ internal class OppsummerVedtaksperiodeVenterExternal (
         try {
             val oppsummering = dao.oppsummeringExternal()
             val melding = lagMelding(oppsummering)
-            val slackmelding = JsonMessage.newMessage("slackmelding", mapOf(
-                "melding" to "$melding\n\n",
-                "level" to "INFO",
-                "channel" to "G01BRRU3666", // wip
-                "system_participating_services" to packet["system_participating_services"]
-            )
+            val slackmelding = JsonMessage.newMessage(
+                "slackmelding", mapOf(
+                    "melding" to "$melding\n\n",
+                    "level" to "INFO",
+                    "channel" to "G01BRRU3666", // wip
+                    "utenPrefix" to true,
+                    "utenSuffix" to true,
+                    "system_participating_services" to packet["system_participating_services"]
+                )
             ).toJson()
             context.publish(slackmelding)
         } catch (exception: Exception) {
