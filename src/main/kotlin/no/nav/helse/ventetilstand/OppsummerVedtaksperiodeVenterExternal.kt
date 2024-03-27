@@ -20,6 +20,15 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 it.requireKey("system_participating_services", "simplified_for_external_purposes")
             }
         }.register(this)
+        River(rapidsConnection).apply {
+            validate {
+                it.demandValue("@event_name", "halv_time")
+                it.demandValue("time", 8)
+                it.demandValue("minutt", 30)
+                it.demandAny("ukedag", listOf("MONDAY"))
+                it.requireKey("system_participating_services")
+            }
+        }.register(this)
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
@@ -30,7 +39,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 "slackmelding", mapOf(
                     "melding" to "$melding\n\n",
                     "level" to "INFO",
-                    "channel" to "G01BRRU3666", // wip
+                    "channel" to "GE89UHQM7",
                     "utenPrefix" to true,
                     "utenSuffix" to true,
                     "system_participating_services" to packet["system_participating_services"]

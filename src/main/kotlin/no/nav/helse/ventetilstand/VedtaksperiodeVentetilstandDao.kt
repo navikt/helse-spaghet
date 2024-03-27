@@ -147,7 +147,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                 select venterpahva, ventetsiden, (now()::date - vedtaksperiode_ventetilstand.ventetsiden::date) as ventetIAntallDager
                 from vedtaksperiode_ventetilstand
                 where venter=true AND gjeldende=true
-                LIMIT 50000 -- wip
             )
             select count(*) as antall,
                    (case when venterpahva = 'INNTEKTSMELDING' THEN 'INFORMASJON FRA ARBEIDSGIVER' WHEN venterpahva = 'GODKJENNING' THEN 'SAKSBEHANDLER' ELSE venterpahva end) as venter_på,
