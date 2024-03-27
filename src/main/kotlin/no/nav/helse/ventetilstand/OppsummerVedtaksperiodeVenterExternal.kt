@@ -64,8 +64,8 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             God mandag! :monday: 
             
             Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
-            Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited:  
-            Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :lets_go: 
+            
+            Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited: Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :lets_go: 
             
             
             """.trimIndent()
