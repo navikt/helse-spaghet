@@ -44,12 +44,11 @@ internal class OppsummerVedtaksperiodeVenterExternal (
 
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-        private val Int.fintAntall get() = "$this".padStart(10,' ')
 
         private fun String.emoji() = when(this) {
-            "UNDER 30 DAGER" -> ":drake-yes:"
-            "MELLOM 30 OG 90 DAGER" -> ":drake-no:"
-            "OVER 90 DAGER" -> ":notlikethis:"
+            "UNDER 30 DAGER" -> ":large_green_circle:"
+            "MELLOM 30 OG 90 DAGER" -> ":large_yellow_circle:"
+            "OVER 90 DAGER" -> ":red_circle:"
             else -> ""
         }
 
@@ -65,9 +64,9 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             """.trimIndent()
             val ventegrupper = oppsummering.groupBy { it.årsak }
             ventegrupper.forEach { (gruppe, data) ->
-                melding += "Noen perioder venter på ${gruppe.lowercase()}: \n"
+                melding += "*Noen perioder venter på ${gruppe.lowercase()}:* \n"
                 data.forEach {
-                    melding += "\t - Har ventet i ${it.bucket.lowercase()}: ${it.antall} ${it.bucket.emoji()} \n"
+                    melding += "\t ${it.bucket.emoji()} Har ventet i ${it.bucket.lowercase()}: *${it.antall}* \n"
                 }
             }
             return melding
