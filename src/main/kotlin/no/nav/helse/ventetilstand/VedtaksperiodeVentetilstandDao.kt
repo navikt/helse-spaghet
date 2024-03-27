@@ -75,6 +75,16 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         oppsummering to antallPersoner
     }
 
+    internal data class VentegruppeExternal(val årsak: String, val antall: Int, val bucket: String)
+
+    internal fun oppsummeringExternal(): List<VentegruppeExternal> {
+        return sessionOf(dataSource).use { session ->
+            session.list(Query(OPPSUMMERING_EXTERNAL)) { row ->
+                VentegruppeExternal(årsak = row.string("venter_på"), antall = row.int("antall"), bucket = row.string("ventet_i"))
+            }
+        }
+    }
+
     internal companion object {
         @Language("PostgreSQL")
         private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId AND gjeldende = true AND venter = true"
@@ -129,6 +139,24 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             WHERE venter = true AND gjeldende = true AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
             GROUP BY arsak, propp
             ORDER BY antall DESC
+        """
+
+        @Language("PostgreSQL")
+        private val OPPSUMMERING_EXTERNAL = """
+            with siste as (
+                select venterpahva, ventetsiden, (now()::date - vedtaksperiode_ventetilstand.ventetsiden::date) as ventetIAntallDager
+                from vedtaksperiode_ventetilstand
+                where venter=true AND gjeldende=true
+                LIMIT 50000 -- wip
+            )
+            select count(*) as antall,
+                   (case when venterpahva = 'INNTEKTSMELDING' THEN 'INFORMASJON FRA ARBEIDSGIVER' WHEN venterpahva = 'GODKJENNING' THEN 'SAKSBEHANDLER' ELSE venterpahva end) as venter_på,
+                   (CASE WHEN ventetIAntallDager > 90 THEN 'OVER 90 DAGER' WHEN ventetIAntallDager > 30 THEN 'MELLOM 30 OG 90 DAGER' ELSE 'UNDER 30 DAGER' end) as ventet_i,
+                   (CASE WHEN ventetIAntallDager > 90 THEN 3 WHEN ventetIAntallDager > 30 THEN 2 ELSE 1 end) as sortering
+            from siste
+            group by venter_på, ventet_i, sortering
+            having count(*) > 10
+            order by sortering
         """
 
 

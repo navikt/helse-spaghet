@@ -52,6 +52,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     VedtaksperiodeEndretRiver(this, dataSource)
     IdentifiserStuckVedtaksperioder(this, dataSource)
     OppsummerVedtaksperiodeVenter(this, dataSource)
+    OppsummerVedtaksperiodeVenterExternal(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)
     FunksjonellFeilOgVarselRiver(this, dataSource)
     SendtSøknadRiver(this, dataSource)

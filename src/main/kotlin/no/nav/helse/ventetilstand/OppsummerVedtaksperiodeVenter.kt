@@ -22,6 +22,7 @@ internal class OppsummerVedtaksperiodeVenter (
             validate {
                 it.demandValue("@event_name", "oppsummer_vedtaksperiode_venter")
                 it.requireKey("system_participating_services")
+                it.rejectKey("simplified_for_external_purposes")
             }
         }.register(this)
         River(rapidsConnection).apply {
