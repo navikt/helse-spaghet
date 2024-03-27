@@ -46,15 +46,29 @@ internal class OppsummerVedtaksperiodeVenterExternal (
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val Int.fintAntall get() = "$this".padStart(10,' ')
 
+        private fun String.emoji() = when(this) {
+            "UNDER 30 DAGER" -> ":drake-yes:"
+            "MELLOM 30 OG 90 DAGER" -> ":drake-no:"
+            "OVER 90 DAGER" -> ":notlikethis:"
+            else -> ""
+        }
+
         private fun lagMelding(oppsummering: List<VedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
-            var melding = """\n\n God mandag! :monday: 
-                Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
-                Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited:  
-                Målet med denne informasjonen er å dele data fra vedtaksløsningen med resten av området :lets_go:
-                Målet med denne informasjonen er å sikre felles oversikt for området og å fremme kontinuerlig forbedring av tjenestene :lets_go: \n\n""".trimMargin()
-            melding += "\nNærmere bestemt venter de på:\n"
-            oppsummering.forEach { (årsak, antall, ventet_i) ->
-                melding += "${antall.fintAntall} venter på $årsak og har ventet i ${ventet_i}\n"
+            var melding = """
+            God mandag! :monday: 
+            
+            Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
+            Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited:  
+            Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :lets_go: 
+            
+            
+            """.trimIndent()
+            val ventegrupper = oppsummering.groupBy { it.årsak }
+            ventegrupper.forEach { (gruppe, data) ->
+                melding += "Noen perioder venter på ${gruppe.lowercase()}: \n"
+                data.forEach {
+                    melding += "\t - Har ventet i ${it.bucket.lowercase()}: ${it.antall} ${it.bucket.emoji()} \n"
+                }
             }
             return melding
         }
