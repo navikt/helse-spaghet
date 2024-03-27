@@ -156,7 +156,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             from siste
             group by venter_på, ventet_i, sortering
             having count(*) > 10
-            order by sortering
+            order by venter_på, sortering
         """
 
 

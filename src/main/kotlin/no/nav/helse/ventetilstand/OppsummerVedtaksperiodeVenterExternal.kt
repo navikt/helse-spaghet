@@ -47,12 +47,36 @@ internal class OppsummerVedtaksperiodeVenterExternal (
         private val Int.fintAntall get() = "$this".padStart(10,' ')
 
         private fun lagMelding(oppsummering: List<VedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
-            var melding = "\n\n God mandag! :monday: Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin behandlet :sonic-waiting:  Dette for å gi innsikt i effektiviteten av prosesseringstiden og for å identifisere eventuelle forsinkelser. Denne er spennende å følge med på over tid :excited:  Ventetid er beregnet fra datoen søknaden ble sendt inn og har med alle søknader der saken ikke er ferdigbehandlet. En person kan ha flere søknader i denne oversikten. Målet med denne informasjonen er å sikre felles oversikt for området og å fremme kontinuerlig forbedring av tjenestene :lets_go: \n\n"
+            var melding = """\n\n God mandag! :monday: 
+                Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
+                Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited:  
+                Målet med denne informasjonen er å dele data fra vedtaksløsningen med resten av området :lets_go:
+                Målet med denne informasjonen er å sikre felles oversikt for området og å fremme kontinuerlig forbedring av tjenestene :lets_go: \n\n""".trimMargin()
             melding += "\nNærmere bestemt venter de på:\n"
             oppsummering.forEach { (årsak, antall, ventet_i) ->
                 melding += "${antall.fintAntall} venter på $årsak og har ventet i ${ventet_i}\n"
             }
             return melding
+        }
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val enOppsummering = """
+                291,INFORMASJON FRA ARBEIDSGIVER,UNDER 30 DAGER
+                9815,INFORMASJON FRA ARBEIDSGIVER,MELLOM 30 OG 90 DAGER
+                6652,INFORMASJON FRA ARBEIDSGIVER,OVER 90 DAGER
+                164,SAKSBEHANDLER,UNDER 30 DAGER
+                2048,SAKSBEHANDLER,MELLOM 30 OG 90 DAGER
+                895,SAKSBEHANDLER,OVER 90 DAGER
+                127,SØKNAD,MELLOM 30 OG 90 DAGER
+            """.trimIndent().lines().map {
+                val split = it.split(",")
+                VedtaksperiodeVentetilstandDao.VentegruppeExternal(
+                    årsak = split[1],
+                    antall = split[0].toInt(),
+                    bucket = split[2])
+            }
+            println(lagMelding(oppsummering = enOppsummering))
         }
     }
 }
