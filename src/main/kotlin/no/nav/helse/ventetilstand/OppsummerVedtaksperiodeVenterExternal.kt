@@ -74,7 +74,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             
             Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
             
-            Denne er spennende å følge med på og kan hjelpe oss å identifisere eventuelle forsinkelser :excited: Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :lets_go: 
+            Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :excited: :lets_go:
             
             
             """.trimIndent()
@@ -86,6 +86,15 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 }
                 melding += "\n"
             }
+
+            melding += """
+            *Ettertanker*
+                1. Det er bare saker som venter i ny løsning som er omfattet
+                2. Det er ikke den totale ventetiden som vises, kun ventetiden i nåværende tilstand. Man kan vente over 90 dager på arbeidsgiver, for så å vente over 90 dager på saksbehandler.
+
+            Med vennlig hilsen,
+            Viggo Velferdsvenn
+            """.trimIndent()
             return melding
         }
 
