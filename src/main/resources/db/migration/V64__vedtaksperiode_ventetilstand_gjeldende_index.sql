@@ -1,0 +1,2 @@
+DROP INDEX vedtaksperiode_ventetilstand_gjeldende_venter_idx;
+CREATE INDEX vedtaksperiode_ventetilstand_gjeldende_venter_idx ON vedtaksperiode_ventetilstand(gjeldende, venter) where gjeldende=true;
