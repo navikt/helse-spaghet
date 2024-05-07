@@ -113,7 +113,7 @@ internal class IdentifiserStuckVedtaksperioder (
 
 class SpurteDuClient(private val host: String) {
     constructor() : this(when (System.getenv("NAIS_CLUSTER_NAME")) {
-        "prod-gcp" -> "https://spurte-du.intern.nav.no"
+        "prod-gcp" -> "https://spurte-du.ansatt.nav.no"
         else -> "https://spurte-du.intern.dev.nav.no"
     })
     private companion object {
