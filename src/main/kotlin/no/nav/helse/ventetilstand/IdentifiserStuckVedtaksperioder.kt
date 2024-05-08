@@ -91,7 +91,7 @@ internal class IdentifiserStuckVedtaksperioder (
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
             "<$url|$vedtaksperiodeId>"
         }
-        private val String.spannerUrl get() = spurteDuClient.utveksleUrl("https://spanner.intern.nav.no/person/${this}")?.let { url ->
+        private val String.spannerUrl get() = spurteDuClient.utveksleUrl("https://spanner.ansatt.nav.no/person/${this}")?.let { url ->
             "<$url|spannerlink>"
         }
 
