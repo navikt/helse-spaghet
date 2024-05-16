@@ -17,7 +17,7 @@ object TestData {
         """{
             "@event_name": "annullering",
             "saksbehandler": {"oid": "$saksbehandler"},
-            "fagsystemId": "$fagsystemId",
+            "vedtaksperiodeId": "$vedtaksperiodeId",
             "begrunnelser": ${begrunnelser.toJson()},
             ${kommentar?.let {""""kommentar": "$it",""" } ?: ""}
             "@opprettet": "$opprettet"
@@ -25,13 +25,13 @@ object TestData {
 
     val annullering = Annullering(
         saksbehandler = randomUUID(),
-        fagsystemId = "ABCD12345",
+        vedtaksperiodeId = randomUUID(),
         begrunnelser = listOf(),
         kommentar = null,
         opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
     )
 
-    fun Annullering.fagsystemId(it: String) = copy(fagsystemId = it)
+    fun Annullering.vedtaksperiodeId(it: UUID) = copy(vedtaksperiodeId = it)
     fun Annullering.kommentar(it: String) = copy(kommentar = it)
     fun Annullering.begrunnelse(it: String) = copy(begrunnelser = begrunnelser + it)
 
@@ -109,7 +109,6 @@ object TestData {
         val kontekstType: String? = null
     ) {
         fun aktivitet(it: Aktivitet) = copy(aktiviteter = aktiviteter + it)
-        fun kontekstType(it: String) = copy(kontekstType = it)
         fun toJson() =
             """{
             "@event_name": "aktivitetslogg_ny_aktivitet",

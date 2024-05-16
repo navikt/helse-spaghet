@@ -5,13 +5,13 @@ import com.zaxxer.hikari.HikariDataSource
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.Util.uuid
 import no.nav.helse.Util.withSession
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.MigrationVersion
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.intellij.lang.annotations.Language
 import org.testcontainers.containers.PostgreSQLContainer
+import java.util.*
 import javax.sql.DataSource
 
 fun embeddedPostgres() = PostgreSQLContainer<Nothing>("postgres:14").apply {
@@ -24,7 +24,7 @@ fun DataSource.annulleringer(): List<Annullering> {
         this.run(
             queryOf(
                 """
-SELECT saksbehandler, fagsystem_id, begrunnelser, kommentar, opprettet
+SELECT saksbehandler, id, begrunnelser, kommentar, opprettet
 FROM annullering a
 ORDER BY a.opprettet DESC
     """
@@ -37,7 +37,7 @@ ORDER BY a.opprettet DESC
 fun Row.annullering() =
     Annullering(
         saksbehandler = uuid("saksbehandler"),
-        fagsystemId = string("fagsystem_id"),
+        vedtaksperiodeId = UUID.fromString(string("id")),
         begrunnelser = stringList("begrunnelser"),
         kommentar = stringOrNull("kommentar"),
         opprettet = localDateTime("opprettet"),

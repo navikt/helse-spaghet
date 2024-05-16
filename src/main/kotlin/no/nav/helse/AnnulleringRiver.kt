@@ -19,13 +19,12 @@ class AnnulleringRiver(
         River(rapidApplication).apply {
             validate {
                 it.demandValue("@event_name", "annullering")
-                it.requireKey("fagsystemId", "begrunnelser", "@opprettet")
+                it.requireKey("vedtaksperiodeId", "begrunnelser", "@opprettet")
                 it.require("saksbehandler.oid") { node -> node.asUuid() }
                 it.interestedIn("kommentar")
             }
         }.register(this)
     }
-
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
 
@@ -34,6 +33,6 @@ class AnnulleringRiver(
         dataSource.withSession {
             this.insertAnnullering(annullering)
         }
-        logg.info("Lagret annullering for fagsystemId=${annullering.fagsystemId}")
+        logg.info("Lagret annullering for vedtaksperiodeId=${annullering.vedtaksperiodeId}")
     }
 }

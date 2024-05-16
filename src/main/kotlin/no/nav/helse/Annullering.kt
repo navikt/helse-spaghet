@@ -13,7 +13,7 @@ import java.util.*
 
 data class Annullering(
     val saksbehandler: UUID,
-    val fagsystemId: String,
+    val vedtaksperiodeId: UUID,
     val begrunnelser: List<String>,
     val kommentar: String?,
     val opprettet: LocalDateTime,
@@ -22,7 +22,7 @@ data class Annullering(
         fun JsonNode.parseAnnullering(): Annullering {
             return Annullering(
                 saksbehandler = this["saksbehandler"]["oid"].asUuid(),
-                fagsystemId = this["fagsystemId"].asText(),
+                vedtaksperiodeId = this["vedtaksperiodeId"].asUuid(),
                 begrunnelser = this["begrunnelser"].map { it.asText() },
                 kommentar = this["kommentar"].asNullableText(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
@@ -34,18 +34,20 @@ data class Annullering(
             val statement = """
                 INSERT INTO annullering(
                     saksbehandler,
-                    fagsystem_id,
+                    id,
+                    id_type,
                     begrunnelser,
                     kommentar,
                     opprettet
-                ) VALUES ( ?, ?, ?, ?, ? )
+                ) VALUES (?, ?, ?::id_type, ?, ?, ?)
                 ON CONFLICT DO NOTHING;
             """
             run(
                 queryOf(
                     statement,
                     annullering.saksbehandler,
-                    annullering.fagsystemId,
+                    annullering.vedtaksperiodeId,
+                    "VEDTAKSPERIODE_ID",
                     annullering.begrunnelser.toJson(),
                     annullering.kommentar,
                     annullering.opprettet,

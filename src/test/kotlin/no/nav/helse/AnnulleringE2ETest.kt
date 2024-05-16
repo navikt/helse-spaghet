@@ -3,11 +3,12 @@ package no.nav.helse
 import no.nav.helse.E2eTestApp.Companion.e2eTest
 import no.nav.helse.TestData.annullering
 import no.nav.helse.TestData.begrunnelse
-import no.nav.helse.TestData.fagsystemId
 import no.nav.helse.TestData.kommentar
+import no.nav.helse.TestData.vedtaksperiodeId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.*
 
 class AnnulleringE2ETest {
     @Test
@@ -35,12 +36,13 @@ class AnnulleringE2ETest {
     fun `To events`() {
         e2eTest {
             annullering.sendTilRapid()
+            val vedtaksperiodeId = UUID.randomUUID()
             annullering
-                .fagsystemId("banan")
+                .vedtaksperiodeId(vedtaksperiodeId)
                 .sendTilRapid()
             val lagrede = dataSource.annulleringer()
             assertEquals(2, lagrede.size)
-            assertEquals(setOf(annullering, annullering.fagsystemId("banan")), lagrede.toSet())
+            assertEquals(setOf(annullering, annullering.vedtaksperiodeId(vedtaksperiodeId)), lagrede.toSet())
         }
     }
 
@@ -80,7 +82,7 @@ class AnnulleringE2ETest {
         val feilMelding = """{
             "@event_name": "annullering",
             "saksbehandler": {"oid": "X000000"},
-            "fagsystemId": "ABC",
+            "vedtaksperiodeId": "0344ff99-b92b-4c35-ae2e-75964666099d",
             "begrunnelser": ["because"],
             "@opprettet": "${LocalDateTime.now()}"
          }""".trimMargin()
