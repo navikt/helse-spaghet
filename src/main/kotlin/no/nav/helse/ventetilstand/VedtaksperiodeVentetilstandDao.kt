@@ -4,7 +4,6 @@ import kotliquery.Query
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.sikkerlogg
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -60,9 +59,12 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
     }
 
     internal fun stuck() = sessionOf(dataSource).use { session ->
+        val nå = LocalDateTime.now(ZoneId.of("Europe/Oslo"))
+        val tiDagerSiden = nå.minusDays(10)
+        val treMånederSiden = nå.minusMonths(3)
         session.list(Query(GJELDENDE_VEDTAKSPERIODER_SOM_VENTER)) { row ->
-            row.vedtaksperiodeVenter
-        }.stuck
+            row.stuckOrNull(tiDagerSiden, treMånederSiden)
+        }
     }
 
     internal data class Ventegruppe(val årsak: String, val antall: Int, val propp: Boolean)
@@ -144,32 +146,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES'
         """
 
-        private val DefinitivtStuck = setOf("BEREGNING", "UTBETALING", "HJELP")
-        private val KanTaMerEnnTreMåneder = setOf("GODKJENNING", "INNTEKTSMELDING")
-        private val List<VedtaksperiodeVenter>.stuck get(): List<VedtaksperiodeVenter> {
-            val stuck = mutableListOf<VedtaksperiodeVenter>()
-            val nå = LocalDateTime.now(ZoneId.of("Europe/Oslo"))
-            sikkerlogg.info("Stuck i kode: ${this.size} vedtksperioder venter.")
-            // Om vi venter på en av disse tingene skal det alltid være alarm
-            val (defnitivtStuck, potensieltStuck) = this.partition { it.venterPå.hva in DefinitivtStuck }
-            sikkerlogg.info("Stuck i kode: Sortert ut de som definitivt er stuck.")
-            stuck.addAll(defnitivtStuck)
-            // Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler eller inntektsmelding
-            val (ventetTreMånederUtenMakstid, resten) = potensieltStuck.partition {
-                it.venterPå.hva !in KanTaMerEnnTreMåneder && it.venterTil.year == 9999 && it.ventetSiden < nå.minusMonths(3)
-            }
-            sikkerlogg.info("Stuck i kode: Sortert ut de som har ventet mer enn tre måneder uten makstid.")
-            stuck.addAll(ventetTreMånederUtenMakstid)
-            // Om maksdato er nådd så tyder det på at vi er en periode som ikke kan forkastes tross at maksdato er nådd.
-            // Trekker fra ekstra 10 dager for å være sikker på at den ikke bare venter på å få en påminnelse fra Spock før den forkastes
-            val nåddMakstidMenKanIkkeForkastes = resten.filter {
-                it.venterTil.year != 9999 && it.venterTil < nå.minusDays(10)
-            }
-            sikkerlogg.info("Stuck i kode: Sortert ut de som har nådd makstid, men ikke kan forkastes.")
-            stuck.addAll(nåddMakstidMenKanIkkeForkastes)
-            return stuck
-        }
-
         @Language("PostgreSQL")
         private val OPPSUMMERING = """
             SELECT concat(TRIM(TRAILING '_FORDI_' FROM concat(venterpahva, '_FORDI_', venterpahvorfor)), case when date_part('Year', ventertil) = 9999 AND ventetSiden <= (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' then '_SOM_IKKE_KAN_FORKASTES_OG_HAR_VENTET_MER_ENN_3_MÅNEDER' else '' end) as arsak, vedtaksperiodeid = venterpavedtaksperiodeid as propp, count(1) as antall
@@ -220,5 +196,22 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                 hvorfor = this.stringOrNull("venterPaHvorfor")
             )
         )
+
+        private val DefinitivtStuck = setOf("BEREGNING", "UTBETALING", "HJELP")
+        private val KanTaMerEnnTreMåneder = setOf("GODKJENNING", "INNTEKTSMELDING")
+        private fun Row.stuckOrNull(tiDagerSiden: LocalDateTime, treMånederSiden: LocalDateTime): VedtaksperiodeVenter? {
+            val hva = this.string("venterPaHva")
+            // Om vi venter på en av disse tingene skal det alltid være alarm
+            if (hva in DefinitivtStuck) return vedtaksperiodeVenter
+            val venterTil = this.localDateTime("venterTil")
+            // Om maksdato er nådd så tyder det på at vi er en periode som ikke kan forkastes tross at maksdato er nådd.
+            // Trekker fra ekstra 10 dager for å være sikker på at den ikke bare venter på å få en påminnelse fra Spock før den forkastes
+            if (venterTil.year != 9999 && venterTil < tiDagerSiden) return vedtaksperiodeVenter
+            val ventetSiden = this.localDateTime("ventetSiden")
+            // Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler eller inntektsmelding
+            if (hva !in KanTaMerEnnTreMåneder && venterTil.year == 9999 && ventetSiden < treMånederSiden) return vedtaksperiodeVenter
+            // Ikke stuck
+            return null
+        }
     }
 }
