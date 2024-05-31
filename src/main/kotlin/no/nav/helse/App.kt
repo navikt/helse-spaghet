@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.navikt.tbd_libs.azure.AzureToken
+import com.github.navikt.tbd_libs.azure.AzureTokenProvider
+import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.ventetilstand.*
@@ -22,6 +25,20 @@ internal val objectMapper: ObjectMapper = jacksonObjectMapper()
 internal val logg: Logger = LoggerFactory.getLogger("spaghet")
 internal val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
+private fun spurteDuClient() =
+    SpurteDuClient(
+        objectMapper = objectMapper,
+        // har ikke behov for token provider fordi spaghet kun skjuler ting, og henter det ikke frem
+        tokenProvider = object : AzureTokenProvider {
+            override fun bearerToken(scope: String): AzureToken {
+                TODO("Not yet implemented")
+            }
+
+            override fun onBehalfOfToken(scope: String, token: String): AzureToken {
+                TODO("Not yet implemented")
+            }
+        }
+    )
 
 fun main() {
     val env = setUpEnvironment()
@@ -35,7 +52,7 @@ fun main() {
         .start()
 }
 
-fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
+fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource, spurteDuClient: SpurteDuClient = spurteDuClient()) = apply {
     AnnulleringRiver(this, dataSource)
     GodkjenningLøsningRiver(this, dataSource)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
@@ -50,7 +67,7 @@ fun <T : RapidsConnection> T.setupRivers(dataSource: DataSource) = apply {
     VedtaksperiodeVenterRiver(this, dataSource)
     VedtaksperiodeVenterIkkeRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
-    IdentifiserStuckVedtaksperioder(this, dataSource)
+    IdentifiserStuckVedtaksperioder(this, dataSource, spurteDuClient)
     OppsummerVedtaksperiodeVenter(this, dataSource)
     OppsummerVedtaksperiodeVenterExternal(this, dataSource)
     SøknadHåndtertRiver(this, dataSource)

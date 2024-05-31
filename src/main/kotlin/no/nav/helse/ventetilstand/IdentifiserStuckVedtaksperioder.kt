@@ -1,18 +1,16 @@
 package no.nav.helse.ventetilstand
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.navikt.tbd_libs.spurtedu.SkjulRequest
+import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import no.nav.helse.objectMapper
-import no.nav.helse.rapids_rivers.*
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.River
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -23,7 +21,8 @@ import kotlin.time.measureTimedValue
 
 internal class IdentifiserStuckVedtaksperioder (
     rapidsConnection: RapidsConnection,
-    dataSource: DataSource
+    dataSource: DataSource,
+    private val spurteDuClient: SpurteDuClient
 ): River.PacketListener {
     private val dao = VedtaksperiodeVentetilstandDao(dataSource)
 
@@ -72,7 +71,7 @@ internal class IdentifiserStuckVedtaksperioder (
             var index = 0
             melding += venterPå.entries.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiode) ->
                 index += 1
-                "\t$index) ${vedtaksperiode.kibanaUrl} venter på ${vedtaksperiode.snygg} ${fnr.spannerUrl?.let { "($it)" }}"
+                "\t$index) ${vedtaksperiode.kibanaUrl} venter på ${vedtaksperiode.snygg} ${fnr.spannerUrl(spurteDuClient).let { "($it)" }}"
             }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -85,13 +84,12 @@ internal class IdentifiserStuckVedtaksperioder (
 
     private companion object {
         private val Maks = 50
-        private val spurteDuClient = SpurteDuClient()
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
             "<$url|$vedtaksperiodeId>"
         }
-        private val String.spannerUrl get() = spurteDuClient.utveksleUrl("https://spanner.ansatt.nav.no/person/${this}")?.let { url ->
+        private fun String.spannerUrl(spurteDuClient: SpurteDuClient) = spannerlink(spurteDuClient, this).let { url ->
             "<$url|spannerlink>"
         }
 
@@ -111,41 +109,16 @@ internal class IdentifiserStuckVedtaksperioder (
     }
 }
 
-class SpurteDuClient(private val host: String) {
-    constructor() : this(when (System.getenv("NAIS_CLUSTER_NAME")) {
-        "prod-gcp" -> "https://spurte-du.ansatt.nav.no"
-        else -> "https://spurte-du.intern.dev.nav.no"
-    })
-    private companion object {
-        private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
-    }
+private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
+fun spannerlink(spurteDuClient: SpurteDuClient, fnr: String): String {
+    val payload = SkjulRequest.SkjulTekstRequest(
+        tekst = objectMapper.writeValueAsString(mapOf(
+            "ident" to fnr,
+            "identtype" to "FNR"
+        )),
+        påkrevdTilgang = tbdgruppeProd
+    )
 
-    fun utveksleUrl(url: String) = utveksleSpurteDu(objectMapper, mapOf(
-        "url" to url,
-        "påkrevdTilgang" to tbdgruppeProd
-    ))?.let { path ->
-        host + path
-    }
-    private fun utveksleSpurteDu(objectMapper: ObjectMapper, data: Map<String, String>): String? {
-        val httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build()
-
-        val jsonInputString = objectMapper.writeValueAsString(data)
-
-        val request = HttpRequest.newBuilder()
-            .uri(URI("http://spurtedu/skjul_meg"))
-            .timeout(Duration.ofSeconds(10))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonInputString))
-            .build()
-
-        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        return try {
-            objectMapper.readTree(response.body()).path("path").asText()
-        } catch (err: JsonParseException) {
-            null
-        }
-    }
+    val spurteDuLink = spurteDuClient.skjul(payload)
+    return "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}"
 }

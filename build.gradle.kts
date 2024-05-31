@@ -1,6 +1,7 @@
 val junitJupiterVersion = "5.10.2"
 val testcontainersVersion = "1.19.5"
 val postgresqlVersion = "42.7.2"
+val tbdLibsVersion = "2024.05.31-08.02-2c3441c1"
 
 plugins {
     kotlin("jvm") version "1.9.22"
@@ -26,6 +27,8 @@ repositories {
 dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.github.navikt:rapids-and-rivers:2024020507581707116327.1c34df474331")
+    implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
+
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.8.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
