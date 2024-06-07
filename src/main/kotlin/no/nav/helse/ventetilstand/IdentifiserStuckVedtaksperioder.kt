@@ -15,9 +15,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 import javax.sql.DataSource
-import kotlin.time.DurationUnit.SECONDS
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
+import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder (
     rapidsConnection: RapidsConnection,
@@ -50,22 +48,19 @@ internal class IdentifiserStuckVedtaksperioder (
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         try {
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
-            "Sjekket om vedtaksperioder er stuck på grunn av '${packet.eventname}'. Det tok ${tidsbruk.toString(SECONDS)}".let {
-                if (tidsbruk.inWholeSeconds > 2) sikkerlogg.error(it) else sikkerlogg.info(it)
-            }
-            if (stuck.isEmpty()) return ingentingStuck(packet, context)
+            if (stuck.isEmpty()) return ingentingStuck(packet, context, tidsbruk)
 
             val venterPå = stuck
                 .groupBy { it.fødselsnummer }
                 .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
                 .filterNot {  it.value.skalIkkeMase }
-                .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context)
+                .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context, tidsbruk)
 
 
             val antall = venterPå.size
 
             var melding =
-                "\n\nDet er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
+                "\n\nBrukte ${tidsbruk.snygg} på å finne ut at det er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
                 "Fordelt på ${antall.personer}:\n\n"
 
             var index = 0
@@ -99,13 +94,19 @@ internal class IdentifiserStuckVedtaksperioder (
         private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
-        private fun ingentingStuck(packet: JsonMessage, context: MessageContext) {
-            if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nTa det med ro! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
+        private fun ingentingStuck(packet: JsonMessage, context: MessageContext, tidsbruk: Duration) {
+            if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nBrukte ${tidsbruk.snygg} på å finne ut at du kan bare ta det helt :musical_keyboard:! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
             sikkerlogg.info("Ingen vedtaksperioder er stuck per ${LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)}")
         }
 
         private val Int.personer get() = if (this == 1) "én person" else "$this personer"
         private val Int.vedtaksperioder get() = if (this == 1) "én vedtaksperiode" else "$this vedtaksperioder"
+        private fun menneskete(ting: String, antall: Int, prefix: String = "") = if (antall <= 0) "" else if (antall == 1) "$prefix$antall $ting" else "$prefix$antall ${ting}er"
+        private val Duration.snygg get() = toJavaDuration().let { when {
+            it.seconds == 0L -> "under ett sekund"
+            it.seconds < 60L -> menneskete("sekund", it.seconds.toInt())
+            else -> "${menneskete("minutt", it.toMinutesPart())} ${menneskete("sekund", it.toSecondsPart(), prefix = "og ")}"
+        }}
     }
 }
 
