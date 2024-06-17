@@ -18,7 +18,7 @@ import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder(
     rapidsConnection: RapidsConnection,
-    private val dao: VedtaksperiodeVentetilstandDao,
+    private val dao: VedtaksperiodeVentetilstandDao, // TODO: Bytte til GjeldendeVedtaksperiodeVentetilstandDao når data er migrert. Da trenger heller ikke stuck være på interfacet
     private val spurteDuClient: SpurteDuClient
 ): River.PacketListener {
 

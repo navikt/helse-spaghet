@@ -3,22 +3,18 @@ package no.nav.helse.ventetilstand
 import kotliquery.Query
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
 
 internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: DataSource): VedtaksperiodeVentetilstandDao {
 
-    override fun hentOmVenter(vedtaksperiodeId: UUID): VedtaksperiodeVenter? {
-        return sessionOf(dataSource).use { session ->
-             session.single(
-                 queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
-             ){ row -> row.vedtaksperiodeVenter }
-        }
-    }
-
     override fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
+        val vedtaksperiodeId = vedtaksperiodeVenter.vedtaksperiodeId
+        if (hentOmVenter(vedtaksperiodeId) == vedtaksperiodeVenter) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
         nyGjeldende(vedtaksperiodeVenter, hendelse, queryOf(VENTER, mapOf(
             "hendelseId" to hendelse.id,
             "hendelse" to hendelse.hendelse,
@@ -34,10 +30,11 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
             "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
             "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
         )))
+        logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
     }
 
-    override fun venterIkke(vedtaksperiodeId: UUID) {}
-    override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {
+    override fun venterIkke(vedtaksperiodeId: UUID, hendelse: Hendelse) {
+        val vedtaksperiodeVentet = hentOmVenter(vedtaksperiodeId) ?: return
         nyGjeldende(vedtaksperiodeVentet, hendelse, queryOf(VENTER_IKKE, mapOf(
             "hendelseId" to hendelse.id,
             "hendelse" to hendelse.hendelse,
@@ -46,6 +43,14 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
             "fodselsnummer" to vedtaksperiodeVentet.fødselsnummer,
             "organisasjonsnummer" to vedtaksperiodeVentet.organisasjonsnummer
         )))
+    }
+
+    internal fun hentOmVenter(vedtaksperiodeId: UUID): VedtaksperiodeVenter? {
+        return sessionOf(dataSource).use { session ->
+            session.single(
+                queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
+            ){ row -> row.vedtaksperiodeVenter }
+        }
     }
 
     private fun nyGjeldende(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse, nyGjeldendeQuery: Query) {
@@ -86,6 +91,8 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
     }
 
     internal companion object {
+        private val logger = LoggerFactory.getLogger(HistoriskVedtaksperiodeVentetilstandDao::class.java)
+
         @Language("PostgreSQL")
         private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId AND gjeldende = true AND venter = true"
 

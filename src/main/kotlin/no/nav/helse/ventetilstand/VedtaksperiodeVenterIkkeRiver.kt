@@ -22,9 +22,7 @@ internal class VedtaksperiodeVenterIkkeRiver(
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        dao.venterIkke(vedtaksperiodeId)
-        val vedtaksperiodeVentet = dao.hentOmVenter(vedtaksperiodeId) ?: return
-        dao.venterIkke(vedtaksperiodeVentet, packet.hendelse)
+        dao.venterIkke(vedtaksperiodeId, packet.hendelse)
         logger.info("Venter ikke lenger for {}. Har fått eksplisitt signal om at den ikke venter", keyValue("vedtaksperiodeId", vedtaksperiodeId))
     }
 

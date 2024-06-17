@@ -1,8 +1,6 @@
 package no.nav.helse.ventetilstand
 
-import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
-import org.slf4j.LoggerFactory
 import java.util.*
 
 internal class VedtaksperiodeVenterRiver (
@@ -33,20 +31,10 @@ internal class VedtaksperiodeVenterRiver (
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val ny = packet.vedtaksperiodeVenter
-        dao.forEach { it.håndterVedtaksperiodeVenter(ny, packet.hendelse) }
-    }
-
-    private fun VedtaksperiodeVentetilstandDao.håndterVedtaksperiodeVenter(ny: VedtaksperiodeVenter, hendelse: Hendelse) {
-        val vedtaksperiodeId = ny.vedtaksperiodeId
-        val gammel = hentOmVenter(vedtaksperiodeId)
-        if (ny == gammel) return logger.info("Ingen endring på ventetilstand for {} i ${this::class.simpleName}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
-        venter(ny, hendelse)
-        logger.info("Lagret ny ventetilstand for {} i ${this::class.simpleName}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+        dao.venter(packet.vedtaksperiodeVenter, packet.hendelse)
     }
 
     private companion object {
-        val logger = LoggerFactory.getLogger(VedtaksperiodeVenterRiver::class.java)
         val JsonMessage.vedtaksperiodeVenter get() = VedtaksperiodeVenter.opprett(
             vedtaksperiodeId = UUID.fromString(this["vedtaksperiodeId"].asText()),
             skjæringstidspunkt = this["skjæringstidspunkt"].asLocalDate(),

@@ -1,23 +1,20 @@
 package no.nav.helse.ventetilstand
 
-import kotliquery.Query
-import kotliquery.Session
-import kotliquery.queryOf
-import kotliquery.sessionOf
+import kotliquery.*
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import org.intellij.lang.annotations.Language
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
 
 internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: DataSource): VedtaksperiodeVentetilstandDao {
 
-    override fun hentOmVenter(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
-        session.single(queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))) { row -> row.vedtaksperiodeVenter }
-    }
-
     override fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
         sessionOf(dataSource).use { session ->
             session.transaction { transaction ->
+                val vedtaksperiodeId = vedtaksperiodeVenter.vedtaksperiodeId
+                if (transaction.hent(vedtaksperiodeId) == vedtaksperiodeVenter) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
                 transaction.venterIkke(vedtaksperiodeVenter.vedtaksperiodeId) // Sletter eventuell eksisterende rad
                 transaction.execute(queryOf(VENTER, mapOf(
                     "hendelseId" to hendelse.id,
@@ -35,17 +32,16 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
                     "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
                     "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
                 )))
+                logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
             }
         }
     }
 
     private fun Session.venterIkke(vedtaksperiodeId: UUID) = execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeId)))
 
-    override fun venterIkke(vedtaksperiodeId: UUID) {
+    override fun venterIkke(vedtaksperiodeId: UUID, hendelse: Hendelse) {
         sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeId) }
     }
-
-    override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {}
 
     override fun stuck() = sessionOf(dataSource).use { session ->
         session.list(Query(STUCK)) { row ->
@@ -53,7 +49,12 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
         }
     }
 
+    private fun TransactionalSession.hent(vedtaksperiodeId: UUID) =
+        single(queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))) { row -> row.vedtaksperiodeVenter }
+
     private companion object {
+        private val logger = LoggerFactory.getLogger(GjeldendeVedtaksperiodeVentetilstandDao::class.java)
+
         @Language("PostgreSQL")
         private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
 
