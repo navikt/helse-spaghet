@@ -9,6 +9,7 @@ import java.util.*
 import javax.sql.DataSource
 
 internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: DataSource): VedtaksperiodeVentetilstandDao {
+
     override fun hentOmVenter(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.single(queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))) { row -> row.vedtaksperiodeVenter }
     }
