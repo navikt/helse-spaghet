@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.time.*
 
-internal class IdentifiserStuckVedtaksperioder (
+internal class IdentifiserStuckVedtaksperioder(
     rapidsConnection: RapidsConnection,
     private val dao: VedtaksperiodeVentetilstandDao,
     private val spurteDuClient: SpurteDuClient
