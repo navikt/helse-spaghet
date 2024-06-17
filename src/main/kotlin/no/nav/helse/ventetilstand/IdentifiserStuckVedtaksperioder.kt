@@ -14,15 +14,13 @@ import org.slf4j.event.Level.INFO
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import javax.sql.DataSource
 import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder (
     rapidsConnection: RapidsConnection,
-    dataSource: DataSource,
+    private val dao: VedtaksperiodeVentetilstandDao,
     private val spurteDuClient: SpurteDuClient
 ): River.PacketListener {
-    private val dao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidsConnection).apply {

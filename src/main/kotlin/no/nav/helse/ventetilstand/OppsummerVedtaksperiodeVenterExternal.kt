@@ -5,13 +5,11 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
-import javax.sql.DataSource
 
 internal class OppsummerVedtaksperiodeVenterExternal (
     rapidsConnection: RapidsConnection,
-    dataSource: DataSource
+    private val dao: HistoriskVedtaksperiodeVentetilstandDao
 ): River.PacketListener {
-    private val dao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidsConnection).apply {
@@ -68,7 +66,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             else -> this
         }
 
-        private fun lagMelding(oppsummering: List<VedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
+        private fun lagMelding(oppsummering: List<HistoriskVedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
             var melding = """
             God mandag! :monday: 
             
@@ -110,7 +108,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 127,SØKNAD,MELLOM 30 OG 90 DAGER
             """.trimIndent().lines().map {
                 val split = it.split(",")
-                VedtaksperiodeVentetilstandDao.VentegruppeExternal(
+                HistoriskVedtaksperiodeVentetilstandDao.VentegruppeExternal(
                     årsak = split[1],
                     antall = split[0].toInt(),
                     bucket = split[2])

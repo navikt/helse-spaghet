@@ -2,10 +2,9 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.Util.uuid
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import no.nav.helse.ventetilstand.*
-import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao.Companion.vedtaksperiodeVenter
+import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
@@ -24,12 +23,12 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     private val embeddedPostgres = embeddedPostgres()
     private val db = configureDb(embeddedPostgres)
     private val dataSource = db.first
-    protected val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
+    protected val vedtaksperiodeVentetilstandDao = HistoriskVedtaksperiodeVentetilstandDao(dataSource)
 
     protected val river = TestRapid().apply {
-        VedtaksperiodeVenterRiver(this, dataSource)
-        VedtaksperiodeVenterIkkeRiver(this, dataSource)
-        VedtaksperiodeEndretRiver(this, dataSource)
+        VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
+        VedtaksperiodeVenterIkkeRiver(this, vedtaksperiodeVentetilstandDao)
+        VedtaksperiodeEndretRiver(this, vedtaksperiodeVentetilstandDao)
     }
 
     @AfterAll

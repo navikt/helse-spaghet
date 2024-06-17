@@ -5,17 +5,15 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
-import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao.Ventegruppe
+import no.nav.helse.ventetilstand.HistoriskVedtaksperiodeVentetilstandDao.Ventegruppe
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.INFO
-import javax.sql.DataSource
 import kotlin.random.Random.Default.nextInt
 
 internal class OppsummerVedtaksperiodeVenter (
     rapidsConnection: RapidsConnection,
-    dataSource: DataSource
+    private val dao: HistoriskVedtaksperiodeVentetilstandDao
 ): River.PacketListener {
-    private val dao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidsConnection).apply {

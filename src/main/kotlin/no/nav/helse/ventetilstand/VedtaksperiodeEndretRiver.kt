@@ -7,13 +7,12 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sql.DataSource
 
 internal class VedtaksperiodeEndretRiver(
     rapidApplication: RapidsConnection,
-    dataSource: DataSource
+    private vararg val dao: VedtaksperiodeVentetilstandDao
 ) : River.PacketListener {
-    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
+
 
     init {
         River(rapidApplication).apply {
@@ -34,8 +33,8 @@ internal class VedtaksperiodeEndretRiver(
         val forrigeTilstand = packet["forrigeTilstand"].asText()
         if (gjeldendeTilstand == forrigeTilstand) return
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val vedtaksperiodeVentet = vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId) ?: return
-        vedtaksperiodeVentetilstandDao.venterIkke(vedtaksperiodeVentet, packet.hendelse)
+        val vedtaksperiodeVentet = dao.hentOmVenter(vedtaksperiodeId) ?: return
+        dao.venterIkke(vedtaksperiodeVentet, packet.hendelse)
         logger.info("Venter ikke lenger for {} som har gått fra $forrigeTilstand til $gjeldendeTilstand", keyValue("vedtaksperiodeId", vedtaksperiodeId))
     }
 

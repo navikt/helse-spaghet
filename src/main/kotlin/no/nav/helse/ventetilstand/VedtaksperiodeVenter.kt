@@ -1,5 +1,6 @@
 package no.nav.helse.ventetilstand
 
+import kotliquery.Row
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit.SECONDS
@@ -19,6 +20,21 @@ internal data class VedtaksperiodeVenter private constructor(
         private val LocalDateTime.sanitize get() = coerceAtMost(MAX).truncatedTo(SECONDS)
         internal fun opprett(vedtaksperiodeId: UUID, skjæringstidspunkt: LocalDate, fødselsnummer: String, organisasjonsnummer: String, ventetSiden: LocalDateTime, venterTil: LocalDateTime, venterPå: VenterPå) =
             VedtaksperiodeVenter(vedtaksperiodeId, skjæringstidspunkt, fødselsnummer, organisasjonsnummer, ventetSiden.sanitize, venterTil.sanitize, venterPå)
+        internal val Row.vedtaksperiodeVenter get() = opprett(
+            vedtaksperiodeId = this.uuid("vedtaksperiodeId"),
+            skjæringstidspunkt = this.localDate("skjaeringstidspunkt"),
+            fødselsnummer = this.string("fodselsnummer"),
+            organisasjonsnummer = this.string("organisasjonsnummer"),
+            ventetSiden = this.localDateTime("ventetSiden"),
+            venterTil = this.localDateTime("venterTil"),
+            venterPå = VenterPå(
+                vedtaksperiodeId = this.uuid("venterPaVedtaksperiodeId"),
+                skjæringstidspunkt = this.localDate("venterPaSkjaeringstidspunkt"),
+                organisasjonsnummer = this.string("venterPaOrganisasjonsnummer"),
+                hva = this.string("venterPaHva"),
+                hvorfor = this.stringOrNull("venterPaHvorfor")
+            )
+        )
     }
 }
 

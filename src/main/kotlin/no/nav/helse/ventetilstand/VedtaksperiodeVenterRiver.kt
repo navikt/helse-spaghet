@@ -4,13 +4,11 @@ import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sql.DataSource
 
 internal class VedtaksperiodeVenterRiver (
     rapidApplication: RapidsConnection,
-    dataSource: DataSource
+    private vararg val dao: VedtaksperiodeVentetilstandDao
 ) : River.PacketListener {
-    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
 
     init {
         River(rapidApplication).apply {
@@ -37,9 +35,9 @@ internal class VedtaksperiodeVenterRiver (
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val ny = packet.vedtaksperiodeVenter
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val gammel = vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId)
+        val gammel = dao.hentOmVenter(vedtaksperiodeId)
         if (ny == gammel) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
-        vedtaksperiodeVentetilstandDao.venter(ny, packet.hendelse)
+        dao.venter(ny, packet.hendelse)
         logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
     }
 

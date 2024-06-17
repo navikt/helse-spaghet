@@ -16,7 +16,6 @@ class E2eTestApp(
     private val embeddedPostgres: PostgreSQLContainer<Nothing> = embeddedPostgres(),
     val dataSource: DataSource = setupDataSourceMedFlyway(embeddedPostgres)
 ) {
-
     private fun start() {
         mockLog()
         rapid.setupRivers(dataSource)
