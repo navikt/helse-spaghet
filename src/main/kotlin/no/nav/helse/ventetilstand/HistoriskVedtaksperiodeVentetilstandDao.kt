@@ -36,6 +36,7 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
         )))
     }
 
+    override fun venterIkke(vedtaksperiodeId: UUID) {}
     override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {
         nyGjeldende(vedtaksperiodeVentet, hendelse, queryOf(VENTER_IKKE, mapOf(
             "hendelseId" to hendelse.id,

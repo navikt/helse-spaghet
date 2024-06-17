@@ -1,6 +1,7 @@
 package no.nav.helse.ventetilstand
 
 import kotliquery.Query
+import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
@@ -16,29 +17,35 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
 
     override fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
         sessionOf(dataSource).use { session ->
-            session.execute(queryOf(VENTER, mapOf(
-                "hendelseId" to hendelse.id,
-                "hendelse" to hendelse.hendelse,
-                "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
-                "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
-                "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
-                "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
-                "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
-                "venterTil" to vedtaksperiodeVenter.venterTil,
-                "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
-                "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
-                "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
-                "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
-                "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
-                "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
-            )))
+            session.transaction { transaction ->
+                transaction.venterIkke(vedtaksperiodeVenter.vedtaksperiodeId) // Sletter eventuell eksisterende rad
+                transaction.execute(queryOf(VENTER, mapOf(
+                    "hendelseId" to hendelse.id,
+                    "hendelse" to hendelse.hendelse,
+                    "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
+                    "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
+                    "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
+                    "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
+                    "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
+                    "venterTil" to vedtaksperiodeVenter.venterTil,
+                    "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
+                    "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
+                    "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
+                    "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
+                    "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
+                    "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
+                )))
+            }
         }
     }
 
+    private fun Session.venterIkke(vedtaksperiodeId: UUID) = execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeId)))
+
+    override fun venterIkke(vedtaksperiodeId: UUID) {
+        sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeId) }
+    }
     override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {
-        sessionOf(dataSource).use { session ->
-            session.execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeVentet.vedtaksperiodeId)))
-        }
+        sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeVentet.vedtaksperiodeId) }
     }
 
     override fun stuck() = sessionOf(dataSource).use { session ->
@@ -55,7 +62,6 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
         private val VENTER = """
             INSERT INTO vedtaksperiode_venter(hendelseId, hendelse, vedtaksperiodeId, skjaeringstidspunkt, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterForAlltid, venterPaVedtaksperiodeId, venterPaSkjaeringstidspunkt, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor)
             VALUES (:hendelseId, :hendelse::jsonb, :vedtaksperiodeId, :skjaeringstidspunkt, :fodselsnummer, :organisasjonsnummer, :ventetSiden, :venterTil, :venterForAlltid, :venterPaVedtaksperiodeId, :venterPaSkjaeringstidspunkt, :venterPaOrganisasjonsnummer, :venterPaHva, :venterPaHvorfor) 
-            ON CONFLICT (vedtaksperiodeId) DO NOTHING
         """
 
         @Language("PostgreSQL")

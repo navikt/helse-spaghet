@@ -33,6 +33,7 @@ internal class VedtaksperiodeEndretRiver(
         val forrigeTilstand = packet["forrigeTilstand"].asText()
         if (gjeldendeTilstand == forrigeTilstand) return
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+        dao.venterIkke(vedtaksperiodeId)
         val vedtaksperiodeVentet = dao.hentOmVenter(vedtaksperiodeId) ?: return
         dao.venterIkke(vedtaksperiodeVentet, packet.hendelse)
         logger.info("Venter ikke lenger for {} som har gått fra $forrigeTilstand til $gjeldendeTilstand", keyValue("vedtaksperiodeId", vedtaksperiodeId))
