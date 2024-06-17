@@ -34,11 +34,15 @@ internal class VedtaksperiodeVenterRiver (
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         val ny = packet.vedtaksperiodeVenter
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val gammel = dao.hentOmVenter(vedtaksperiodeId)
-        if (ny == gammel) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
-        dao.venter(ny, packet.hendelse)
-        logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+        dao.forEach { it.håndterVedtaksperiodeVenter(ny, packet.hendelse) }
+    }
+
+    private fun VedtaksperiodeVentetilstandDao.håndterVedtaksperiodeVenter(ny: VedtaksperiodeVenter, hendelse: Hendelse) {
+        val vedtaksperiodeId = ny.vedtaksperiodeId
+        val gammel = hentOmVenter(vedtaksperiodeId)
+        if (ny == gammel) return logger.info("Ingen endring på ventetilstand for {} i ${this::class.simpleName}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+        venter(ny, hendelse)
+        logger.info("Lagret ny ventetilstand for {} i ${this::class.simpleName}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
     }
 
     private companion object {

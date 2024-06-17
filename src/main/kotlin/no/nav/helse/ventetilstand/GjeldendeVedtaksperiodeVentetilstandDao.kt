@@ -44,9 +44,8 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
     override fun venterIkke(vedtaksperiodeId: UUID) {
         sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeId) }
     }
-    override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {
-        sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeVentet.vedtaksperiodeId) }
-    }
+
+    override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {}
 
     override fun stuck() = sessionOf(dataSource).use { session ->
         session.list(Query(STUCK)) { row ->

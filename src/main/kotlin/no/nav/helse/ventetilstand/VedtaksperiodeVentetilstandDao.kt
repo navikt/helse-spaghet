@@ -13,9 +13,6 @@ internal interface VedtaksperiodeVentetilstandDao {
 internal fun Array<out VedtaksperiodeVentetilstandDao>.hentOmVenter(vedtaksperiodeId: UUID) =
     firstNotNullOfOrNull { it.hentOmVenter(vedtaksperiodeId) }
 
-internal fun Array<out VedtaksperiodeVentetilstandDao>.venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) =
-    forEach { it.venter(vedtaksperiodeVenter, hendelse) }
-
 internal fun Array<out VedtaksperiodeVentetilstandDao>.venterIkke(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) =
     forEach { it.venterIkke(vedtaksperiodeVenter, hendelse) }
 
