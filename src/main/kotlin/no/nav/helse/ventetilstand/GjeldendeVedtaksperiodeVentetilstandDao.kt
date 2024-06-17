@@ -43,7 +43,7 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
         sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeId) }
     }
 
-    override fun stuck() = sessionOf(dataSource).use { session ->
+    internal fun stuck() = sessionOf(dataSource).use { session ->
         session.list(Query(STUCK)) { row ->
             row.vedtaksperiodeVenter
         }

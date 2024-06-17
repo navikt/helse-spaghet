@@ -8,7 +8,6 @@ import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeV
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.testcontainers.containers.PostgreSQLContainer
@@ -23,7 +22,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     private val embeddedPostgres = embeddedPostgres()
     private val db = configureDb(embeddedPostgres)
     private val dataSource = db.first
-    protected val vedtaksperiodeVentetilstandDao = HistoriskVedtaksperiodeVentetilstandDao(dataSource)
+    protected val vedtaksperiodeVentetilstandDao = GjeldendeVedtaksperiodeVentetilstandDao(dataSource)
 
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
@@ -97,57 +96,20 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         } 
     """
 
-    protected fun hendelseIderFor(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
-        session.list(
-            queryOf(
-                "SELECT hendelseId FROM vedtaksperiode_ventetilstand WHERE vedtaksperiodeId = :vedtaksperiodeId", mapOf(
-                    "vedtaksperiodeId" to vedtaksperiodeId
-                )
-            )
-        ) { it.uuid("hendelseId") }.toSet()
-    }
-
-    protected fun hentDeSomVenter(): Set<VedtaksperiodeVenter> {
-        val venterBasertPåTimestamp = hentDeSomVenterBasertPåTimestamp()
-        val venterBasertPåGjeldende = hentDeSomVenterBasertPåGjeldende()
-        assertEquals(venterBasertPåTimestamp, venterBasertPåGjeldende) { "De som venter basert på timestamp og gjeldende er ikke like!" }
-        return venterBasertPåGjeldende
-    }
-
-    private fun hentDeSomVenterBasertPåTimestamp(): Set<VedtaksperiodeVenter> {
-        @Language("PostgreSQL")
-        val SQL = """
-            WITH sistePerVedtaksperiodeId AS (
-                SELECT DISTINCT ON (vedtaksperiodeId) *
-                FROM vedtaksperiode_ventetilstand
-                ORDER BY vedtaksperiodeId, tidsstempel DESC
-            )
-            SELECT * FROM sistePerVedtaksperiodeId
-            WHERE venter = true
-            ORDER BY ventetSiden ASC
-        """
-
-        return sessionOf(dataSource).use { session ->
-            session.list(queryOf(SQL)) { row ->
+    protected fun hentDeSomVenter() =
+        sessionOf(dataSource).use { session ->
+            session.list(queryOf("SELECT * FROM vedtaksperiode_venter")) { row ->
                 row.vedtaksperiodeVenter
             }
         }.toSet()
-    }
-    private fun hentDeSomVenterBasertPåGjeldende(): Set<VedtaksperiodeVenter> {
-        @Language("PostgreSQL")
-        val SQL = """
-            SELECT * FROM vedtaksperiode_ventetilstand
-            WHERE gjeldende = true
-            AND venter = true
-        """
-
-        return sessionOf(dataSource).use { session ->
-            session.list(queryOf(SQL)) { row ->
-                row.vedtaksperiodeVenter
-            }
-        }.toSet()
-    }
 
     protected fun hentVedtaksperiodeIderSomVenter() =
         hentDeSomVenter().map { it.vedtaksperiodeId }.toSet()
+
+    protected fun hentOmVenter(vedtaksperiodeId: UUID) =
+        sessionOf(dataSource).use { session ->
+            session.single(queryOf("SELECT * FROM vedtaksperiode_venter WHERE vedtaksperiodeId='$vedtaksperiodeId'")) { row ->
+                row.vedtaksperiodeVenter
+            }
+        }
 }

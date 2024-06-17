@@ -72,7 +72,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     VedtaksperiodeVenterRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
     VedtaksperiodeVenterIkkeRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
     VedtaksperiodeEndretRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
-    IdentifiserStuckVedtaksperioder(this, historiskVedtaksperiodeVentetilstandDao, spurteDuClient)
+    IdentifiserStuckVedtaksperioder(this, gjeldendeVedtaksperiodeVentetilstandDao, spurteDuClient)
     OppsummerVedtaksperiodeVenter(this, historiskVedtaksperiodeVentetilstandDao)
     OppsummerVedtaksperiodeVenterExternal(this, historiskVedtaksperiodeVentetilstandDao)
     SøknadHåndtertRiver(this, dataSource)

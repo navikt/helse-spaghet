@@ -14,45 +14,39 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
     fun `vedtaksperiode venter og går videre`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNotNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
     }
 
     @Test
     fun `Gjentatte like vedtaksperiodeVenter lagres ikke, men så fort noe endres lagres det`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
-        assertEquals(0, hendelseIderFor(vedtaksperiodeId).size)
-        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
+        river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING"))
-        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
-        assertEquals("UTBETALING", vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId)!!.venterPå.hva)
+        assertEquals("UTBETALING", hentOmVenter(vedtaksperiodeId)!!.venterPå.hva)
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertEquals(3, hendelseIderFor(vedtaksperiodeId).size)
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
     }
 
     @Test
     fun `Begynner å vente på nytt`() {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNotNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
-        assertEquals(3, hendelseIderFor(vedtaksperiodeId).size)
+        assertNotNull(hentOmVenter(vedtaksperiodeId))
     }
 
     @Test
@@ -75,7 +69,7 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
                 hvorfor = "TESTOLINI"
             )
         )
-        assertEquals(forventet, vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertEquals(forventet, hentOmVenter(vedtaksperiodeId))
     }
 
     @Test
@@ -83,19 +77,15 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertEquals(0, hendelseIderFor(vedtaksperiodeId).size)
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertEquals(1, hendelseIderFor(vedtaksperiodeId).size)
-        assertNotNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNotNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
-        assertNull(vedtaksperiodeVentetilstandDao.hentOmVenter(vedtaksperiodeId))
+        assertNull(hentOmVenter(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertEquals(2, hendelseIderFor(vedtaksperiodeId).size)
     }
 
     @Test
@@ -123,37 +113,10 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
         river.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId3))
         river.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3, "UTBETALING"))
 
-        assertEquals(1, hendelseIderFor(vedtaksperiodeId1).size)
-        assertEquals(2, hendelseIderFor(vedtaksperiodeId2).size)
-        assertEquals(3, hendelseIderFor(vedtaksperiodeId3).size)
-
         assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId3), hentVedtaksperiodeIderSomVenter())
         val venteårsaker = hentDeSomVenter()
         assertEquals("GODKJENNING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId1 }.venterPå.hva)
         assertEquals("UTBETALING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId3 }.venterPå.hva)
-    }
-
-    @Test
-    fun `ignorerer vedtaksperiode_venter med id som allerede er håndtert`() {
-        val vedtaksperiodeId = UUID.randomUUID()
-        val venterPåVedtaksperiodeId = UUID.randomUUID()
-        val hendelseId = UUID.randomUUID()
-        val melding = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING", hendelseId)
-        val melding2 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "GODKJENNING", hendelseId)
-        river.sendTestMessage(melding)
-        river.sendTestMessage(melding2)
-        assertEquals("UTBETALING", hentDeSomVenter().single().venterPå.hva)
-    }
-
-    @Test
-    fun `ignorerer vedtaksperiode_endret med id som allerede er håndtert`() {
-        val vedtaksperiodeId = UUID.randomUUID()
-        val hendelseId = UUID.randomUUID()
-        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "GODKJENNING", hendelseId)
-        val vedtaksperiodeEndret = vedtaksperiodeEndret(vedtaksperiodeId, hendelseId)
-        river.sendTestMessage(vedtaksperiodeVenter)
-        river.sendTestMessage(vedtaksperiodeEndret)
-        assertEquals("GODKJENNING", hentDeSomVenter().single().venterPå.hva)
     }
 
     @Test

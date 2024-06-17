@@ -5,7 +5,6 @@ import java.util.*
 internal interface VedtaksperiodeVentetilstandDao {
     fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse)
     fun venterIkke(vedtaksperiodeId: UUID, hendelse: Hendelse)
-    fun stuck(): List<VedtaksperiodeVenter>
 }
 
 internal fun Array<out VedtaksperiodeVentetilstandDao>.venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) =

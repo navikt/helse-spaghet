@@ -62,12 +62,6 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
         }
     }
 
-    override fun stuck() = sessionOf(dataSource).use { session ->
-        session.list(Query(STUCK)) { row ->
-            row.vedtaksperiodeVenter
-        }
-    }
-
     internal data class Ventegruppe(val årsak: String, val antall: Int, val propp: Boolean)
     internal fun oppsummering() = sessionOf(dataSource).use { session ->
         val oppsummering = session.list(Query(OPPSUMMERING)) { row ->
@@ -117,26 +111,6 @@ internal class HistoriskVedtaksperiodeVentetilstandDao(private val dataSource: D
             WHERE vedtaksperiodeId = :vedtaksperiodeId
             AND gjeldende = true
             AND hendelseId != :hendelseId
-        """
-
-        @Language("PostgreSQL")
-        private val STUCK = """
-            SELECT * FROM vedtaksperiode_ventetilstand
-            WHERE gjeldende = true
-            AND venter = true
-            -- Må ha ventet minst 5 minutter før vi anser det som stuck
-            AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '5 MINUTES'
-            AND (
-                -- Om vi venter på en av disse tingene skal det alltid være alarm
-                (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
-                    OR
-                -- Om vi ikke har noe makstid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler eller inntektsmelding
-                (date_part('Year', ventertil) = 9999 AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva not in ('GODKJENNING', 'INNTEKTSMELDING'))
-                    OR 
-                -- Om maksdato er nådd så tyder det på at vi er en periode som ikke kan forkastes tross at maksdato er nådd.
-                -- Trekker fra ekstra 10 dager for å være sikker på at den ikke bare venter på å få en påminnelse fra Spock før den forkastes
-                (date_part('Year', ventertil) != 9999 AND ventertil < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '10 DAYS')
-            )
         """
 
         @Language("PostgreSQL")
