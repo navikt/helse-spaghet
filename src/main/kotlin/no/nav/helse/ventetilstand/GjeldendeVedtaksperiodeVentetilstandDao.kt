@@ -15,22 +15,24 @@ internal class GjeldendeVedtaksperiodeVentetilstandDao(private val dataSource: D
     }
 
     override fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
-        sessionOf(dataSource).execute(queryOf(VENTER, mapOf(
-            "hendelseId" to hendelse.id,
-            "hendelse" to hendelse.hendelse,
-            "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
-            "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
-            "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
-            "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
-            "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
-            "venterTil" to vedtaksperiodeVenter.venterTil,
-            "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
-            "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
-            "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
-            "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
-            "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
-            "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
-        )))
+        sessionOf(dataSource).use { session ->
+            session.execute(queryOf(VENTER, mapOf(
+                "hendelseId" to hendelse.id,
+                "hendelse" to hendelse.hendelse,
+                "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
+                "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
+                "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
+                "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
+                "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
+                "venterTil" to vedtaksperiodeVenter.venterTil,
+                "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
+                "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
+                "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
+                "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
+                "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
+                "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
+            )))
+        }
     }
 
     override fun venterIkke(vedtaksperiodeVentet: VedtaksperiodeVenter, hendelse: Hendelse) {
