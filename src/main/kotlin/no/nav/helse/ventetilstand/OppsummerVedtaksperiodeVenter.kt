@@ -4,15 +4,15 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.ventetilstand.OppsummeringDao.Ventegruppe
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
-import no.nav.helse.ventetilstand.HistoriskVedtaksperiodeVentetilstandDao.Ventegruppe
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.INFO
 import kotlin.random.Random.Default.nextInt
 
 internal class OppsummerVedtaksperiodeVenter (
     rapidsConnection: RapidsConnection,
-    private val dao: HistoriskVedtaksperiodeVentetilstandDao
+    private val dao: OppsummeringDao
 ): River.PacketListener {
 
     init {
@@ -93,33 +93,6 @@ internal class OppsummerVedtaksperiodeVenter (
             årsak.startsWith("GODKJENNING") -> "saksbehandler :female-office-worker:"
             årsak.startsWith("SØKNAD") -> "sykmeldte :pepesick:"
             else -> "tverrfaglig manuell hjelp :maxi-nut-cracker: :david-gun: :eminott_aminott_nottland_onduty:"
-        }
-
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val enOppsummering = """
-                INNTEKTSMELDING,true,33376
-                GODKJENNING,false,14300
-                GODKJENNING_FORDI_OVERSTYRING_IGANGSATT,false,11327
-                GODKJENNING,true,10575
-                GODKJENNING_FORDI_OVERSTYRING_IGANGSATT,true,4194
-                INNTEKTSMELDING,false,3424
-                INNTEKTSMELDING_FORDI_MANGLER_INNTEKT_FOR_VILKÅRSPRØVING_PÅ_ANDRE_ARBEIDSGIVERE,true,338
-                INNTEKTSMELDING_FORDI_MANGLER_INNTEKT_FOR_VILKÅRSPRØVING_PÅ_ANDRE_ARBEIDSGIVERE,false,319
-                SØKNAD_FORDI_HAR_SYKMELDING_SOM_OVERLAPPER_PÅ_ANDRE_ARBEIDSGIVERE,true,171
-                INNTEKTSMELDING_FORDI_MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE,false,94
-                SØKNAD_FORDI_HAR_SYKMELDING_SOM_OVERLAPPER_PÅ_ANDRE_ARBEIDSGIVERE,false,87
-                INNTEKTSMELDING_FORDI_MANGLER_REFUSJONSOPPLYSNINGER_PÅ_ANDRE_ARBEIDSGIVERE,true,59
-                INNTEKTSMELDING_FORDI_MANGLER_TILSTREKKELIG_INFORMASJON_TIL_UTBETALING_SAMME_ARBEIDSGIVE,false,37
-                INNTEKTSMELDING_FORDI_MANGLER_TILSTREKKELIG_INFORMASJON_TIL_UTBETALING_SAMME_ARBEIDSGIVE,true,15
-                HJELP_FORDI_VIL_UTBETALES,true,2
-                BEREGNING_FORDI_OVERSTYRING_IGANGSATT,true,1
-                BEREGNING_FORDI_OVERSTYRING_IGANGSATT,false,1
-            """.trimIndent().lines().map {
-                val split = it.split(",")
-                Ventegruppe(split[0], split[2].toInt(), split[1].toBoolean())
-            }
-            println(lagMelding(oppsummering = enOppsummering, antallPersoner = 33521))
         }
     }
 }

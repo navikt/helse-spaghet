@@ -4,11 +4,12 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.ventetilstand.OppsummeringDao.VentegruppeExternal
 import org.slf4j.LoggerFactory
 
 internal class OppsummerVedtaksperiodeVenterExternal (
     rapidsConnection: RapidsConnection,
-    private val dao: HistoriskVedtaksperiodeVentetilstandDao
+    private val dao: OppsummeringDao
 ): River.PacketListener {
 
     init {
@@ -66,7 +67,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             else -> this
         }
 
-        private fun lagMelding(oppsummering: List<HistoriskVedtaksperiodeVentetilstandDao.VentegruppeExternal>): String {
+        private fun lagMelding(oppsummering: List<VentegruppeExternal>): String {
             var melding = """
             God mandag! :monday: 
             
@@ -94,26 +95,6 @@ internal class OppsummerVedtaksperiodeVenterExternal (
             Viggo Velferdsvenn
             """.trimIndent()
             return melding
-        }
-
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val enOppsummering = """
-                291,INFORMASJON FRA ARBEIDSGIVER,UNDER 30 DAGER
-                9815,INFORMASJON FRA ARBEIDSGIVER,MELLOM 30 OG 90 DAGER
-                6652,INFORMASJON FRA ARBEIDSGIVER,OVER 90 DAGER
-                164,SAKSBEHANDLER,UNDER 30 DAGER
-                2048,SAKSBEHANDLER,MELLOM 30 OG 90 DAGER
-                895,SAKSBEHANDLER,OVER 90 DAGER
-                127,SØKNAD,MELLOM 30 OG 90 DAGER
-            """.trimIndent().lines().map {
-                val split = it.split(",")
-                HistoriskVedtaksperiodeVentetilstandDao.VentegruppeExternal(
-                    årsak = split[1],
-                    antall = split[0].toInt(),
-                    bucket = split[2])
-            }
-            println(lagMelding(oppsummering = enOppsummering))
         }
     }
 }
