@@ -32,7 +32,13 @@ internal class OppsummeringDao(private val dataSource: DataSource) {
 
         @Language("PostgreSQL")
         private val OPPSUMMERING = """
-            SELECT concat(TRIM(TRAILING '_FORDI_' FROM concat(venterpahva, '_FORDI_', venterpahvorfor)), case when date_part('Year', ventertil) = 9999 AND ventetSiden <= (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' then '_SOM_IKKE_KAN_FORKASTES_OG_HAR_VENTET_MER_ENN_3_MÅNEDER' else '' end) as arsak, vedtaksperiodeid = venterpavedtaksperiodeid as propp, count(1) as antall
+            SELECT
+                concat(
+                    concat(venterpahva, CASE WHEN venterpahvorfor IS NOT NULL THEN '_FORDI_' END, venterpahvorfor),
+                    CASE WHEN venterForAlltid = true AND ventetSiden <= (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' THEN '_SOM_IKKE_KAN_FORKASTES_OG_HAR_VENTET_MER_ENN_3_MÅNEDER' END
+                ) AS arsak,
+                vedtaksperiodeid = venterpavedtaksperiodeid AS propp, 
+                count(1) AS antall
             FROM vedtaksperiode_venter
             WHERE tidsstempel < now() - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
             GROUP BY arsak, propp
@@ -41,24 +47,24 @@ internal class OppsummeringDao(private val dataSource: DataSource) {
 
         @Language("PostgreSQL")
         private val OPPSUMMERING_EXTERNAL = """
-            with siste as (
-                select venterpahva, ventetsiden, (now()::date - ventetsiden::date) as ventetIAntallDager
-                from vedtaksperiode_venter
-                where tidsstempel < now() - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
+            WITH siste AS (
+                SELECT venterpahva, ventetsiden, (now()::date - ventetsiden::date) AS ventetIAntallDager
+                FROM vedtaksperiode_venter
+                WHERE tidsstempel < now() - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
             )
-            select count(*) as antall,
-                   (case when venterpahva = 'INNTEKTSMELDING' THEN 'INFORMASJON FRA ARBEIDSGIVER' WHEN venterpahva = 'GODKJENNING' THEN 'SAKSBEHANDLER' ELSE venterpahva end) as venter_på,
-                   (CASE WHEN ventetIAntallDager > 90 THEN 'OVER 90 DAGER' WHEN ventetIAntallDager > 30 THEN 'MELLOM 30 OG 90 DAGER' ELSE 'UNDER 30 DAGER' end) as ventet_i,
-                   (CASE WHEN ventetIAntallDager > 90 THEN 3 WHEN ventetIAntallDager > 30 THEN 2 ELSE 1 end) as sortering
-            from siste
-            group by venter_på, ventet_i, sortering
-            having count(*) > 10
-            order by venter_på, sortering
+            SELECT count(1) AS antall,
+                   (CASE WHEN venterpahva = 'INNTEKTSMELDING' THEN 'INFORMASJON FRA ARBEIDSGIVER' WHEN venterpahva = 'GODKJENNING' THEN 'SAKSBEHANDLER' ELSE venterpahva END) AS venter_på,
+                   (CASE WHEN ventetIAntallDager > 90 THEN 'OVER 90 DAGER' WHEN ventetIAntallDager > 30 THEN 'MELLOM 30 OG 90 DAGER' ELSE 'UNDER 30 DAGER' END) AS ventet_i,
+                   (CASE WHEN ventetIAntallDager > 90 THEN 3 WHEN ventetIAntallDager > 30 THEN 2 ELSE 1 END) AS sortering
+            FROM siste
+            GROUP BY venter_på, ventet_i, sortering
+            HAVING count(1) > 10
+            ORDER BY venter_på, sortering
         """
 
         @Language("PostgreSQL")
         private val ANTALL_PERSONER_SOM_VENTER = """
-            SELECT count(distinct fodselsnummer) as antallPersoner
+            SELECT count(distinct fodselsnummer) AS antallPersoner
             FROM vedtaksperiode_venter
             WHERE tidsstempel < now() - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
         """
