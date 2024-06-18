@@ -133,11 +133,11 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
 
     @Test
     fun `vedtaksperiode som venter på HJELP skal defineres som stuck uavhengig av årsaken`() {
-        assertEquals(emptyList<VedtaksperiodeVenter>(), vedtaksperiodeVentetilstandDao.stuck())
+        assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
         val vedtaksperiodeId = UUID.randomUUID()
         val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "HJELP", UUID.randomUUID(), venterPåHvorfor = "VIL_UTBETALES")
         river.sendTestMessage(vedtaksperiodeVenter)
-        val stuck = vedtaksperiodeVentetilstandDao.stuck().single()
+        val stuck = stuck().single()
         assertEquals(vedtaksperiodeId, stuck.vedtaksperiodeId)
         assertEquals("HJELP", stuck.venterPå.hva)
         assertEquals("VIL_UTBETALES", stuck.venterPå.hvorfor)
@@ -145,10 +145,32 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
 
     @Test
     fun `ingen alarm når vi er stuck pga inntektsmelding - vi får ikke gjort noe med dem uansett`() {
-        assertEquals(emptyList<VedtaksperiodeVenter>(), vedtaksperiodeVentetilstandDao.stuck())
+        assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
         val vedtaksperiodeId = UUID.randomUUID()
         val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "INNTEKTSMELDING", UUID.randomUUID())
         river.sendTestMessage(vedtaksperiodeVenter)
-        assertEquals(emptyList<VedtaksperiodeVenter>(), vedtaksperiodeVentetilstandDao.stuck())
+        assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
+    }
+
+    @Test
+    fun `Ignorer meldinger med lik informasjon`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        val venterPåVedtaksperiodeId = UUID.randomUUID()
+        val hendelseId1 = UUID.randomUUID()
+        val hendelseId2 = UUID.randomUUID()
+        val hendelseId3 = UUID.randomUUID()
+        val vedtaksperiodeVenter1 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, hendelseId = hendelseId1)
+        val vedtaksperiodeVenter2 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, hendelseId = hendelseId2)
+        val vedtaksperiodeVenter3 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, hendelseId = hendelseId3)
+        river.sendTestMessage(vedtaksperiodeVenter1)
+        river.sendTestMessage(vedtaksperiodeVenter2)
+        river.sendTestMessage(vedtaksperiodeVenter3)
+        assertEquals(hendelseId1, hentHendelseId(vedtaksperiodeId))
+
+        val hendelseId4 = UUID.randomUUID()
+        val vedtaksperiodeVenter4 = vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, hendelseId = hendelseId4, venterPåHvorfor = "OVERSTYRING_IGANGSATT")
+
+        river.sendTestMessage(vedtaksperiodeVenter4)
+        assertEquals(hendelseId4, hentHendelseId(vedtaksperiodeId))
     }
 }

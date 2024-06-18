@@ -22,7 +22,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     private val embeddedPostgres = embeddedPostgres()
     private val db = configureDb(embeddedPostgres)
     private val dataSource = db.first
-    protected val vedtaksperiodeVentetilstandDao = GjeldendeVedtaksperiodeVentetilstandDao(dataSource)
+    private val vedtaksperiodeVentetilstandDao = GjeldendeVedtaksperiodeVentetilstandDao(dataSource)
 
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
@@ -112,4 +112,19 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
                 row.vedtaksperiodeVenter
             }
         }
+
+    protected fun hentHendelseId(vedtaksperiodeId: UUID) =
+        sessionOf(dataSource).use { session ->
+            session.single(queryOf("SELECT hendelseId FROM vedtaksperiode_venter WHERE vedtaksperiodeId='$vedtaksperiodeId'")) { row ->
+                row.uuid("hendelseId")
+            }
+        }
+
+    protected fun stuck(): List<VedtaksperiodeVenter> {
+        // Hacker først tidsstempelet til å se ut til at de har ventet i 10 minutter
+        sessionOf(dataSource).use { session ->
+            session.execute(queryOf("UPDATE vedtaksperiode_venter SET tidsstempel=now() - INTERVAL '10 MINUTES'"))
+        }
+        return vedtaksperiodeVentetilstandDao.stuck()
+    }
 }
