@@ -10,7 +10,8 @@ internal object Slack {
             "melding" to "$melding\n\n - Deres erbødig SPaghet :spaghet:",
             "level" to level.name,
             "system_participating_services" to packet["system_participating_services"]
-        ).let { if (level == Level.ERROR) it.plus("channel" to "C077X4MJYQK") else it }).toJson()
+        )
+        ).toJson()
         publish(slackmelding)
     }
 }
