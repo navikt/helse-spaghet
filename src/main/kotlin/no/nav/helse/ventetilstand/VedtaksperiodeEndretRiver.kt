@@ -10,7 +10,7 @@ import java.util.*
 
 internal class VedtaksperiodeEndretRiver(
     rapidApplication: RapidsConnection,
-    private val dao: GjeldendeVedtaksperiodeVentetilstandDao
+    private val dao: VedtaksperiodeVentetilstandDao
 ) : River.PacketListener {
 
 

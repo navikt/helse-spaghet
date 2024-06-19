@@ -22,7 +22,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
     private val embeddedPostgres = embeddedPostgres()
     private val db = configureDb(embeddedPostgres)
     private val dataSource = db.first
-    private val vedtaksperiodeVentetilstandDao = GjeldendeVedtaksperiodeVentetilstandDao(dataSource)
+    private val vedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource)
 
     protected val river = TestRapid().apply {
         VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)

@@ -18,7 +18,7 @@ import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder(
     rapidsConnection: RapidsConnection,
-    private val dao: GjeldendeVedtaksperiodeVentetilstandDao,
+    private val dao: VedtaksperiodeVentetilstandDao,
     private val spurteDuClient: SpurteDuClient
 ): River.PacketListener {
 
