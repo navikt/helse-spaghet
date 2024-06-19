@@ -5,7 +5,7 @@ import java.util.*
 
 internal class VedtaksperiodeVenterRiver (
     rapidApplication: RapidsConnection,
-    private vararg val dao: VedtaksperiodeVentetilstandDao
+    private val dao: GjeldendeVedtaksperiodeVentetilstandDao
 ) : River.PacketListener {
 
     init {

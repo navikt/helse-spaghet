@@ -54,7 +54,6 @@ fun main() {
 
 internal fun <T : RapidsConnection> T.setupRivers(
     dataSource: DataSource,
-    historiskVedtaksperiodeVentetilstandDao: HistoriskVedtaksperiodeVentetilstandDao = HistoriskVedtaksperiodeVentetilstandDao(dataSource),
     gjeldendeVedtaksperiodeVentetilstandDao: GjeldendeVedtaksperiodeVentetilstandDao = GjeldendeVedtaksperiodeVentetilstandDao(dataSource),
     oppsummeringDao: OppsummeringDao = OppsummeringDao(dataSource),
     spurteDuClient: SpurteDuClient = spurteDuClient()
@@ -70,9 +69,9 @@ internal fun <T : RapidsConnection> T.setupRivers(
     HendelseIkkeHåndtertRiver(this, dataSource)
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)
-    VedtaksperiodeVenterRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
-    VedtaksperiodeVenterIkkeRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
-    VedtaksperiodeEndretRiver(this, historiskVedtaksperiodeVentetilstandDao, gjeldendeVedtaksperiodeVentetilstandDao)
+    VedtaksperiodeVenterRiver(this, gjeldendeVedtaksperiodeVentetilstandDao)
+    VedtaksperiodeVenterIkkeRiver(this, gjeldendeVedtaksperiodeVentetilstandDao)
+    VedtaksperiodeEndretRiver(this, gjeldendeVedtaksperiodeVentetilstandDao)
     IdentifiserStuckVedtaksperioder(this, gjeldendeVedtaksperiodeVentetilstandDao, spurteDuClient)
     OppsummerVedtaksperiodeVenter(this, oppsummeringDao)
     OppsummerVedtaksperiodeVenterExternal(this, oppsummeringDao)
