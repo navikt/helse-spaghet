@@ -79,7 +79,8 @@ internal fun <T : RapidsConnection> T.setupRivers(
     FunksjonellFeilOgVarselRiver(this, dataSource)
     SendtSøknadRiver(this, dataSource)
     OppgaveEndretRiver(this, dataSource)
-    VedtaksperiodeDumpRiver(this, dataSource)
+    VedtaksperiodeEndretRiver(this, dataSource)
+    VedtaksperiodeOpprettetRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
