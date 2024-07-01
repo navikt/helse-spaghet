@@ -81,6 +81,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     OppgaveEndretRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource)
     VedtaksperiodeOpprettetRiver(this, dataSource)
+    VedtaksperiodeAvstemt(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {

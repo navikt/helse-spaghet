@@ -3,6 +3,7 @@ package no.nav.helse
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -85,6 +86,44 @@ class VedtaksperiodeDataE2ETest {
         )
     }
 
+    @Test
+    fun `send person avstemt`() {
+        val første = UUID.randomUUID()
+        val andre = UUID.randomUUID()
+        val tredje = UUID.randomUUID()
+        river.sendTestMessage(personAvstemt(første, andre, tredje))
+        assertFelt(
+            første,
+            forventetFnr = "1",
+            forventetAktørId = "2",
+            forventetYrkesaktivitet = "12",
+            forventetSkjæringstidspunkt = LocalDate.of(2001, 1, 1),
+            forventetTilstand = "START",
+            forventetFom = LocalDate.of(2001, 1, 1),
+            forventetTom = LocalDate.of(2001, 1, 11)
+        )
+        assertFelt(
+            andre,
+            forventetFnr = "1",
+            forventetAktørId = "2",
+            forventetYrkesaktivitet = "12",
+            forventetSkjæringstidspunkt = LocalDate.of(2002, 2, 2),
+            forventetTilstand = "AVSLUTTET_UTEN_UTBETALING",
+            forventetFom = LocalDate.of(2002, 2, 2),
+            forventetTom = LocalDate.of(2002, 2, 22)
+        )
+        assertFelt(
+            tredje,
+            forventetFnr = "1",
+            forventetAktørId = "2",
+            forventetYrkesaktivitet = "3",
+            forventetSkjæringstidspunkt = LocalDate.of(2003, 3, 3),
+            forventetTilstand = "AVSLUTTET",
+            forventetFom = LocalDate.of(2003, 3, 3),
+            forventetTom = LocalDate.of(2003, 3, 13)
+        )
+    }
+
     private fun vedtakOpprettet(vedtaksperiodeId: UUID, fnr: String, aktørId: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate) = """
             {
             "@event_name": "vedtaksperiode_opprettet",
@@ -98,16 +137,7 @@ class VedtaksperiodeDataE2ETest {
             }
         """
 
-    private fun vedtakEndret(
-        vedtaksperiodeId: UUID,
-        fnr: String,
-        aktørId: String,
-        yrkesaktivitet: String,
-        fom: LocalDate,
-        tom: LocalDate,
-        skjæringstidspunkt: LocalDate,
-        tilstand: String
-    ) = """
+    private fun vedtakEndret(vedtaksperiodeId: UUID, fnr: String, aktørId: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate, tilstand: String) = """
             {
             "@event_name": "vedtaksperiode_endret",
             "vedtaksperiodeId": "$vedtaksperiodeId",
@@ -120,6 +150,44 @@ class VedtaksperiodeDataE2ETest {
             "gjeldendeTilstand": "$tilstand"
             }
         """
+
+    @Language("JSON")
+    private fun personAvstemt(første: UUID, andre: UUID, tredje: UUID): String = """
+  {
+    "@event_name": "person_avstemt",
+    "fødselsnummer": "1",
+    "aktørId": "2",
+    "arbeidsgivere": [{
+        "organisasjonsnummer":"12",
+        "vedtaksperioder": [{
+            "id": "$første",
+            "tilstand": "START",
+            "oppdatert": "2001-01-01T11:11:11.111111",
+            "fom": "2001-01-01",
+            "tom": "2001-01-11",
+            "skjæringstidspunkt": "2001-01-01"
+        },{
+            "id": "$andre",
+            "tilstand": "AVSLUTTET_UTEN_UTBETALING",
+            "oppdatert": "2002-02-02T22:22:22.222222",
+            "fom": "2002-02-02",
+            "tom": "2002-02-22",
+            "skjæringstidspunkt": "2002-02-02"
+        }]
+    },
+    {
+        "organisasjonsnummer":"3",
+        "vedtaksperioder": [{
+            "id": "$tredje",
+            "tilstand": "AVSLUTTET",
+            "oppdatert": "2003-03-03T13:13:13.131313",
+            "fom": "2003-03-03",
+            "tom": "2003-03-13",
+            "skjæringstidspunkt": "2003-03-03"
+        }]
+    }
+]}
+    """.trimIndent()
 
     private fun assertFelt(
         vedtaksperiodeId: UUID,
