@@ -72,7 +72,7 @@ private fun lagreVedtaksperiodedata(packet: JsonMessage, dataSource: DataSource)
     val fom = json["fom"].asLocalDate()
     val tom = json["tom"].asLocalDate()
     val skjæringstidspunkt = json["skjæringstidspunkt"].asLocalDate()
-    val tilstand = json["tilstand"]?.asText() ?: "START"
+    val tilstand = json["gjeldendeTilstand"]?.asText() ?: "START"
     try {
         sessionOf(dataSource).use { session ->
             val upsert = """
