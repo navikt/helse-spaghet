@@ -43,6 +43,7 @@ spec:
     sqlInstances:
       - type: POSTGRES_15
         diskAutoresize: true
+        name: spaghet2
         databases:
           - name: spaghet
             envVarPrefix: DATABASE
