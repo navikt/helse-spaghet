@@ -9,8 +9,10 @@ import javax.sql.DataSource
 internal class DataSourceBuilder(private val env: Environment.DatabaseEnvironment) {
     private val hikariConfig = HikariConfig().apply {
         jdbcUrl = env.jdbcUrl
-        username = env.username
-        password = env.password
+        if (!env.erDev) {
+            username = env.username
+            password = env.password
+        }
 
         maximumPoolSize = 5
         minimumIdle = 1

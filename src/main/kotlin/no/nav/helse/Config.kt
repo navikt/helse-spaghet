@@ -7,7 +7,9 @@ fun setUpEnvironment() = Environment(
         databaseHost = System.getenv("DATABASE_HOST"),
         databasePort = System.getenv("DATABASE_PORT"),
         username = System.getenv("DATABASE_USERNAME"),
-        password = System.getenv("DATABASE_PASSWORD")
+        password = System.getenv("DATABASE_PASSWORD"),
+        databaseJdbcUrl = System.getenv("DATABASE_JDBC_URL"),
+        clusterName = System.getenv("NAIS_CLUSTER_NAME"),
     )
 )
 
@@ -22,7 +24,10 @@ class Environment(
         val databasePort: String,
         val username: String,
         val password: String,
+        val databaseJdbcUrl: String,
+        clusterName: String,
     ) {
-        val jdbcUrl = "jdbc:postgresql://$databaseHost:$databasePort/$databaseName"
+        val erDev = "dev-gcp" == clusterName
+        val jdbcUrl = if (erDev) databaseJdbcUrl else "jdbc:postgresql://$databaseHost:$databasePort/$databaseName"
     }
 }
