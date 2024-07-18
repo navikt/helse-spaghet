@@ -8,7 +8,7 @@ fun setUpEnvironment() = Environment(
         databasePort = System.getenv("DATABASE_PORT"),
         username = System.getenv("DATABASE_USERNAME"),
         password = System.getenv("DATABASE_PASSWORD"),
-        databaseJdbcUrl = System.getenv("DATABASE_JDBC_URL"),
+        databaseJdbcUrl = System.getenv()["DATABASE_JDBC_URL"] ?: "",
         clusterName = System.getenv("NAIS_CLUSTER_NAME"),
     )
 )
