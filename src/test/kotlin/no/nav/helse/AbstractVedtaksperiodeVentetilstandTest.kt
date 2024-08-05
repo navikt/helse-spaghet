@@ -50,7 +50,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         venterPå: String = "GODKJENNING",
         hendelseId: UUID = UUID.randomUUID(),
         fødselsnummer: String = "11111111111",
-        venterPåHvorfor: String = "TESTOLINI",
+        venterPåHvorfor: String? = "TESTOLINI",
         ventetSiden: LocalDateTime = LocalDateTime.parse("2023-03-04T21:34:17.96322")
     ) = """
         {
@@ -66,7 +66,7 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
             "organisasjonsnummer": "987654321",
             "venteårsak": {
               "hva": "$venterPå",
-              "hvorfor": "$venterPåHvorfor"
+              "hvorfor": ${venterPåHvorfor?.let { "\"$it\"" }}
             }
           },
           "@id": "$hendelseId",

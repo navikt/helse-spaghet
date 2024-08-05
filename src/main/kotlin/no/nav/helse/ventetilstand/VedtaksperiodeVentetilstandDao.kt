@@ -70,7 +70,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         @Language("PostgreSQL")
         private val STUCK = """
             SELECT * FROM vedtaksperiode_venter
-            -- Må ha ventet minst 5 minutter før vi anser det som stuck. Disse er mest sannsynlig i transit.
+                -- Må ha ventet minst 5 minutter før vi anser det som stuck. Disse er mest sannsynlig i transit.
                 -- 'ventetSiden' er sist gang vedtaksperioden endret tilstand, så i tilstandene AVVENTER_BLOKKERENDE & AVENTER_REVURDERING blir det ofte feil å ta utgangspunkt i det tidspunktet.
                 -- F.eks. kan en periode vært i AVVENTER_BLOKKERENDE i 2 måneder og ventet på Godkjenning. Om perioden foran overstyres, og denne spørringen
                 -- kjøres mens vi venter på Utbetaling så vil perioden melde om at den har ventet 2 måneder på på utbetaling.
@@ -80,6 +80,9 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             AND (
                 -- Om vi venter på en av disse tingene skal det alltid være alarm
                 (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
+                -- Om hvorfor er satt til noe skal det være alarm så fremt det ikke er på grunn av overstyring igangsatt
+                    OR
+                (venterPaHvorfor IS NOT NULL AND venterPaHvorfor != 'OVERSTYRING_IGANGSATT')
                     OR
                 -- Om vi venter for alltid skal alarmen gå når vi har ventet 3 måneder, så fremt det ikke venter på godkjenning fra saksbehandler eller inntektsmelding
                 (venterForAlltid = true AND ventetSiden < (now() AT TIME ZONE 'Europe/Oslo') - INTERVAL '3 MONTHS' AND venterPaHva not in ('GODKJENNING', 'INNTEKTSMELDING'))

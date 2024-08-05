@@ -144,12 +144,36 @@ internal class VedtaksperiodeVentetilstandTest : AbstractVedtaksperiodeVentetils
     }
 
     @Test
-    fun `ingen alarm når vi er stuck pga inntektsmelding - vi får ikke gjort noe med dem uansett`() {
+    fun `ingen alarm når vi er stuck pga inntektsmelding UTEN hvorfor satt - vi får ikke gjort noe med dem uansett`() {
         assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
         val vedtaksperiodeId = UUID.randomUUID()
-        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "INNTEKTSMELDING", UUID.randomUUID())
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "INNTEKTSMELDING", UUID.randomUUID(), venterPåHvorfor = null)
         river.sendTestMessage(vedtaksperiodeVenter)
         assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
+    }
+
+    @Test
+    fun `alarm når vi er stuck pga inntektsmelding MED hvorfor satt`() {
+        assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
+        val vedtaksperiodeId = UUID.randomUUID()
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "INNTEKTSMELDING", UUID.randomUUID(), venterPåHvorfor = "noe")
+        river.sendTestMessage(vedtaksperiodeVenter)
+        val stuck = stuck().single()
+        assertEquals(vedtaksperiodeId, stuck.vedtaksperiodeId)
+        assertEquals("INNTEKTSMELDING", stuck.venterPå.hva)
+        assertEquals("noe", stuck.venterPå.hvorfor)
+    }
+
+    @Test
+    fun `alarm når hvorfor er satt til noe som helst utenom overstyring igangsatt`() {
+        assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())
+        val vedtaksperiodeId = UUID.randomUUID()
+        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "tja", UUID.randomUUID(), venterPåHvorfor = "tjo")
+        river.sendTestMessage(vedtaksperiodeVenter)
+        val stuck = stuck().single()
+        assertEquals(vedtaksperiodeId, stuck.vedtaksperiodeId)
+        assertEquals("tja", stuck.venterPå.hva)
+        assertEquals("tjo", stuck.venterPå.hvorfor)
     }
 
     @Test
