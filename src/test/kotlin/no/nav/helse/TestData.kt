@@ -19,8 +19,13 @@ object TestData {
             "saksbehandler": {"oid": "$saksbehandler"},
             "vedtaksperiodeId": "$vedtaksperiodeId",
             "begrunnelser": ${begrunnelser.toJson()},
-            ${kommentar?.let {""""kommentar": "$it",""" } ?: ""}
-            "@opprettet": "$opprettet"
+            ${kommentar?.let { """"kommentar": "$it",""" } ?: ""}
+            "@opprettet": "$opprettet",
+            "arsaker": ${arsaker?.map { arsak ->
+            """
+                {"arsak": "${arsak.arsak}", "key": "${arsak.key}"}
+            """
+            }}
          }""".trimMargin()
 
     val annullering = Annullering(
@@ -29,11 +34,13 @@ object TestData {
         begrunnelser = listOf(),
         kommentar = null,
         opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+        arsaker = emptyList()
     )
 
     fun Annullering.vedtaksperiodeId(it: UUID) = copy(vedtaksperiodeId = it)
     fun Annullering.kommentar(it: String) = copy(kommentar = it)
     fun Annullering.begrunnelse(it: String) = copy(begrunnelser = begrunnelser + it)
+    fun Annullering.årsak(it: AnnulleringArsak) = copy(arsaker = arsaker?.plus(it))
 
     data class VedtaksperiodeEndret(
         val vedtaksperiodeId: UUID = randomUUID(),
@@ -82,7 +89,7 @@ object TestData {
           "tilstand": "$tilstand",
           "fødselsnummer": "$fødselsnummer",
           "egenskaper": [
-            ${egenskaper.joinToString{ """"$it""""}}
+            ${egenskaper.joinToString { """"$it"""" }}
           ],
           "beslutter": {
             "epostadresse": "beslutter@nav.no",
@@ -126,44 +133,53 @@ object TestData {
         val tidsstempel: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
         val kontekster: List<Map<String, Any>> = emptyList()
     ) {
-        fun error() = copy (alvorlighetsgrad = FUNKSJONELL_FEIL.name)
-        fun info()  = copy (alvorlighetsgrad = INFO.name, varselkode = null)
+        fun error() = copy(alvorlighetsgrad = FUNKSJONELL_FEIL.name)
+        fun info() = copy(alvorlighetsgrad = INFO.name, varselkode = null)
         fun toJson() = """{
             "melding" : "$melding",
             "nivå" : "$alvorlighetsgrad",
-            ${ if (varselkode != null) """ "varselkode": "$varselkode", """ else """"""}
+            ${if (varselkode != null) """ "varselkode": "$varselkode", """ else """"""}
             "tidsstempel" : "$tidsstempel",
-            "kontekster": ${kontekster.map { kontekst ->
+            "kontekster": ${
+            kontekster.map { kontekst ->
                 """{
                     "konteksttype": "${kontekst.getValue("konteksttype")}",
                     "kontekstmap": {
-                    ${(kontekst.getValue("kontekstmap") as Map<String, String>).entries.joinToString { 
+                    ${
+                    (kontekst.getValue("kontekstmap") as Map<String, String>).entries.joinToString {
                         """
                            "${it.key}": "${it.value}" 
                         """
-                }}
+                    }
+                }
                     }
                 }
                 """
-        }}
+            }
+        }
            }
         """.trimIndent()
 
         fun melding(it: String) = copy(melding = it)
-        fun vedtaksperiodeId(id: UUID) = copy(kontekster = kontekster + listOf(
-            mapOf(
-                "konteksttype" to "Vedtaksperiode",
-                "kontekstmap" to mapOf(
-                    "vedtaksperiodeId" to id.toString()
+        fun vedtaksperiodeId(id: UUID) = copy(
+            kontekster = kontekster + listOf(
+                mapOf(
+                    "konteksttype" to "Vedtaksperiode",
+                    "kontekstmap" to mapOf(
+                        "vedtaksperiodeId" to id.toString()
+                    )
                 )
             )
-        ))
+        )
 
         companion object {
             fun List<Aktivitet>.toJson(vedtaksperiodeId: UUID): String =
-                joinToString(separator = ", ", prefix = "[", postfix = "]") { it.vedtaksperiodeId(vedtaksperiodeId).toJson() }
+                joinToString(separator = ", ", prefix = "[", postfix = "]") {
+                    it.vedtaksperiodeId(vedtaksperiodeId).toJson()
+                }
         }
     }
+
     val vedtaksperiodeEndret = VedtaksperiodeEndret()
     val nyAktivitet = NyAktivitet()
     val nyOppgave = NyOppgave()

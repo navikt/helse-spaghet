@@ -22,6 +22,7 @@ class AnnulleringRiver(
                 it.requireKey("vedtaksperiodeId", "begrunnelser", "@opprettet")
                 it.require("saksbehandler.oid") { node -> node.asUuid() }
                 it.interestedIn("kommentar")
+                it.interestedIn("arsaker")
             }
         }.register(this)
     }

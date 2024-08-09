@@ -17,15 +17,23 @@ data class Annullering(
     val begrunnelser: List<String>,
     val kommentar: String?,
     val opprettet: LocalDateTime,
+    val arsaker: List<AnnulleringArsak>?
 ) {
     companion object {
         fun JsonNode.parseAnnullering(): Annullering {
             return Annullering(
                 saksbehandler = this["saksbehandler"]["oid"].asUuid(),
                 vedtaksperiodeId = this["vedtaksperiodeId"].asUuid(),
-                begrunnelser = this["begrunnelser"].map { it.asText() },
+                begrunnelser = this["arsaker"]?.takeUnless { it.isEmpty }?.let { it.map { arsak -> arsak["arsak"].asText() } }
+                    ?: this["begrunnelser"].map { it.asText() },
                 kommentar = this["kommentar"].asNullableText(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
+                arsaker = this["arsaker"]?.map {
+                    AnnulleringArsak(
+                        key = it["key"].asText(),
+                        arsak = it["arsak"].asText()
+                    )
+                } ?: emptyList(),
             )
         }
 
@@ -53,6 +61,32 @@ data class Annullering(
                     annullering.opprettet,
                 ).asUpdate
             )
+
+            if (annullering.arsaker?.isNotEmpty() == true) {
+                @Language("PostgreSQL")
+                val årsakStatement = """
+                INSERT INTO annullering_arsak(
+                    vedtaksperiode_id,
+                    arsak,
+                    key
+                ) VALUES (?, ?, ?);
+            """
+                annullering.arsaker.forEach { arsak ->
+                    run(
+                        queryOf(
+                            årsakStatement,
+                            annullering.vedtaksperiodeId,
+                            arsak.arsak,
+                            arsak.key
+                        ).asUpdate
+                    )
+                }
+            }
         }
     }
 }
+
+data class AnnulleringArsak(
+    val key: String,
+    val arsak: String,
+)

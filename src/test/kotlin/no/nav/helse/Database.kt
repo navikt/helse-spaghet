@@ -24,23 +24,47 @@ fun DataSource.annulleringer(): List<Annullering> {
         this.run(
             queryOf(
                 """
-SELECT saksbehandler, id, begrunnelser, kommentar, opprettet
+SELECT a.saksbehandler, a.id, a.begrunnelser, a.kommentar, a.opprettet, aa.arsak, aa.key
 FROM annullering a
+LEFT JOIN annullering_arsak aa ON aa.vedtaksperiode_id = a.id 
 ORDER BY a.opprettet DESC
     """
             )
-                .map { it.annullering() }.asList
+                .map {
+                    val årsak = this.run(
+                        queryOf("""
+                            SELECT arsak, key
+                            FROM annullering_arsak
+                        """
+                        ).map {årsak -> årsak.annulleringÅrsak() }.asList)
+
+                    it.annullering(årsak)
+                }.asList
         )
     }
 }
 
-fun Row.annullering() =
+fun Row.annullering(årsak: List<AnnulleringArsak>?) =
     Annullering(
         saksbehandler = uuid("saksbehandler"),
         vedtaksperiodeId = UUID.fromString(string("id")),
-        begrunnelser = stringList("begrunnelser"),
+        begrunnelser = stringOrNull("arsak")?.let { listOf(string("arsak")) } ?: stringList("begrunnelser"),
         kommentar = stringOrNull("kommentar"),
         opprettet = localDateTime("opprettet"),
+        arsaker = årsak?.takeUnless { årsak.isEmpty() }?.let {
+            listOf(
+                AnnulleringArsak(
+                    arsak = string("arsak"),
+                    key = string("key")
+                )
+            )
+        } ?: emptyList()
+    )
+
+fun Row.annulleringÅrsak(): AnnulleringArsak =
+    AnnulleringArsak(
+        key = string("key"),
+        arsak = string("arsak")
     )
 
 fun Row.stringList(column: String) =

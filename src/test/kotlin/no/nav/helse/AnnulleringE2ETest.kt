@@ -5,6 +5,7 @@ import no.nav.helse.TestData.annullering
 import no.nav.helse.TestData.begrunnelse
 import no.nav.helse.TestData.kommentar
 import no.nav.helse.TestData.vedtaksperiodeId
+import no.nav.helse.TestData.årsak
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -53,6 +54,18 @@ class AnnulleringE2ETest {
                 .kommentar("Kremfjes")
                 .sendTilRapid()
             assertEquals("Kremfjes", dataSource.annulleringer()[0].kommentar)
+        }
+    }
+
+    @Test
+    fun `Med årsak`() {
+        e2eTest {
+            annullering
+                .begrunnelse("Kremfjes")
+                .årsak(AnnulleringArsak(key = "key01", arsak = "Ferie"))
+                .sendTilRapid()
+            assertEquals(listOf("Ferie"), dataSource.annulleringer()[0].begrunnelser)
+            assertEquals(listOf(AnnulleringArsak(key = "key01", arsak = "Ferie")), dataSource.annulleringer()[0].arsaker)
         }
     }
 
