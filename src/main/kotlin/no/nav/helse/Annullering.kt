@@ -66,18 +66,18 @@ data class Annullering(
                 @Language("PostgreSQL")
                 val årsakStatement = """
                 INSERT INTO annullering_arsak(
-                    vedtaksperiode_id,
                     arsak,
-                    key
+                    key,
+                    vedtaksperiode_id
                 ) VALUES (?, ?, ?);
             """
                 annullering.arsaker.forEach { arsak ->
                     run(
                         queryOf(
                             årsakStatement,
-                            annullering.vedtaksperiodeId,
                             arsak.arsak,
-                            arsak.key
+                            arsak.key,
+                            annullering.vedtaksperiodeId
                         ).asUpdate
                     )
                 }

@@ -24,41 +24,35 @@ fun DataSource.annulleringer(): List<Annullering> {
         this.run(
             queryOf(
                 """
-SELECT a.saksbehandler, a.id, a.begrunnelser, a.kommentar, a.opprettet, aa.arsak, aa.key
+SELECT a.saksbehandler, a.id, a.begrunnelser, a.kommentar, a.opprettet
 FROM annullering a
-LEFT JOIN annullering_arsak aa ON aa.vedtaksperiode_id = a.id 
 ORDER BY a.opprettet DESC
     """
             )
                 .map {
-                    val årsak = this.run(
+                    val årsaker = this.run(
                         queryOf("""
                             SELECT arsak, key
                             FROM annullering_arsak
-                        """
-                        ).map {årsak -> årsak.annulleringÅrsak() }.asList)
+                            WHERE vedtaksperiode_id = :annulleringId
+                        """, mapOf(
+                            "annulleringId" to it.string("id")
+                        )).map {årsak -> årsak.annulleringÅrsak() }.asList)
 
-                    it.annullering(årsak)
+                    it.annullering(årsaker)
                 }.asList
         )
     }
 }
 
-fun Row.annullering(årsak: List<AnnulleringArsak>?) =
+fun Row.annullering(årsaker: List<AnnulleringArsak>?) =
     Annullering(
         saksbehandler = uuid("saksbehandler"),
         vedtaksperiodeId = UUID.fromString(string("id")),
-        begrunnelser = stringOrNull("arsak")?.let { listOf(string("arsak")) } ?: stringList("begrunnelser"),
+        begrunnelser = årsaker?.takeUnless { it.isEmpty() }?.let { it.map { årsak -> årsak.arsak } } ?: stringList("begrunnelser"),
         kommentar = stringOrNull("kommentar"),
         opprettet = localDateTime("opprettet"),
-        arsaker = årsak?.takeUnless { årsak.isEmpty() }?.let {
-            listOf(
-                AnnulleringArsak(
-                    arsak = string("arsak"),
-                    key = string("key")
-                )
-            )
-        } ?: emptyList()
+        arsaker = årsaker?.takeUnless { it.isEmpty() } ?: emptyList()
     )
 
 fun Row.annulleringÅrsak(): AnnulleringArsak =
