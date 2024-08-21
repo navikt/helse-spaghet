@@ -106,6 +106,6 @@ private fun lagreVedtaksperiodedata(packet: JsonMessage, dataSource: DataSource)
         }
     } catch (err: PSQLException) {
         logg.warn("klarte ikke oppdatere vedtaksdata fra dump")
-        sikkerlogg.warn("klarte ikke oppdatere vedtaksdata fra dump: $packet")
+        sikkerlogg.warn("klarte ikke oppdatere vedtaksdata fra dump; Error: $err \nPacket dump: $json")
     }
 }
