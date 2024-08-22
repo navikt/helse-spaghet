@@ -63,6 +63,8 @@ class VedtaksperiodeOpprettetRiver(
     }
 }
 
+private val minsteDato = LocalDate.of(-4713, 1, 1)
+
 private fun lagreVedtaksperiodedata(packet: JsonMessage, dataSource: DataSource) {
     val json = objectMapper.readTree(packet.toJson())
     val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
@@ -71,7 +73,7 @@ private fun lagreVedtaksperiodedata(packet: JsonMessage, dataSource: DataSource)
     val yrkesaktivitet = json["organisasjonsnummer"].asText()
     val fom = json["fom"].asLocalDate()
     val tom = json["tom"].asLocalDate()
-    val skjæringstidspunkt = json["skjæringstidspunkt"].asLocalDate()
+    val skjæringstidspunkt = json["skjæringstidspunkt"].asLocalDate().coerceAtLeast(minsteDato)
     val tilstand = json["gjeldendeTilstand"]?.asText() ?: "START"
     try {
         sessionOf(dataSource).use { session ->
