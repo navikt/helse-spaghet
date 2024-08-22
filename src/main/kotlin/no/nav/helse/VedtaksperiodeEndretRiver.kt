@@ -63,7 +63,7 @@ class VedtaksperiodeOpprettetRiver(
     }
 }
 
-private val minsteDato = LocalDate.of(-4713, 1, 1)
+private val minsteDato = LocalDate.of(-4500, 1, 1)
 
 private fun lagreVedtaksperiodedata(packet: JsonMessage, dataSource: DataSource) {
     val json = objectMapper.readTree(packet.toJson())
