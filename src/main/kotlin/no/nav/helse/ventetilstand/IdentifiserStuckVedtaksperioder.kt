@@ -13,6 +13,7 @@ import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder(
@@ -62,7 +63,7 @@ internal class IdentifiserStuckVedtaksperioder(
                 "Fordelt på ${antall.personer}:\n\n"
 
             melding += venterPå.take(Maks).joinToString(separator = "\n") { (fnr, venterPå) ->
-                "\t${venterPå.id}) venter på ${venterPå.snygg} ${venterPå.suffix(fnr, spurteDuClient)}"
+                "\t${venterPå.id} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, spurteDuClient)}"
             }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -78,15 +79,8 @@ internal class IdentifiserStuckVedtaksperioder(
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
 
-        private val VenterPå.id get() = "$vedtaksperiodeId".take(5).uppercase()
-        private fun VenterPå.suffix(fnr: String, spurteDuClient: SpurteDuClient) = "[${fnr.spannerUrl(spurteDuClient)}/${kibanaUrl}]"
-
-        private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
-            "<$url|Kibana>"
-        }
-        private fun String.spannerUrl(spurteDuClient: SpurteDuClient) = spannerlink(spurteDuClient, this).let { url ->
-            "<$url|Spanner>"
-        }
+        private val VenterPå.id get() = "$vedtaksperiodeId".take(5).uppercase().let { "*$it*" }
+        private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId)}/${kibanaUrl}]"
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
         private fun ingentingStuck(packet: JsonMessage, context: MessageContext, tidsbruk: Duration) {
@@ -104,7 +98,7 @@ internal class IdentifiserStuckVedtaksperioder(
         }}
 
         private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
-        private fun spannerlink(spurteDuClient: SpurteDuClient, fnr: String): String {
+        private fun SpurteDuClient.spannerUrl(fnr: String, vedtaksperiodeId: UUID): String {
             val payload = SkjulRequest.SkjulTekstRequest(
                 tekst = objectMapper.writeValueAsString(mapOf(
                     "ident" to fnr,
@@ -113,8 +107,13 @@ internal class IdentifiserStuckVedtaksperioder(
                 påkrevdTilgang = tbdgruppeProd
             )
 
-            val spurteDuLink = spurteDuClient.skjul(payload)
-            return "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}"
+            val spurteDuLink = skjul(payload)
+            val spannerLink = "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}?vedtaksperiodeId=$vedtaksperiodeId"
+            return "<$spannerLink|Spanner>"
+        }
+
+        private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
+            "<$url|Kibana>"
         }
     }
 }
