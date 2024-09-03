@@ -74,8 +74,8 @@ class VarselEndretRiver(
         private fun Session.insertVarsel(varsel: Varsel, sistEndret: LocalDateTime, behandlingId: UUID?): Int {
             @Language("PostgreSQL")
             val statement = """
-                INSERT INTO varsel(varsel_id, behandling_id, vedtaksperiode_id, varselkode, kilde, tittel, status, sist_endret)
-                VALUES (:varselId, :behandlingId, :vedtaksperiodeId, :varselkode, :kilde, :tittel, :status, :sistEndret)
+                INSERT INTO varsel(varsel_id, behandling_id, vedtaksperiode_id, varselkode, kilde, tittel, status, sist_endret, godkjenning_varsel_id)
+                VALUES (:varselId, :behandlingId, :vedtaksperiodeId, :varselkode, :kilde, :tittel, :status, :sistEndret, null)
                 ON CONFLICT (varsel_id) DO NOTHING;
             """
 

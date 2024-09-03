@@ -25,9 +25,10 @@ fun DataSource.insertGodkjenning(behov: Godkjenningsbehov) =
                             utbetaling_type,
                             refusjon_type,
                             er_saksbehandleroverstyringer,
-                            behandling_id
+                            behandling_id,
+                            godkjenning_varsel_id
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, null);
                     """
             val godkjenningId = transaction.run(
                 queryOf(
