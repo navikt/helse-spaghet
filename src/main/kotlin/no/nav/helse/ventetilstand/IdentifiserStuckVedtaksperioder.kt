@@ -13,7 +13,6 @@ import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
 import kotlin.time.*
 
 internal class IdentifiserStuckVedtaksperioder(
@@ -50,10 +49,9 @@ internal class IdentifiserStuckVedtaksperioder(
 
             val venterPå = stuck
                 .groupBy { it.fødselsnummer }
-                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.first().venterPå }
-                .filterNot {  it.value.skalIkkeMase }
+                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.minBy { it.ventetSiden }.venterPå }
+                .toSortedMap()
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context, tidsbruk)
-
 
             val antall = venterPå.size
 
@@ -86,11 +84,6 @@ internal class IdentifiserStuckVedtaksperioder(
             "<$url|spannerlink>"
         }
 
-        /** Liste med perioder som er stuck, men bruker kontaktes av saksbehandler for å avvente ny informasjon som kan endre på stuck-situasjonen **/
-        private val AVVENTER_MENS_AG_KONTAKTES = emptySet<IkkeStuckLikevel>()
-        private val VenterPå.skalIkkeMase get() = IkkeStuckLikevel(vedtaksperiodeId, hva, hvorfor) in AVVENTER_MENS_AG_KONTAKTES
-        private data class IkkeStuckLikevel(private val vedtaksperiodeId: UUID, private val hva: String, private val hvorfor: String?)
-
         private val JsonMessage.eventname get() = get("@event_name").asText()
         private fun ingentingStuck(packet: JsonMessage, context: MessageContext, tidsbruk: Duration) {
             if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nBrukte ${tidsbruk.snygg} på å finne ut at du kan bare ta det helt :musical_keyboard:! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
@@ -105,19 +98,20 @@ internal class IdentifiserStuckVedtaksperioder(
             it.seconds < 60L -> menneskete("sekund", it.seconds.toInt())
             else -> "${menneskete("minutt", it.toMinutesPart())} ${menneskete("sekund", it.toSecondsPart(), prefix = "og ")}"
         }}
+
+        private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
+        private fun spannerlink(spurteDuClient: SpurteDuClient, fnr: String): String {
+            val payload = SkjulRequest.SkjulTekstRequest(
+                tekst = objectMapper.writeValueAsString(mapOf(
+                    "ident" to fnr,
+                    "identtype" to "FNR"
+                )),
+                påkrevdTilgang = tbdgruppeProd
+            )
+
+            val spurteDuLink = spurteDuClient.skjul(payload)
+            return "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}"
+        }
     }
 }
 
-private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
-fun spannerlink(spurteDuClient: SpurteDuClient, fnr: String): String {
-    val payload = SkjulRequest.SkjulTekstRequest(
-        tekst = objectMapper.writeValueAsString(mapOf(
-            "ident" to fnr,
-            "identtype" to "FNR"
-        )),
-        påkrevdTilgang = tbdgruppeProd
-    )
-
-    val spurteDuLink = spurteDuClient.skjul(payload)
-    return "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}"
-}
