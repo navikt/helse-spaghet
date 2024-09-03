@@ -203,13 +203,13 @@ class VedtaksperiodeGodkjentE2ETest {
     "periodetype": "INFOTRYGDFORLENGELSE",
     "inntektskilde": "EN_ARBEIDSGIVER",
     "utbetalingtype": "UTBETALING",
+    "behandlingId":  "$behandlingId",
     "warnings": {
       "aktiviteter": [],
       "kontekster": []
     }
   },
-  "behandlingId": "$behandlingId",
-  "vedtaksperiodeId": "$vedtaksperiodeId",
+ "vedtaksperiodeId": "$vedtaksperiodeId",
   "aktørId": "1234",
   "fødselsnummer": "1234567901"
 }

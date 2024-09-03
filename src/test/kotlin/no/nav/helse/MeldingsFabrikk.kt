@@ -29,6 +29,7 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
           "vedtaksperiodeId": "$vedtaksperiodeId",
           "tilstand": "AVVENTER_GODKJENNING",
           "Godkjenning": {
+            "behandlingId": "${UUID.randomUUID()}",
             "warnings": {
               "aktiviteter": [
                 {
@@ -77,7 +78,6 @@ fun løsningNyttFormat(
                 }
             }"""))
             .put("@besvart", "2020-06-02T13:00:00.000000")
-            .put("behandlingId", "${UUID.randomUUID()}")
     }.toString()
 
 @Language("JSON")

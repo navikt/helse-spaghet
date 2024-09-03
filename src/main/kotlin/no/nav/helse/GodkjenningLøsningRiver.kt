@@ -21,7 +21,7 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
                     "Godkjenning.periodetype",
                     "Godkjenning.inntektskilde",
                     "Godkjenning.utbetalingtype",
-                    "behandlingId",
+                    "Godkjenning.behandlingId",
                     "@løsning.Godkjenning.godkjenttidspunkt",
                 )
                 it.interestedIn(
@@ -64,7 +64,7 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         if (godkjenningAlleredeLagret(packet)) return
 
-        val behandlingId = UUID.fromString(packet["behandlingId"].asText())
+        val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asText())
 
         val behov = Godkjenningsbehov(
             vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
