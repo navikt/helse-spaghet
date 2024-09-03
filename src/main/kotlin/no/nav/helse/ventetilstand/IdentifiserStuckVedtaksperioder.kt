@@ -49,8 +49,10 @@ internal class IdentifiserStuckVedtaksperioder(
 
             val venterPå = stuck
                 .groupBy { it.fødselsnummer }
-                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.minBy { it.ventetSiden }.venterPå }
-                .toSortedMap()
+                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.minBy { it.ventetSiden } }
+                .entries
+                .sortedBy { (_, vedtaksperiode) -> vedtaksperiode.ventetSiden }
+                .map { (fødselsnummer, vedtaksperiode) -> fødselsnummer to vedtaksperiode.venterPå }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context, tidsbruk)
 
             val antall = venterPå.size
@@ -59,10 +61,8 @@ internal class IdentifiserStuckVedtaksperioder(
                 "\n\nBrukte ${tidsbruk.snygg} på å finne ut at det er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
                 "Fordelt på ${antall.personer}:\n\n"
 
-            var index = 0
-            melding += venterPå.entries.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiode) ->
-                index += 1
-                "\t$index) ${vedtaksperiode.kibanaUrl} venter på ${vedtaksperiode.snygg} ${fnr.spannerUrl(spurteDuClient).let { "($it)" }}"
+            melding += venterPå.take(Maks).joinToString(separator = "\n") { (fnr, venterPå) ->
+                "\t${venterPå.id}) venter på ${venterPå.snygg} ${venterPå.suffix(fnr, spurteDuClient)}"
             }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -77,11 +77,15 @@ internal class IdentifiserStuckVedtaksperioder(
         private val Maks = 50
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
+
+        private val VenterPå.id get() = "$vedtaksperiodeId".take(5).uppercase()
+        private fun VenterPå.suffix(fnr: String, spurteDuClient: SpurteDuClient) = "[${fnr.spannerUrl(spurteDuClient)}/${kibanaUrl}]"
+
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
-            "<$url|$vedtaksperiodeId>"
+            "<$url|Kibana>"
         }
         private fun String.spannerUrl(spurteDuClient: SpurteDuClient) = spannerlink(spurteDuClient, this).let { url ->
-            "<$url|spannerlink>"
+            "<$url|Spanner>"
         }
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
