@@ -125,6 +125,6 @@ internal abstract class AbstractVedtaksperiodeVentetilstandTest(
         sessionOf(dataSource).use { session ->
             session.execute(queryOf("UPDATE vedtaksperiode_venter SET tidsstempel=now() - INTERVAL '10 MINUTES'"))
         }
-        return vedtaksperiodeVentetilstandDao.stuck()
+        return vedtaksperiodeVentetilstandDao.stuck().map { it.vedtaksperiodeVenter }
     }
 }

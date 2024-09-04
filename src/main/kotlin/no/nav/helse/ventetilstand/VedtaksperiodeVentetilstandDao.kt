@@ -3,6 +3,7 @@ package no.nav.helse.ventetilstand
 import kotliquery.*
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
+import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
 import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -45,7 +46,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
     internal fun stuck() = sessionOf(dataSource).use { session ->
         session.list(Query(STUCK)) { row ->
-            row.vedtaksperiodeVenter
+            row.vedtaksperiodeVenterMedMetadata
         }
     }
 

@@ -11,8 +11,11 @@ import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
+import java.time.DayOfWeek.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID
 import kotlin.time.*
 
@@ -48,22 +51,24 @@ internal class IdentifiserStuckVedtaksperioder(
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
             if (stuck.isEmpty()) return ingentingStuck(packet, context, tidsbruk)
 
-            val venterPå = stuck
-                .groupBy { it.fødselsnummer }
-                .mapValues { (_, vedtaksperioder) -> vedtaksperioder.minBy { it.ventetSiden } }
+            val ventetLengstPerPerson = stuck
+                .groupBy { it.vedtaksperiodeVenter.fødselsnummer }
+                .mapValues { (_, vedtaksperiodeVenterMedMetadata) -> vedtaksperiodeVenterMedMetadata.minBy { it.vedtaksperiodeVenter.ventetSiden } }
                 .entries
-                .sortedBy { (_, vedtaksperiode) -> vedtaksperiode.ventetSiden }
-                .map { (fødselsnummer, vedtaksperiode) -> fødselsnummer to vedtaksperiode.venterPå }
+                .sortedBy { (_, vedtaksperiodeVenterMedMetadata) -> vedtaksperiodeVenterMedMetadata.vedtaksperiodeVenter.ventetSiden }
+                .map { (fødselsnummer, vedtaksperiodeVenterMedMetadata) -> fødselsnummer to vedtaksperiodeVenterMedMetadata }
                 .takeUnless { it.isEmpty() } ?: return ingentingStuck(packet, context, tidsbruk)
 
-            val antall = venterPå.size
+            val antall = ventetLengstPerPerson.size
 
             var melding =
                 "\n\nBrukte ${tidsbruk.snygg} på å finne ut at det er ${stuck.size.vedtaksperioder} som ser ut til å være stuck! :helene-redteam:\n" +
                 "Fordelt på ${antall.personer}:\n\n"
 
-            melding += venterPå.take(Maks).joinToString(separator = "\n") { (fnr, venterPå) ->
-                "\t${venterPå.id} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, spurteDuClient)}"
+            melding += ventetLengstPerPerson.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiodeVenterMedMetadata) ->
+                val vedtaksperiodeVenter = vedtaksperiodeVenterMedMetadata.vedtaksperiodeVenter
+                val venterPå = vedtaksperiodeVenter.venterPå
+                "\t${vedtaksperiodeVenterMedMetadata.prefix} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, spurteDuClient)}"
             }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -77,9 +82,20 @@ internal class IdentifiserStuckVedtaksperioder(
     private companion object {
         private val Maks = 50
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-        private val VenterPå.snygg get() = if (hvorfor == null) hva else "$hva fordi $hvorfor"
+        private val VenterPå.snygg get() = (if (hvorfor == null) hva else "$hva fordi $hvorfor").lowercase().replace("_", "")
 
-        private val VenterPå.id get() = "$vedtaksperiodeId".take(5).uppercase().let { "*$it*" }
+        private val VedtaksperiodeVenterMedMetadata.prefix get() = "${vedtaksperiodeVenter.venterPå.vedtaksperiodeId}".take(5).uppercase().let {
+            val iDag = LocalDate.now()
+            val registrert = tidsstempel.toLocalDate()
+            val news = when (iDag.dayOfWeek) {
+                SUNDAY -> setOf(iDag, iDag.minusDays(1)) // Drar med oss lørdan' på søndan'
+                MONDAY -> setOf(iDag, iDag.minusDays(1), iDag.minusDays(2)) // Drar med oss lørdan' og søndan' på mandan'
+                else -> setOf(iDag)
+            }
+            if (registrert in news) ":news: *$it* :news:"
+            else if (DAYS.between(registrert, iDag) > 5) ":pepe-freezing: *$it* :pepe-freezing:"
+            else "*$it*"
+        }
         private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId)}/${kibanaUrl}]"
 
         private val JsonMessage.eventname get() = get("@event_name").asText()

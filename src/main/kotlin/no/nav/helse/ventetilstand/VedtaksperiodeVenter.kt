@@ -35,6 +35,10 @@ internal data class VedtaksperiodeVenter private constructor(
                 hvorfor = this.stringOrNull("venterPaHvorfor")
             )
         )
+        internal val Row.vedtaksperiodeVenterMedMetadata get() = VedtaksperiodeVenterMedMetadata(
+            tidsstempel = this.localDateTime("tidsstempel"),
+            vedtaksperiodeVenter = vedtaksperiodeVenter
+        )
     }
 }
 
@@ -44,5 +48,11 @@ internal data class VenterPå(
     internal val organisasjonsnummer: String,
     internal val hva: String,
     internal val hvorfor: String?
+)
+
+
+internal data class VedtaksperiodeVenterMedMetadata(
+    internal val tidsstempel: LocalDateTime,
+    internal val vedtaksperiodeVenter: VedtaksperiodeVenter
 )
 
