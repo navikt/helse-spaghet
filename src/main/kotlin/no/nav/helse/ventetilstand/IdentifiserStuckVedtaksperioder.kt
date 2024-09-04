@@ -82,7 +82,7 @@ internal class IdentifiserStuckVedtaksperioder(
     private companion object {
         private val Maks = 50
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-        private val VenterPå.snygg get() = (if (hvorfor == null) hva else "$hva fordi $hvorfor").lowercase().replace("_", "")
+        private val VenterPå.snygg get() = (if (hvorfor == null) hva else "$hva fordi $hvorfor").lowercase().replace("_", " ")
 
         private val VedtaksperiodeVenterMedMetadata.prefix get() = "${vedtaksperiodeVenter.venterPå.vedtaksperiodeId}".take(5).uppercase().let {
             val iDag = LocalDate.now()
@@ -92,8 +92,8 @@ internal class IdentifiserStuckVedtaksperioder(
                 MONDAY -> setOf(iDag, iDag.minusDays(1), iDag.minusDays(2)) // Drar med oss lørdan' og søndan' på mandan'
                 else -> setOf(iDag)
             }
-            if (registrert in news) ":news: *$it* :news:"
-            else if (DAYS.between(registrert, iDag) > 5) ":pepe-freezing: *$it* :pepe-freezing:"
+            if (registrert in news) "*$it* :news:"
+            else if (DAYS.between(registrert, iDag) > 5) "*$it* :pepe-freezing:"
             else "*$it*"
         }
         private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId)}/${kibanaUrl}]"
