@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
 import java.time.DayOfWeek.*
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.time.temporal.ChronoUnit.DAYS
@@ -85,16 +84,12 @@ internal class IdentifiserStuckVedtaksperioder(
         private val VenterPå.snygg get() = (if (hvorfor == null) hva else "$hva fordi $hvorfor").lowercase().replace("_", " ")
 
         private val VedtaksperiodeVenterMedMetadata.prefix get() = "${vedtaksperiodeVenter.venterPå.vedtaksperiodeId}".take(5).uppercase().let {
-            val iDag = LocalDate.now()
-            val registrert = tidsstempel.toLocalDate()
-            val news = when (iDag.dayOfWeek) {
-                SUNDAY -> setOf(iDag, iDag.minusDays(1)) // Drar med oss lørdan' på søndan'
-                MONDAY -> setOf(iDag, iDag.minusDays(1), iDag.minusDays(2)) // Drar med oss lørdan' og søndan' på mandan'
-                else -> setOf(iDag)
+            val venteklassifisering = venteklassifisering(registrert = tidsstempel)
+            when (venteklassifisering) {
+                Venteklassifisering.VANLIG -> "*$it*"
+                Venteklassifisering.GAMMEL -> "*$it* :pepe-freezing:"
+                Venteklassifisering.NYHET -> "*$it* :news:"
             }
-            if (registrert in news) "*$it* :news:"
-            else if (DAYS.between(registrert, iDag) > 5) "*$it* :pepe-freezing:"
-            else "*$it*"
         }
         private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId)}/${kibanaUrl}]"
 
@@ -134,3 +129,14 @@ internal class IdentifiserStuckVedtaksperioder(
     }
 }
 
+internal enum class Venteklassifisering { VANLIG, NYHET, GAMMEL }
+internal fun venteklassifisering(registrert: LocalDateTime, nå: LocalDateTime = LocalDateTime.now()): Venteklassifisering {
+    if (DAYS.between(registrert, nå) > 5) return Venteklassifisering.GAMMEL
+    val nyhet = when (nå.dayOfWeek) {
+        SUNDAY -> nå.minusHours(48) // Drar med oss lørdan' på søndan'
+        MONDAY -> nå.minusHours(72) // Drar med oss lørdan' og søndan' på mandan'
+        else -> nå.minusHours(24)
+    }
+    if (registrert >= nyhet) return Venteklassifisering.NYHET
+    return Venteklassifisering.VANLIG
+}
