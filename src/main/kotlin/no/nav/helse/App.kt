@@ -82,6 +82,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     VedtaksperiodeEndretRiver(this, dataSource)
     VedtaksperiodeOpprettetRiver(this, dataSource)
     VedtaksperiodeAvstemt(this, dataSource)
+    SkatteinntekterLagtTilGrunnRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
