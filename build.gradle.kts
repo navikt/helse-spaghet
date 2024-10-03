@@ -1,10 +1,10 @@
 val junitJupiterVersion = "5.10.2"
-val testcontainersVersion = "1.19.5"
+val testcontainersVersion = "1.20.1"
 val postgresqlVersion = "42.7.2"
 val tbdLibsVersion = "2024.05.31-08.02-2c3441c1"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.0.20"
 }
 
 repositories {
@@ -75,6 +75,6 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "8.5"
+        gradleVersion = "8.10"
     }
 }
