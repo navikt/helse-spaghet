@@ -60,7 +60,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
 ) = apply {
     AnnulleringRiver(this, dataSource)
     GodkjenningLøsningRiver(this, dataSource)
-    VedtaksperiodeTilGodkjenningRiver(this, dataSource)
+    UtkastTilVedtakRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
     TidFraGodkjenningTilUtbetalingRiver(this, dataSource)
     TilstandendringRiver(this, dataSource)
@@ -83,6 +83,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     VedtaksperiodeOpprettetRiver(this, dataSource)
     VedtaksperiodeAvstemt(this, dataSource)
     SkatteinntekterLagtTilGrunnRiver(this, dataSource)
+    UtkastTilVedtakRiver(this, dataSource)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
