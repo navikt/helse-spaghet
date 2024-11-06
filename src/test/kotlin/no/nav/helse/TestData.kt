@@ -73,6 +73,7 @@ object TestData {
         val id: Long = nextLong(),
         val egenskaper: List<String> = listOf("SØKNAD", "EN_ARBEIDSGIVER", "UTBETALING_TIL_SYKMELDT"),
         val fødselsnummer: String = "12345678910",
+        val behandlingId: UUID = randomUUID(),
         val tilstand: String = "AvventerSaksbehandler",
     ) {
         fun id(id: Long) = copy(id = id)
@@ -88,6 +89,7 @@ object TestData {
           "oppgaveId": $id,
           "tilstand": "$tilstand",
           "fødselsnummer": "$fødselsnummer",
+          "behandlingId": "$behandlingId",
           "egenskaper": [
             ${egenskaper.joinToString { """"$it"""" }}
           ],
