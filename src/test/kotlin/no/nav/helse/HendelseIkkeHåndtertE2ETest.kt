@@ -2,36 +2,21 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HendelseIkkeHåndtertE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
     @Test
-    fun `lagrer årsaker i hendelse_ikke_håndtert i database`() {
+    fun `lagrer årsaker i hendelse_ikke_håndtert i database`() = e2eTest {
         val hendelseId = UUID.randomUUID()
         val årsaker = listOf(
             "Mottatt flere søknader for perioden - det støttes ikke før replay av hendelser er på plass",
             "pluss noe mer"
         )
-        river.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
+        rapid.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
         assertEquals(
             listOf(
                 "Mottatt flere søknader for perioden - det støttes ikke før replay av hendelser er på plass",
@@ -42,14 +27,14 @@ class HendelseIkkeHåndtertE2ETest {
     }
 
     @Test
-    fun `uniqness på kombinasjoner av hendleseId, årsak`() {
+    fun `uniqness på kombinasjoner av hendleseId, årsak`() = e2eTest {
         val hendelseId = UUID.randomUUID()
         val årsaker = listOf(
             "Mottatt flere søknader for perioden - det støttes ikke før replay av hendelser er på plass",
             "pluss noe mer"
         )
-        river.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
-        river.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
+        rapid.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
+        rapid.sendTestMessage(hendelseIkkeHåndtert(hendelseId, årsaker))
         assertEquals(
             listOf(
                 "Mottatt flere søknader for perioden - det støttes ikke før replay av hendelser er på plass",
@@ -59,7 +44,7 @@ class HendelseIkkeHåndtertE2ETest {
         )
     }
 
-    private fun hentÅrsaker(hendelseId: UUID): List<String> =
+    private fun E2eTestApp.hentÅrsaker(hendelseId: UUID): List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = """

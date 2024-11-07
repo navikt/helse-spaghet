@@ -2,34 +2,18 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.time.LocalDate
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class VedtaksperiodeDataE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
-
     @Test
-    fun `send en enkel melding, lagre en enkelt periode`() {
+    fun `send en enkel melding, lagre en enkelt periode`() = e2eTest {
         val id = UUID.randomUUID()
-        river.sendTestMessage(vedtakOpprettet(
+        rapid.sendTestMessage(vedtakOpprettet(
             id,
             "01010112345",
             "12345",
@@ -52,9 +36,9 @@ class VedtaksperiodeDataE2ETest {
     }
 
     @Test
-    fun `send samme periode igjen, men annen data`() {
+    fun `send samme periode igjen, men annen data`() = e2eTest {
         val id = UUID.randomUUID()
-        river.sendTestMessage(vedtakOpprettet(
+        rapid.sendTestMessage(vedtakOpprettet(
             vedtaksperiodeId = id,
             fnr = "01010112345",
             aktørId = "12345",
@@ -63,7 +47,7 @@ class VedtaksperiodeDataE2ETest {
             tom = LocalDate.of(2020, 1, 31),
             skjæringstidspunkt = LocalDate.of(2020, 1, 1)
         ))
-        river.sendTestMessage(vedtakEndret(
+        rapid.sendTestMessage(vedtakEndret(
             vedtaksperiodeId = id,
             fnr = "99999999999",
             aktørId = "99999",
@@ -87,11 +71,11 @@ class VedtaksperiodeDataE2ETest {
     }
 
     @Test
-    fun `send person avstemt`() {
+    fun `send person avstemt`() = e2eTest {
         val første = UUID.randomUUID()
         val andre = UUID.randomUUID()
         val tredje = UUID.randomUUID()
-        river.sendTestMessage(personAvstemt(første, andre, tredje))
+        rapid.sendTestMessage(personAvstemt(første, andre, tredje))
         assertFelt(
             første,
             forventetFnr = "1",
@@ -189,7 +173,7 @@ class VedtaksperiodeDataE2ETest {
 ]}
     """.trimIndent()
 
-    private fun assertFelt(
+    private fun E2eTestApp.assertFelt(
         vedtaksperiodeId: UUID,
         forventetFnr: String,
         forventetAktørId: String,

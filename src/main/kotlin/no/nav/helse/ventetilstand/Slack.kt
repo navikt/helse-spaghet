@@ -1,7 +1,7 @@
 package no.nav.helse.ventetilstand
 
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import org.slf4j.event.Level
 
 internal object Slack {

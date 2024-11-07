@@ -2,74 +2,48 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SendtSøknadRiverTest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
-    @AfterEach
-    fun slettRader() {
-        return sessionOf(dataSource).use { session ->
-            @Language("PostgreSQL")
-            val query = "TRUNCATE TABLE soknad"
-            session.run(queryOf(query).asExecute)
-        }
-    }
-
     @Test
-    fun `lagrer søknadNav`() {
-        river.sendTestMessage(sendtSøknadNav())
+    fun `lagrer søknadNav`() = e2eTest {
+        rapid.sendTestMessage(sendtSøknadNav())
         assertEquals(1, tellSøknader())
         assertEquals("sendt_søknad_nav", eventName())
     }
 
     @Test
-    fun `lagrer søknadArbeidsgiver`() {
-        river.sendTestMessage(sendtSøknadArbeidsgiver())
+    fun `lagrer søknadArbeidsgiver`() = e2eTest {
+        rapid.sendTestMessage(sendtSøknadArbeidsgiver())
         assertEquals(1, tellSøknader())
         assertEquals("sendt_søknad_arbeidsgiver", eventName())
     }
 
     @Test
-    fun `lagrer søknadArbeidsledig`() {
-        river.sendTestMessage(sendtSøknadArbeidsledig())
+    fun `lagrer søknadArbeidsledig`() = e2eTest {
+        rapid.sendTestMessage(sendtSøknadArbeidsledig())
         assertEquals(1, tellSøknader())
         assertEquals("sendt_søknad_arbeidsledig", eventName())
     }
 
     @Test
-    fun `lagrer søknadFrilanser`() {
-        river.sendTestMessage(sendtSøknadFrilanser())
+    fun `lagrer søknadFrilanser`() = e2eTest {
+        rapid.sendTestMessage(sendtSøknadFrilanser())
         assertEquals(1, tellSøknader())
         assertEquals("sendt_søknad_frilanser", eventName())
     }
 
     @Test
-    fun `lagrer søknadSelvstendigNæringsdrivende`() {
-        river.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
+    fun `lagrer søknadSelvstendigNæringsdrivende`() = e2eTest {
+        rapid.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
         assertEquals(1, tellSøknader())
         assertEquals("sendt_søknad_selvstendig", eventName())
     }
 
-    private fun tellSøknader(): Int {
+    private fun E2eTestApp.tellSøknader(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM soknad"
@@ -79,7 +53,7 @@ internal class SendtSøknadRiverTest {
         }
     }
 
-    private fun eventName(): String {
+    private fun E2eTestApp.eventName(): String {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT event FROM soknad"

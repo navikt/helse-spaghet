@@ -1,28 +1,22 @@
 package no.nav.helse
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SkatteinntekterLagtTilGrunnE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
     @Test
-    fun `lagrer i databasen`() {
-        river.sendTestMessage(skatteinntekterLagtTilGrunnEvent())
+    fun `lagrer i databasen`() = e2eTest {
+        rapid.sendTestMessage(skatteinntekterLagtTilGrunnEvent())
         assertEquals(1, tellSkatteinntekterLagtTilGrunn())
     }
 
-    private fun tellSkatteinntekterLagtTilGrunn(): Int {
+    private fun E2eTestApp.tellSkatteinntekterLagtTilGrunn(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM skatteinntekter_lagt_til_grunn"

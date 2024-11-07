@@ -2,35 +2,20 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class VarselE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
     @Test
-    fun `lagrer varsel`() {
-        river.sendTestMessage(aktivitetsloggNyAktivitet())
+    fun `lagrer varsel`() = e2eTest {
+        rapid.sendTestMessage(aktivitetsloggNyAktivitet())
         assertEquals(1, tellVarsel())
     }
 
-    private fun tellVarsel(): Int {
+    private fun E2eTestApp.tellVarsel(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM regelverksvarsel"

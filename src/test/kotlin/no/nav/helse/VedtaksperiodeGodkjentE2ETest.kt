@@ -2,98 +2,82 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.Util.uuid
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import java.lang.IllegalStateException
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class VedtaksperiodeGodkjentE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
     @Test
-    fun `lagrer varsel i database`() {
+    fun `lagrer varsel i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
-        river.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
+        rapid.sendTestMessage(godkjenning(vedtaksperiodeId))
+        rapid.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
         assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer varsel uten behandlingId i database`() {
+    fun `lagrer varsel uten behandlingId i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(varselEndretUtenBehandlingId(vedtaksperiodeId, varseltittel = "En tittel"))
+        rapid.sendTestMessage(varselEndretUtenBehandlingId(vedtaksperiodeId, varseltittel = "En tittel"))
         assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
-    fun `ugyldig varselkode kaster exception`() {
+    fun `ugyldig varselkode kaster exception`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
 
         assertDoesNotThrow {
-            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "SB_EX_1"))
-            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "RV_SY_1"))
+            rapid.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "SB_EX_1"))
+            rapid.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "RV_SY_1"))
         }
 
         assertThrows<IllegalStateException> {
-            river.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "EN_KODE"))
+            rapid.sendTestMessage(varselEndret(vedtaksperiodeId, varselkode = "EN_KODE"))
         }
     }
 
     @Test
-    fun `lagrer varsel for avvisning i database`() {
+    fun `lagrer varsel for avvisning i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
+        rapid.sendTestMessage(varselEndret(vedtaksperiodeId, varseltittel = "En tittel"))
         assertEquals(listOf("En tittel"), hentVarsler(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer inntektskilde i database`() {
+    fun `lagrer inntektskilde i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        rapid.sendTestMessage(godkjenning(vedtaksperiodeId))
         assertEquals("EN_ARBEIDSGIVER", finnInntektskilde(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer utbetalingtype i database`() {
+    fun `lagrer utbetalingtype i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        rapid.sendTestMessage(godkjenning(vedtaksperiodeId))
         assertEquals("UTBETALING", finnUtbetalingType(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer refusjontype i database`() {
+    fun `lagrer refusjontype i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
-        river.sendTestMessage(godkjenning(vedtaksperiodeId))
+        rapid.sendTestMessage(godkjenning(vedtaksperiodeId))
         assertEquals("FULL_REFUSJON", finnRefusjonType(vedtaksperiodeId))
     }
 
     @Test
-    fun `lagrer saksbehandleroverstyringer i database`() {
+    fun `lagrer saksbehandleroverstyringer i database`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
         val saksbehandleroverstyringer = listOf(UUID.randomUUID(), UUID.randomUUID())
-        river.sendTestMessage(godkjenning(vedtaksperiodeId, saksbehandleroverstyringer))
+        rapid.sendTestMessage(godkjenning(vedtaksperiodeId, saksbehandleroverstyringer))
         assertTrue(finnErSaksbehandleroverstyringer(vedtaksperiodeId)!!)
         assertEquals(saksbehandleroverstyringer, finnGodkjenningOverstyringer(vedtaksperiodeId))
     }
 
-    private fun hentVarsler(vedtaksperiodeId: UUID) : List<String> =
+    private fun E2eTestApp.hentVarsler(vedtaksperiodeId: UUID) : List<String> =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = """
@@ -105,13 +89,13 @@ class VedtaksperiodeGodkjentE2ETest {
             )
         }
 
-    private fun finnInntektskilde(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.finnInntektskilde(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("inntektskilde") }
             .asSingle)
     }
 
-    private fun finnErSaksbehandleroverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.finnErSaksbehandleroverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map {
                 it.boolean("er_saksbehandleroverstyringer")
@@ -119,7 +103,7 @@ class VedtaksperiodeGodkjentE2ETest {
             .asSingle)
     }
 
-    private fun finnGodkjenningOverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.finnGodkjenningOverstyringer(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("""
             SELECT * FROM godkjenning_overstyringer go
             INNER JOIN godkjenning g ON g.id = go.godkjenning_ref
@@ -129,14 +113,14 @@ class VedtaksperiodeGodkjentE2ETest {
         .asList)
     }
 
-    private fun finnUtbetalingType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.finnUtbetalingType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("utbetaling_type") }
             .asSingle)
     }
 
 
-    private fun finnRefusjonType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.finnRefusjonType(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
             .map { it.stringOrNull("refusjon_type") }
             .asSingle)

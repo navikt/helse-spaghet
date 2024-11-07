@@ -7,9 +7,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.azure.AzureToken
 import com.github.navikt.tbd_libs.azure.AzureTokenProvider
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import com.github.navikt.tbd_libs.result_object.Result
 import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
+import io.micrometer.core.instrument.Clock
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.helse.rapids_rivers.RapidApplication
-import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.ventetilstand.*
 import no.nav.helse.ventetilstand.IdentifiserStuckVedtaksperioder
 import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
@@ -30,15 +35,17 @@ private fun spurteDuClient() =
         objectMapper = objectMapper,
         // har ikke behov for token provider fordi spaghet kun skjuler ting, og henter det ikke frem
         tokenProvider = object : AzureTokenProvider {
-            override fun bearerToken(scope: String): AzureToken {
+            override fun bearerToken(scope: String): Result<AzureToken> {
                 TODO("Not yet implemented")
             }
 
-            override fun onBehalfOfToken(scope: String, token: String): AzureToken {
+            override fun onBehalfOfToken(scope: String, token: String): Result<AzureToken> {
                 TODO("Not yet implemented")
             }
         }
     )
+
+val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
 
 fun main() {
     val env = setUpEnvironment()
@@ -46,7 +53,7 @@ fun main() {
     val dataSourceBuilder = DataSourceBuilder(env.db)
     val dataSource = dataSourceBuilder.getDataSource()
 
-    RapidApplication.create(env.raw)
+    RapidApplication.create(env.raw, meterRegistry = meterRegistry)
         .setupRivers(dataSource)
         .setupMigration(dataSourceBuilder)
         .start()

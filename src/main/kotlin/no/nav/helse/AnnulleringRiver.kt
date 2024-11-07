@@ -1,14 +1,14 @@
 package no.nav.helse
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import no.nav.helse.Annullering.Companion.insertAnnullering
 import no.nav.helse.Annullering.Companion.parseAnnullering
 import no.nav.helse.Util.asUuid
 import no.nav.helse.Util.jsonNode
 import no.nav.helse.Util.withSession
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
 import javax.sql.DataSource
 
 class AnnulleringRiver(

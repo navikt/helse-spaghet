@@ -1,10 +1,10 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.JsonMessage
 import java.util.*
 import javax.sql.DataSource
 

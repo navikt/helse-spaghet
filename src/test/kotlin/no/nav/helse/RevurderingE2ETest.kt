@@ -2,35 +2,20 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import java.time.LocalDate
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RevurderingE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
     @Test
-    fun `lagrer i databasen`() {
+    fun `lagrer i databasen`() = e2eTest {
         val revurderingId = UUID.randomUUID()
-        river.sendTestMessage(revurderingIgangsatt(revurderingId))
-        river.sendTestMessage(revurderingFerdigstilt(revurderingId))
+        rapid.sendTestMessage(revurderingIgangsatt(revurderingId))
+        rapid.sendTestMessage(revurderingFerdigstilt(revurderingId))
         assertEquals(1, tellRevurdering())
         assertEquals("FERDIGSTILT_AUTOMATISK", statusForRevurdering(revurderingId))
         val vedtaksperioder = revurderingVedtaksperioder()
@@ -52,7 +37,7 @@ class RevurderingE2ETest {
     }
 
 
-    private fun tellRevurdering(): Int {
+    private fun E2eTestApp.tellRevurdering(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM revurdering"
@@ -63,7 +48,7 @@ class RevurderingE2ETest {
     }
 
 
-    private fun statusForRevurdering(id: UUID): String {
+    private fun E2eTestApp.statusForRevurdering(id: UUID): String {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT status FROM revurdering where id='$id' LIMIT 1;"
@@ -73,7 +58,7 @@ class RevurderingE2ETest {
         }
     }
 
-    private fun revurderingVedtaksperioder(): List<RevurderingVedtaksperiode> {
+    private fun E2eTestApp.revurderingVedtaksperioder(): List<RevurderingVedtaksperiode> {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT status, periode_fom, periode_tom, skjaeringstidspunkt FROM revurdering_vedtaksperiode"

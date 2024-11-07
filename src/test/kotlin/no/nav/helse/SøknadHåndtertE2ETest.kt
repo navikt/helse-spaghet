@@ -2,42 +2,26 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SøknadHåndtertE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
     @Test
-    fun `lagrer kobling mellom søknad og vedtaksperiode`() {
-        river.sendTestMessage(søknadHåndtertEvent())
+    fun `lagrer kobling mellom søknad og vedtaksperiode`() = e2eTest {
+        rapid.sendTestMessage(søknadHåndtertEvent())
         assertEquals(1, tellSøknadHåndtert())
     }
 
     @Test
-    fun `lagrer ikke duplikat kobling mellom søknad og vedtaksperiode`() {
-        river.sendTestMessage(søknadHåndtertEvent())
-        river.sendTestMessage(søknadHåndtertEvent())
+    fun `lagrer ikke duplikat kobling mellom søknad og vedtaksperiode`() = e2eTest {
+        rapid.sendTestMessage(søknadHåndtertEvent())
+        rapid.sendTestMessage(søknadHåndtertEvent())
         assertEquals(1, tellSøknadHåndtert())
     }
 
-    private fun tellSøknadHåndtert(): Int {
+    private fun E2eTestApp.tellSøknadHåndtert(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM soknad_haandtert"

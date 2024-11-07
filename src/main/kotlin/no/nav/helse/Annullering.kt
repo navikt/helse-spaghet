@@ -1,12 +1,12 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.helse.Util.asNullableText
 import no.nav.helse.Util.asUuid
 import no.nav.helse.Util.toJson
-import no.nav.helse.rapids_rivers.asLocalDateTime
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*

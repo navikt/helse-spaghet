@@ -8,11 +8,8 @@ import no.nav.helse.TestData.nyAktivitet
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import java.time.LocalDateTime
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AktivitetRiverE2ETest {
     @Test
     fun `lagrer errors i database`() {

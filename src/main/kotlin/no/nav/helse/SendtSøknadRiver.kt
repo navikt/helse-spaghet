@@ -1,9 +1,12 @@
 package no.nav.helse
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
-import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource

@@ -1,13 +1,22 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.prometheus.client.Counter
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.Counter
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.rapids_rivers.*
 import java.util.*
 import javax.sql.DataSource
 
 class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: DataSource): River.PacketListener {
+    val godkjentCounter = Counter.builder("vedtaksperioder_godkjent")
+        .description("Antall godkjente vedtaksperioder")
+        .register(meterRegistry)
+
     init {
         River(rapid).apply {
             validate {
@@ -30,35 +39,6 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
                 )
             }
         }.register(this)
-    }
-
-    companion object {
-        val godkjentCounter: Counter = Counter.build(
-            "vedtaksperioder_godkjent",
-            "Antall godkjente vedtaksperioder"
-        )
-                .register()
-
-        val årsakCounter: Counter = Counter.build(
-            "vedtaksperioder_avvist_arsak",
-            "Antall avviste vedtaksperioder"
-        )
-                .labelNames("arsak")
-                .register()
-
-        val begrunnelserCounter: Counter = Counter.build(
-            "vedtaksperioder_avvist_begrunnelser",
-            "Antall avviste vedtaksperioder"
-        )
-                .labelNames("begrunnelse")
-                .register()
-
-        val oppgaveTypeCounter: Counter = Counter.build(
-            "oppgavetype_behandlet",
-            "Antall oppgaver behandlet av type"
-        )
-                .labelNames("type")
-                .register()
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
@@ -85,13 +65,27 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
         logg.info("Lagrer godkjenning for {}", kv("vedtaksperiodeId", behov.vedtaksperiodeId))
 
         if (behov.løsning.godkjent) {
-            godkjentCounter.inc()
-            oppgaveTypeCounter.labels(behov.periodetype).inc()
+            godkjentCounter.increment()
+            Counter.builder("oppgavetype_behandlet")
+                .description("Antall oppgaver behandlet av type")
+                .tag("type", behov.periodetype)
+                .register(meterRegistry)
+                .increment()
         } else {
             if (behov.løsning.årsak != null) {
-                årsakCounter.labels(behov.løsning.årsak).inc()
+                Counter.builder("vedtaksperioder_avvist_arsak")
+                    .description("Antall avviste vedtaksperioder")
+                    .tag("arsak", behov.løsning.årsak)
+                    .register(meterRegistry)
+                    .increment()
             }
-            behov.løsning.begrunnelser?.forEach { begrunnelserCounter.labels(it).inc() }
+            behov.løsning.begrunnelser?.forEach {
+                Counter.builder("vedtaksperioder_avvist_begrunnelser")
+                    .description("Antall avviste vedtaksperioder")
+                    .tag("begrunnelse", it)
+                    .register(meterRegistry)
+                    .increment()
+            }
         }
 
         dataSource.insertGodkjenning(behov)

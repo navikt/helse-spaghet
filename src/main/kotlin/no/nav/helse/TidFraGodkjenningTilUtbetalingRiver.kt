@@ -1,11 +1,15 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.prometheus.client.Summary
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.Timer
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.helse.rapids_rivers.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -31,13 +35,6 @@ class TidFraGodkjenningTilUtbetalingRiver(
     }
 
     companion object {
-        val utbetalingsRTT = Summary.build()
-            .name("tidBrukt")
-            .quantile(0.5, 0.05) // Add 50th percentile (= median) with 5% tolerated error
-            .quantile(0.9, 0.01) // Add 90th percentile with 1% tolerated error
-            .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
-            .help("Måler hvor lang tid det tar fra godkjenning til utbetaling i millisekunder")
-            .register()
         val legacyDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
     }
@@ -47,9 +44,13 @@ class TidFraGodkjenningTilUtbetalingRiver(
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
 
         finnUtbetalingsTidspunkt(json)?.let { utbetalingsTidspunkt ->
-            finnGodkjenninger(vedtaksperiodeId)?.let { godkjentTidspunkt ->
+            finnGodkjenninger(vedtaksperiodeId)?.also { godkjentTidspunkt ->
                 val delta = MILLIS.between(godkjentTidspunkt, utbetalingsTidspunkt)
-                utbetalingsRTT.observe(delta.toDouble())
+                Timer.builder("tidBrukt")
+                    .description("Måler hvor lang tid det tar fra godkjenning til utbetaling i millisekunder")
+                    .publishPercentiles(0.5, 0.9, 0.99)
+                    .register(meterRegistry)
+                    .record(delta::toLong)
             }
         }
     }
@@ -60,7 +61,7 @@ class TidFraGodkjenningTilUtbetalingRiver(
         ?.find { node -> "OK fra Oppdragssystemet".equals(node.valueOrNull("melding")?.textValue()) }
         ?.valueOrNull("tidsstempel")?.fromDate()
 
-    private fun finnGodkjenninger(vedtaksperiodeId: UUID) = using(sessionOf(dataSource)) { session ->
+    private fun finnGodkjenninger(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(
             queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
                 .map {

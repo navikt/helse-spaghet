@@ -1,49 +1,34 @@
 package no.nav.helse
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
 import java.util.*
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UtkastTilVedtakE2ETest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-        .setupRivers(dataSource)
-
-    @AfterEach
-    fun slettRader() {
-        return sessionOf(dataSource).use { session ->
-            @Language("PostgreSQL")
-            val query = "TRUNCATE TABLE utkast_til_vedtak"
-            session.run(queryOf(query).asExecute)
-        }
-    }
-
     @Test
-    fun `lagrer i databasen`() {
-        river.sendTestMessage(utkastTilVedtakEvent())
+    fun `lagrer i databasen`() = e2eTest {
+        rapid.sendTestMessage(utkastTilVedtakEvent())
         assertEquals(1, tellUtkastTilVedtak())
     }
 
     @Test
-    fun `lagrer bare unike kombinasjoner av (behandlingId, tags) databasen`() {
+    fun `lagrer bare unike kombinasjoner av (behandlingId, tags) databasen`() = e2eTest {
         val behandlingId = UUID.randomUUID()
-        river.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag")))
-        river.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag")))
+        rapid.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag")))
+        rapid.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag")))
         assertEquals(1, tellUtkastTilVedtak())
-        river.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag", "EnTagTil")))
+        rapid.sendTestMessage(utkastTilVedtakEvent(behandlingId = behandlingId, tags = listOf("EnTag", "EnTagTil")))
         assertEquals(2, tellUtkastTilVedtak())
     }
 
-    private fun tellUtkastTilVedtak(): Int {
+    private fun E2eTestApp.tellUtkastTilVedtak(): Int {
         return sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM utkast_til_vedtak"

@@ -2,32 +2,16 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
-import no.nav.helse.Util.uuid
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
-import org.junit.jupiter.api.AfterAll
+import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
 import java.util.UUID
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GodkjenningDaoTest {
-    private val embeddedPostgres = embeddedPostgres()
-    private val dataSource = setupDataSourceMedFlyway(embeddedPostgres)
-    private val river = TestRapid()
-            .setupRivers(dataSource)
-
-    @AfterAll
-    fun tearDown() {
-        river.stop()
-        dataSource.connection.close()
-        embeddedPostgres.close()
-    }
-
+    
     @Test
-    fun `lagrer informasjon fra godkjenninger`() {
+    fun `lagrer informasjon fra godkjenninger`() = e2eTest {
         val behandlingId = UUID.randomUUID()
         val løsning = Godkjenningsbehov(
             vedtaksperiodeId = UUID.randomUUID(),
@@ -60,7 +44,7 @@ class GodkjenningDaoTest {
     }
 
     @Test
-    fun `lagrer saksbehandleroverstyringer for godkjenning`() {
+    fun `lagrer saksbehandleroverstyringer for godkjenning`() = e2eTest {
         val saksbehandleroverstyringer = listOf(UUID.randomUUID())
         val løsning = Godkjenningsbehov(
             vedtaksperiodeId = UUID.randomUUID(),
@@ -90,7 +74,7 @@ class GodkjenningDaoTest {
         assertEquals(saksbehandleroverstyringer, finnGodkjenningOverstyringer(godkjenninger.first().id))
     }
 
-    private fun finnGodkjenninger(vedtaksperiodeId: UUID) = using(sessionOf(dataSource)) { session ->
+    private fun E2eTestApp.finnGodkjenninger(vedtaksperiodeId: UUID) = sessionOf(dataSource).use { session ->
         session.run(
             queryOf("SELECT * FROM godkjenning WHERE vedtaksperiode_id=?;", vedtaksperiodeId)
                 .map {
@@ -104,7 +88,7 @@ class GodkjenningDaoTest {
                 .asList)
     }
 
-    private fun finnBegrunnelser(id: Long) = using(sessionOf(dataSource)) { session ->
+    private fun E2eTestApp.finnBegrunnelser(id: Long) = sessionOf(dataSource).use { session ->
         session.run(
             queryOf("SELECT * FROM begrunnelse WHERE godkjenning_ref=?;", id)
                 .map {
@@ -113,7 +97,7 @@ class GodkjenningDaoTest {
                 .asList)
     }
 
-    private fun finnGodkjenningOverstyringer(id: Long) = using(sessionOf(dataSource)) { session ->
+    private fun E2eTestApp.finnGodkjenningOverstyringer(id: Long) = sessionOf(dataSource).use { session ->
         session.run(
             queryOf("SELECT * FROM godkjenning_overstyringer WHERE godkjenning_ref=?;", id)
                 .map {

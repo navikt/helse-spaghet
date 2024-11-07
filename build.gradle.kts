@@ -1,7 +1,7 @@
 val junitJupiterVersion = "5.10.2"
-val testcontainersVersion = "1.20.1"
 val postgresqlVersion = "42.7.2"
-val tbdLibsVersion = "2024.05.31-08.02-2c3441c1"
+val tbdLibsVersion = "2024.11.07-09.04-76a1afb0"
+val rapidsAndRiversVersion = "2024110709231730967802.bf0cda480345"
 
 plugins {
     kotlin("jvm") version "2.0.20"
@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.github.navikt:rapids-and-rivers:2024020507581707116327.1c34df474331")
+    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
 
     implementation("com.zaxxer:HikariCP:5.0.1")
@@ -36,9 +36,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
-    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
+    testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:$tbdLibsVersion")
+    testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
 }
 
 java {

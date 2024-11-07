@@ -1,12 +1,15 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.ktor.utils.io.*
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.nav.helse.rapids_rivers.*
 import org.intellij.lang.annotations.Language
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
