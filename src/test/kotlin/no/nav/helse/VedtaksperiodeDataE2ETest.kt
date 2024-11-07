@@ -16,7 +16,6 @@ class VedtaksperiodeDataE2ETest {
         rapid.sendTestMessage(vedtakOpprettet(
             id,
             "01010112345",
-            "12345",
             "et organisasjonsnummer",
             LocalDate.of(2020, 1, 1),
             LocalDate.of(2020, 1, 31),
@@ -26,7 +25,7 @@ class VedtaksperiodeDataE2ETest {
         assertFelt(
             id,
             forventetFnr = "01010112345",
-            forventetAktørId = "12345",
+            forventetAktørId = standardAktørId,
             forventetYrkesaktivitet = "et organisasjonsnummer",
             forventetFom = LocalDate.of(2020, 1, 1),
             forventetTom = LocalDate.of(2020, 1, 31),
@@ -41,7 +40,6 @@ class VedtaksperiodeDataE2ETest {
         rapid.sendTestMessage(vedtakOpprettet(
             vedtaksperiodeId = id,
             fnr = "01010112345",
-            aktørId = "12345",
             yrkesaktivitet = "et organisasjonsnummer",
             fom = LocalDate.of(2020, 1, 1),
             tom = LocalDate.of(2020, 1, 31),
@@ -50,7 +48,6 @@ class VedtaksperiodeDataE2ETest {
         rapid.sendTestMessage(vedtakEndret(
             vedtaksperiodeId = id,
             fnr = "99999999999",
-            aktørId = "99999",
             yrkesaktivitet = "kølgruvene",
             fom = LocalDate.of(2029, 1, 1),
             tom = LocalDate.of(2029, 1, 31),
@@ -61,7 +58,7 @@ class VedtaksperiodeDataE2ETest {
         assertFelt(
             vedtaksperiodeId = id,
             forventetFnr = "99999999999",
-            forventetAktørId = "99999",
+            forventetAktørId = standardAktørId,
             forventetYrkesaktivitet = "kølgruvene",
             forventetFom = LocalDate.of(2029, 1, 1),
             forventetTom = LocalDate.of(2029, 1, 31),
@@ -79,7 +76,7 @@ class VedtaksperiodeDataE2ETest {
         assertFelt(
             første,
             forventetFnr = "1",
-            forventetAktørId = "2",
+            forventetAktørId = standardAktørId,
             forventetYrkesaktivitet = "12",
             forventetSkjæringstidspunkt = LocalDate.of(2001, 1, 1),
             forventetTilstand = "START",
@@ -89,7 +86,7 @@ class VedtaksperiodeDataE2ETest {
         assertFelt(
             andre,
             forventetFnr = "1",
-            forventetAktørId = "2",
+            forventetAktørId = standardAktørId,
             forventetYrkesaktivitet = "12",
             forventetSkjæringstidspunkt = LocalDate.of(2002, 2, 2),
             forventetTilstand = "AVSLUTTET_UTEN_UTBETALING",
@@ -99,7 +96,7 @@ class VedtaksperiodeDataE2ETest {
         assertFelt(
             tredje,
             forventetFnr = "1",
-            forventetAktørId = "2",
+            forventetAktørId = standardAktørId,
             forventetYrkesaktivitet = "3",
             forventetSkjæringstidspunkt = LocalDate.of(2003, 3, 3),
             forventetTilstand = "AVSLUTTET",
@@ -108,12 +105,11 @@ class VedtaksperiodeDataE2ETest {
         )
     }
 
-    private fun vedtakOpprettet(vedtaksperiodeId: UUID, fnr: String, aktørId: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate) = """
+    private fun vedtakOpprettet(vedtaksperiodeId: UUID, fnr: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate) = """
             {
             "@event_name": "vedtaksperiode_opprettet",
             "vedtaksperiodeId": "$vedtaksperiodeId",
             "fødselsnummer": "$fnr",
-            "aktørId": "$aktørId",
             "organisasjonsnummer": "$yrkesaktivitet",
             "fom": "$fom",
             "tom": "$tom",
@@ -121,12 +117,11 @@ class VedtaksperiodeDataE2ETest {
             }
         """
 
-    private fun vedtakEndret(vedtaksperiodeId: UUID, fnr: String, aktørId: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate, tilstand: String) = """
+    private fun vedtakEndret(vedtaksperiodeId: UUID, fnr: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate, tilstand: String) = """
             {
             "@event_name": "vedtaksperiode_endret",
             "vedtaksperiodeId": "$vedtaksperiodeId",
             "fødselsnummer": "$fnr",
-            "aktørId": "$aktørId",
             "organisasjonsnummer": "$yrkesaktivitet",
             "fom": "$fom",
             "tom": "$tom",
@@ -140,7 +135,6 @@ class VedtaksperiodeDataE2ETest {
   {
     "@event_name": "person_avstemt",
     "fødselsnummer": "1",
-    "aktørId": "2",
     "arbeidsgivere": [{
         "organisasjonsnummer":"12",
         "vedtaksperioder": [{

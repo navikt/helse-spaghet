@@ -7,8 +7,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.azure.AzureToken
 import com.github.navikt.tbd_libs.azure.AzureTokenProvider
+import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.result_object.Result
+import com.github.navikt.tbd_libs.speed.SpeedClient
 import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
@@ -22,6 +24,7 @@ import no.nav.helse.ventetilstand.VedtaksperiodeVenterIkkeRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.http.HttpClient
 import javax.sql.DataSource
 
 internal val objectMapper: ObjectMapper = jacksonObjectMapper()
@@ -53,20 +56,27 @@ fun main() {
     val dataSourceBuilder = DataSourceBuilder(env.db)
     val dataSource = dataSourceBuilder.getDataSource()
 
+    val azureClient = createAzureTokenClientFromEnvironment(env.raw)
+    val speedClient = SpeedClient(
+        httpClient = HttpClient.newHttpClient(),
+        objectMapper = objectMapper,
+        tokenProvider = azureClient
+    )
     RapidApplication.create(env.raw, meterRegistry = meterRegistry)
-        .setupRivers(dataSource)
+        .setupRivers(dataSource, speedClient)
         .setupMigration(dataSourceBuilder)
         .start()
 }
 
 internal fun <T : RapidsConnection> T.setupRivers(
     dataSource: DataSource,
+    speedClient: SpeedClient,
     vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource),
     oppsummeringDao: OppsummeringDao = OppsummeringDao(dataSource),
     spurteDuClient: SpurteDuClient = spurteDuClient()
 ) = apply {
     AnnulleringRiver(this, dataSource)
-    GodkjenningLøsningRiver(this, dataSource)
+    GodkjenningLøsningRiver(this, dataSource, speedClient)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
     TidFraGodkjenningTilUtbetalingRiver(this, dataSource)
@@ -86,9 +96,9 @@ internal fun <T : RapidsConnection> T.setupRivers(
     FunksjonellFeilOgVarselRiver(this, dataSource)
     SendtSøknadRiver(this, dataSource)
     OppgaveEndretRiver(this, dataSource)
-    VedtaksperiodeEndretRiver(this, dataSource)
-    VedtaksperiodeOpprettetRiver(this, dataSource)
-    VedtaksperiodeAvstemt(this, dataSource)
+    VedtaksperiodeEndretRiver(this, dataSource, speedClient)
+    VedtaksperiodeOpprettetRiver(this, dataSource, speedClient)
+    VedtaksperiodeAvstemt(this, dataSource, speedClient)
     SkatteinntekterLagtTilGrunnRiver(this, dataSource)
     UtkastTilVedtakRiver(this, dataSource)
 }

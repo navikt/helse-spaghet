@@ -6,6 +6,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import com.github.navikt.tbd_libs.result_object.getOrThrow
+import com.github.navikt.tbd_libs.retry.retryBlocking
+import com.github.navikt.tbd_libs.speed.SpeedClient
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
@@ -17,16 +20,14 @@ import javax.sql.DataSource
 
 class VedtaksperiodeAvstemt(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val speedClient: SpeedClient
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
             validate {
                 it.demandValue("@event_name", "person_avstemt")
-                it.requireKey(
-                    "aktørId",
-                    "fødselsnummer"
-                )
+                it.requireKey("@id", "fødselsnummer")
                 it.requireArray("arbeidsgivere") {
                     requireKey("organisasjonsnummer")
                     requireArray("vedtaksperioder") {
@@ -39,15 +40,16 @@ class VedtaksperiodeAvstemt(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val fnr = packet["fødselsnummer"].asText()
-        val aktørId = packet["aktørId"].asText()
+        val ident = packet["fødselsnummer"].asText()
+        val callId = packet["@id"].asText()
+        val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
         val data: List<VedtaksperiodeData> = packet["arbeidsgivere"].flatMap { arbeidsgiver ->
             val orgnr = arbeidsgiver["organisasjonsnummer"].asText()
             arbeidsgiver["vedtaksperioder"].map { vedtaksperiode ->
                 VedtaksperiodeData(
                     id = vedtaksperiode["id"].asUuid(),
-                    fnr = fnr,
-                    aktørId = aktørId,
+                    fnr = identer.fødselsnummer,
+                    aktørId = identer.aktørId,
                     yrkesaktivitet = orgnr,
                     tilstand = vedtaksperiode["tilstand"].asText(),
                     fom = vedtaksperiode["fom"].asLocalDate(),

@@ -51,7 +51,6 @@ class SkatteinntekterLagtTilGrunnE2ETest {
          ],
          "@id": "dfa2ebc9-1ee8-4dc1-9f2e-e63d0b96fb5b",
          "@opprettet": "2024-09-27T13:07:25.898735",
-         "aktørId": "42",
          "fødselsnummer": "12029240045"
        }
        """

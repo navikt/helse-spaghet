@@ -54,7 +54,6 @@ class UtkastTilVedtakE2ETest {
             "sykepengegrunnlagsfakta": {
               "6G": 561804.0
             },
-            "aktørId": "42",
             "fødselsnummer": "2",
             "tags": ${tags.map { "\"$it\"" }}
         }

@@ -21,9 +21,7 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
           "@opprettet": "2020-06-02T12:00:00.000000",
           "@id": "${UUID.randomUUID()}",
           "@behovId": "$id",
-          "@behov": [
-            "Godkjenning"],
-          "aktørId": "1000000000000",
+          "@behov": [ "Godkjenning"],
           "fødselsnummer": "$fødselsnummer",
           "organisasjonsnummer": "987654321",
           "vedtaksperiodeId": "$vedtaksperiodeId",
@@ -116,7 +114,6 @@ fun vedtaksperiodeEndret(
         "kontekstType": "Simulering",
         "kontekstMap": {
           "meldingsreferanseId": "eb288a68-f49f-4c24-bdc6-3fdef4e57630",
-          "aktørId": "100000231823",
           "fødselsnummer": "12121212345",
           "organisasjonsnummer": "$orgnummer"
         }
@@ -124,8 +121,7 @@ fun vedtaksperiodeEndret(
       {
         "kontekstType": "Person",
         "kontekstMap": {
-          "fødselsnummer": "12121212345",
-          "aktørId": "100000231823"
+          "fødselsnummer": "12121212345"
         }
       },
       {
@@ -156,7 +152,6 @@ fun vedtaksperiodeEndret(
     "id": "ae2a4ee4-304a-4482-879f-40b412880e17",
     "opprettet": "${timestamp.minusMinutes(3)}"
   },
-  "aktørId": "100000231823",
   "fødselsnummer": "12121212345"
 } 
 """

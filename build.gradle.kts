@@ -2,6 +2,7 @@ val junitJupiterVersion = "5.10.2"
 val postgresqlVersion = "42.7.2"
 val tbdLibsVersion = "2024.11.07-09.04-76a1afb0"
 val rapidsAndRiversVersion = "2024110709231730967802.bf0cda480345"
+val mockkVersion = "1.13.13"
 
 plugins {
     kotlin("jvm") version "2.0.20"
@@ -28,6 +29,9 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
+    implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
+    implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
+    implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
 
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.8.1")
@@ -36,6 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:$tbdLibsVersion")
     testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
 }

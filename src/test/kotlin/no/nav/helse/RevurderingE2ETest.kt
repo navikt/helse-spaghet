@@ -91,7 +91,6 @@ class RevurderingE2ETest {
     ) = """{
         "@event_name":"overstyring_igangsatt",
         "fødselsnummer":"fnr",
-        "aktørId":"aktorId",
         "revurderingId": "$revurderingId",
         "kilde":"$kilde",
         "skjæringstidspunkt":"2022-10-03",

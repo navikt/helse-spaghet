@@ -39,6 +39,11 @@ spec:
     outbound:
       rules:
         - application: spurtedu
+        - application: speed-api
+  azure:
+    application:
+      enabled: true
+      tenant: trygdeetaten.no
   gcp:
     sqlInstances:
       - type: POSTGRES_15

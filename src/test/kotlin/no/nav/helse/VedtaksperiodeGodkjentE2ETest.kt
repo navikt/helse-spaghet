@@ -194,7 +194,6 @@ class VedtaksperiodeGodkjentE2ETest {
     }
   },
  "vedtaksperiodeId": "$vedtaksperiodeId",
-  "aktørId": "1234",
   "fødselsnummer": "1234567901"
 }
     """

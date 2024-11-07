@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import io.mockk.every
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest

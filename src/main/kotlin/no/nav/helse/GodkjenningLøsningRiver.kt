@@ -4,15 +4,23 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.be
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import com.github.navikt.tbd_libs.result_object.getOrThrow
+import com.github.navikt.tbd_libs.retry.retryBlocking
+import com.github.navikt.tbd_libs.speed.SpeedClient
 import io.micrometer.core.instrument.Counter
 import net.logstash.logback.argument.StructuredArguments.kv
 import java.util.*
 import javax.sql.DataSource
 
-class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: DataSource): River.PacketListener {
+class GodkjenningLøsningRiver(
+    rapid: RapidsConnection,
+    private val dataSource: DataSource,
+    private val speedClient: SpeedClient
+): River.PacketListener {
     val godkjentCounter = Counter.builder("vedtaksperioder_godkjent")
         .description("Antall godkjente vedtaksperioder")
         .register(meterRegistry)
@@ -25,7 +33,6 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
                 it.require("@løsning.Godkjenning", ::tilLøsning)
                 it.requireKey(
                     "vedtaksperiodeId",
-                    "aktørId",
                     "fødselsnummer",
                     "Godkjenning.periodetype",
                     "Godkjenning.inntektskilde",
@@ -44,12 +51,15 @@ class GodkjenningLøsningRiver(rapid: RapidsConnection, private val dataSource: 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         if (godkjenningAlleredeLagret(packet)) return
 
+        val ident = packet["fødselsnummer"].asText()
         val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asText())
+
+        val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, behandlingId.toString()).getOrThrow() }
 
         val behov = Godkjenningsbehov(
             vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
-            fødselsnummer = packet["fødselsnummer"].asText(),
-            aktørId = packet["aktørId"].asText(),
+            fødselsnummer = identer.fødselsnummer,
+            aktørId = identer.aktørId,
             periodetype = packet["Godkjenning.periodetype"].asText(),
             inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
             utbetalingType = packet["Godkjenning.utbetalingtype"].asText(),
