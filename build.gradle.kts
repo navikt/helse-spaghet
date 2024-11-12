@@ -5,7 +5,7 @@ val rapidsAndRiversVersion = "2024110709231730967802.bf0cda480345"
 val mockkVersion = "1.13.13"
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm") version "2.0.21"
 }
 
 repositories {
