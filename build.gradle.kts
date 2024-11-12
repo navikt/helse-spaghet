@@ -45,9 +45,9 @@ dependencies {
     testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of("21"))
     }
 }
 
