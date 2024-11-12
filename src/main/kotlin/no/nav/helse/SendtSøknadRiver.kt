@@ -3,7 +3,9 @@ package no.nav.helse
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
@@ -31,7 +33,7 @@ class SendtSøknadRiver(
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         val dokumentId = packet["id"].asUuid()
         val hendelseId = packet["@id"].asUuid()
         val eventName = packet["@event_name"].asText()

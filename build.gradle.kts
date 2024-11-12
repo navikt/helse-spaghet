@@ -1,7 +1,7 @@
 val junitJupiterVersion = "5.11.3"
 val postgresqlVersion = "42.7.2"
-val tbdLibsVersion = "2024.11.07-09.04-76a1afb0"
-val rapidsAndRiversVersion = "2024110709231730967802.bf0cda480345"
+val tbdLibsVersion = "2024.11.12-11.09-16cf2599"
+val rapidsAndRiversVersion = "2024111211071731406062.648687519469"
 val mockkVersion = "1.13.13"
 
 plugins {

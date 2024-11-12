@@ -5,7 +5,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import net.logstash.logback.argument.StructuredArguments.keyValue
@@ -33,7 +35,7 @@ class FunksjonellFeilOgVarselRiver(
             }
         }.register(this)
     }
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         sikkerlogg.info("Leser inn {}", keyValue("hendelse", packet.toJson()))
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]

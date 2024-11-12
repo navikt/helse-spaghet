@@ -3,9 +3,11 @@ package no.nav.helse.ventetilstand
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.spurtedu.SkjulRequest
 import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
+import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.objectMapper
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import org.slf4j.LoggerFactory
@@ -44,8 +46,7 @@ internal class IdentifiserStuckVedtaksperioder(
         }.register(this)
     }
 
-    @ExperimentalTime
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         try {
             val (stuck, tidsbruk) = measureTimedValue { dao.stuck() }
             if (stuck.isEmpty()) return ingentingStuck(packet, context, tidsbruk)

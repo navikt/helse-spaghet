@@ -4,8 +4,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.intellij.lang.annotations.Language
@@ -28,7 +30,7 @@ class UtkastTilVedtakRiver(
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         val behandlingId = UUID.fromString(packet["behandlingId"].asText())
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -38,7 +40,7 @@ class UtkastTilVedtakRiver(
         logg.info("Lagret utkast_til_vedtak for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext) {
+    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
         sikkerlogg.error("Klarte ikke å lese utkast_til_vedtak event! ${problems.toExtendedReport()}")
     }
 
