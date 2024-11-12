@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit.SECONDS
 import java.util.*
 
-internal data class VedtaksperiodeVenter private constructor(
+internal data class VedtaksperiodeVenter(
     internal val vedtaksperiodeId: UUID,
     internal val skjæringstidspunkt: LocalDate,
     internal val fødselsnummer: String,
