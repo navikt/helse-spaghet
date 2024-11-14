@@ -21,8 +21,8 @@ class UtkastTilVedtakRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "utkast_til_vedtak") }
             validate {
-                it.demandValue("@event_name", "utkast_til_vedtak")
                 it.requireKey("@opprettet", "@id", "tags", "behandlingId", "vedtaksperiodeId")
                 it.interestedIn("vedtaksperiodeId")
             }

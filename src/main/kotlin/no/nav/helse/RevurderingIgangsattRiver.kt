@@ -21,9 +21,11 @@ class RevurderingIgangsattRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { 
+                it.requireValue("@event_name", "overstyring_igangsatt")
+                it.requireValue("typeEndring", "REVURDERING")
+            }
             validate {
-                it.demandValue("@event_name", "overstyring_igangsatt")
-                it.demandValue("typeEndring", "REVURDERING")
                 it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
                 it.require("@opprettet", JsonNode::asLocalDateTime)
                 it.require("skjæringstidspunkt", JsonNode::asLocalDate)

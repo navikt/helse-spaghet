@@ -20,14 +20,16 @@ class SendtSøknadRiver(
 
     init {
         River(rapidApplication).apply {
-            validate {
-                it.demandAny("@event_name", listOf(
+            precondition {
+                it.requireAny("@event_name", listOf(
                     "sendt_søknad_nav",
                     "sendt_søknad_arbeidsgiver",
                     "sendt_søknad_selvstendig",
                     "sendt_søknad_frilanser",
                     "sendt_søknad_arbeidsledig")
                 )
+            }
+            validate {
                 it.requireKey("id", "@id", "type", "arbeidssituasjon")
             }
         }.register(this)

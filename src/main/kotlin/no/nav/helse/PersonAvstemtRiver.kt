@@ -27,8 +27,8 @@ class VedtaksperiodeAvstemt(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "person_avstemt") }
             validate {
-                it.demandValue("@event_name", "person_avstemt")
                 it.requireKey("@id", "fødselsnummer")
                 it.requireArray("arbeidsgivere") {
                     requireKey("organisasjonsnummer")

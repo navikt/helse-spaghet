@@ -24,9 +24,11 @@ class VedtaksperiodeBehandletRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition {
+                it.requireAll("@behov", listOf("Godkjenning"))
+                it.forbid("@final")
+            }
             validate {
-                it.demandAll("@behov", listOf("Godkjenning"))
-                it.rejectKey("@final")
                 it.requireKey("@behovId", "vedtaksperiodeId", "@løsning")
             }
 

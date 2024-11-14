@@ -22,8 +22,8 @@ class AktivitetRiver(
 
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "aktivitetslogg_ny_aktivitet") }
             validate {
-                it.demandValue("@event_name", "aktivitetslogg_ny_aktivitet")
                 it.requireKey("@id", "@forårsaket_av.id", "aktiviteter")
                 it.requireArray("aktiviteter") {
                     requireKey("nivå", "melding")

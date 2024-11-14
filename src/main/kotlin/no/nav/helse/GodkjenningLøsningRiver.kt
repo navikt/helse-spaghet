@@ -28,9 +28,11 @@ class GodkjenningLøsningRiver(
 
     init {
         River(rapid).apply {
+            precondition {
+                it.requireAll("@behov", listOf("Godkjenning"))
+                it.forbid("@final")
+            }
             validate {
-                it.demandAll("@behov", listOf("Godkjenning"))
-                it.rejectKey("@final")
                 it.require("@løsning.Godkjenning", ::tilLøsning)
                 it.requireKey(
                     "vedtaksperiodeId",

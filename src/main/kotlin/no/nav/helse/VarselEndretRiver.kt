@@ -25,8 +25,8 @@ class VarselEndretRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "varsel_endret") }
             validate {
-                it.demandValue("@event_name", "varsel_endret")
                 it.requireKey(
                     "@id", "@opprettet",
                     "varseltittel", "varselkode", "gjeldende_status",

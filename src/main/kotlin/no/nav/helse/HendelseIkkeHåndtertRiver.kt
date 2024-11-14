@@ -23,8 +23,8 @@ class HendelseIkkeHåndtertRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "hendelse_ikke_håndtert") }
             validate {
-                it.demandValue("@event_name", "hendelse_ikke_håndtert")
                 it.requireKey("hendelseId", "@opprettet")
                 it.interestedIn("årsaker")
             }

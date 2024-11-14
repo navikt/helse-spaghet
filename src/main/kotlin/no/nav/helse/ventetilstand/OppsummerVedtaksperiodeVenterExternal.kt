@@ -16,17 +16,19 @@ internal class OppsummerVedtaksperiodeVenterExternal (
 
     init {
         River(rapidsConnection).apply {
+            precondition { it.requireValue("@event_name", "oppsummer_vedtaksperiode_venter") }
             validate {
-                it.demandValue("@event_name", "oppsummer_vedtaksperiode_venter")
                 it.requireKey("system_participating_services", "simplified_for_external_purposes")
             }
         }.register(this)
         River(rapidsConnection).apply {
+            precondition {
+                it.requireValue("@event_name", "halv_time")
+                it.requireValue("time", 8)
+                it.requireValue("minutt", 30)
+                it.requireAny("ukedag", listOf("MONDAY"))
+            }
             validate {
-                it.demandValue("@event_name", "halv_time")
-                it.demandValue("time", 8)
-                it.demandValue("minutt", 30)
-                it.demandAny("ukedag", listOf("MONDAY"))
                 it.requireKey("system_participating_services")
             }
         }.register(this)

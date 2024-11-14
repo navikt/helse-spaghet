@@ -18,7 +18,7 @@ internal class VedtaksperiodeVenterRiver (
 
     init {
         River(rapidApplication).apply {
-            validate { it.demandValue("@event_name", "vedtaksperiode_venter") }
+            precondition { it.requireValue("@event_name", "vedtaksperiode_venter") }
             validate { it.requireKey(
                 "venterPå.venteårsak.hva",
                 "venterPå.vedtaksperiodeId",

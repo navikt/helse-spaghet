@@ -23,8 +23,8 @@ class OppgaveEndretRiver(
 ): River.PacketListener {
     init {
         River(rapidsConnection).apply {
+            precondition { it.requireAny("@event_name", listOf("oppgave_opprettet", "oppgave_oppdatert")) }
             validate {
-                it.demandAny("@event_name", listOf("oppgave_opprettet", "oppgave_oppdatert"))
                 it.requireKey("oppgaveId", "fødselsnummer", "@opprettet", "behandlingId")
                 it.requireKey("tilstand")
                 it.requireArray("egenskaper")

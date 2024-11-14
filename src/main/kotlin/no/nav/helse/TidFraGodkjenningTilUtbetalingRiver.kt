@@ -25,11 +25,13 @@ class TidFraGodkjenningTilUtbetalingRiver(
 
     init {
         River(rapidApplication).apply {
+            precondition {
+                it.requireValue("@event_name", "vedtaksperiode_endret")
+                it.requireValue("gjeldendeTilstand", "AVSLUTTET")
+                it.requireValue("forrigeTilstand", "TIL_UTBETALING")
+            }
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_endret")
                 it.requireKey("vedtaksperiodeId")
-                it.demandValue("gjeldendeTilstand", "AVSLUTTET")
-                it.demandValue("forrigeTilstand", "TIL_UTBETALING")
             }
 
         }.register(this)

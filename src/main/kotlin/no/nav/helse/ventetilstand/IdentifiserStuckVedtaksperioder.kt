@@ -28,19 +28,21 @@ internal class IdentifiserStuckVedtaksperioder(
 
     init {
         River(rapidsConnection).apply {
+            precondition { it.requireValue("@event_name", "identifiser_stuck_vedtaksperioder") }
             validate {
-                it.demandValue("@event_name", "identifiser_stuck_vedtaksperioder")
                 it.requireKey("system_participating_services")
             }
         }.register(this)
         River(rapidsConnection).apply {
-            validate {
-                it.demandValue("@event_name", "halv_time")
-                it.demand("time") { time ->
+            precondition {
+                it.requireValue("@event_name", "halv_time")
+                it.require("time") { time ->
                     check(time.asInt() in setOf(8, 13))
                 }
-                it.demandValue("minutt", 30)
-                it.rejectValues("ukedag", listOf("SATURDAY", "SUNDAY"))
+                it.requireValue("minutt", 30)
+                it.forbidValues("ukedag", listOf("SATURDAY", "SUNDAY"))
+            }
+            validate {
                 it.requireKey("system_participating_services")
             }
         }.register(this)

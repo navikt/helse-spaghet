@@ -19,8 +19,8 @@ class AnnulleringRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "annullering") }
             validate {
-                it.demandValue("@event_name", "annullering")
                 it.requireKey("vedtaksperiodeId", "begrunnelser", "@opprettet")
                 it.require("saksbehandler.oid") { node -> node.asUuid() }
                 it.interestedIn("kommentar")

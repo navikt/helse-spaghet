@@ -5,6 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.result_object.getOrThrow
 import com.github.navikt.tbd_libs.retry.retryBlocking
@@ -25,8 +26,8 @@ class VedtaksperiodeEndretRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "vedtaksperiode_endret") }
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_endret")
                 it.requireKey(
                     "@id",
                     "fødselsnummer",
@@ -53,8 +54,8 @@ class VedtaksperiodeOpprettetRiver(
 ) : River.PacketListener {
     init {
         River(rapidApplication).apply {
+            precondition { it.requireValue("@event_name", "vedtaksperiode_opprettet") }
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_opprettet")
                 it.requireKey(
                     "@id",
                     "fødselsnummer",

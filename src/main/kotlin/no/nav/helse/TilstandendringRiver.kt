@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
@@ -22,15 +23,18 @@ class TilstandendringRiver(
 
     init {
         River(rapidApplication).apply {
+            precondition {
+                it.requireValue("@event_name", "vedtaksperiode_endret")
+                it.requireKey("gjeldendeTilstand")
+                it.require("forrigeTilstand") { forrigeTilstand ->
+                    require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
+                }
+            }
             validate {
-                it.demandValue("@event_name", "vedtaksperiode_endret")
                 it.requireKey("vedtaksperiodeId", "@id")
                 it.require("@opprettet", JsonNode::asLocalDateTime)
                 it.requireKey("@forårsaket_av.id", "@forårsaket_av.event_name")
                 it.requireKey("forrigeTilstand", "gjeldendeTilstand")
-                it.demand("forrigeTilstand") { forrigeTilstand ->
-                    require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
-                }
             }
 
         }.register(this)
