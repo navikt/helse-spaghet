@@ -3,6 +3,7 @@ val postgresqlVersion = "42.7.2"
 val tbdLibsVersion = "2024.11.15-09.09-08ca346b"
 val rapidsAndRiversVersion = "2024111509181731658731.11009b44c672"
 val mockkVersion = "1.13.13"
+val hikariCPVersion = "6.1.0"
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -33,7 +34,7 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
 
-    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-database-postgresql:10.8.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
