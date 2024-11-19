@@ -6,6 +6,7 @@ import no.nav.helse.AktivitetRiver.Nivå.INFO
 import no.nav.helse.TestData.Aktivitet.Companion.toJson
 import no.nav.helse.Util.toJson
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -13,6 +14,83 @@ import java.util.UUID.randomUUID
 import kotlin.random.Random.Default.nextLong
 
 object TestData {
+
+
+    val lagtPåVent = LagtPåVent(
+        oppgaveId = "12345".toLong(),
+        behandlingId = randomUUID(),
+        skalTildeles = false,
+        frist = LocalDate.now().plusDays(2),
+        opprettet = LocalDateTime.now(),
+        saksbehandlerOid = randomUUID(),
+        saksbehandlerIdent = "W12345",
+        notatTekst = "Hei",
+        årsaker = listOf(
+            LagtPåVentÅrsak(
+                key = "en key",
+                årsak = "en årsak"
+            ),
+        )
+    )
+
+    val lagtPåVentFlereÅrsakerUtenNotat = LagtPåVent(
+        oppgaveId = "12345".toLong(),
+        behandlingId = randomUUID(),
+        skalTildeles = false,
+        frist = LocalDate.now().plusDays(2),
+        opprettet = LocalDateTime.now(),
+        saksbehandlerOid = randomUUID(),
+        saksbehandlerIdent = "W12345",
+        notatTekst = null,
+        årsaker = listOf(
+            LagtPåVentÅrsak(
+                key = "en key",
+                årsak = "en årsak"
+            ),
+            LagtPåVentÅrsak(
+                key = "to key",
+                årsak = "to årsak"
+            ),
+        )
+    )
+
+    fun LagtPåVent.toJsonUtenNotatTekst(): String =
+        """{
+            "@event_name": "lagt_på_vent",
+            "oppgaveId": "$oppgaveId",
+            "behandlingId": "$behandlingId",
+            "skalTildeles": "$skalTildeles",
+            "frist": "$frist",
+            "@opprettet": "$opprettet",
+            "saksbehandlerOid": "$saksbehandlerOid",
+            "saksbehandlerIdent": "$saksbehandlerIdent",
+            "årsaker": ${årsaker.map { årsak ->
+            """
+                {"årsak": "${årsak.årsak}", "key": "${årsak.key}"}
+            """
+        }}
+         }""".trimMargin()
+
+    fun LagtPåVent.toJson(): String =
+        """{
+            "@event_name": "lagt_på_vent",
+            "oppgaveId": "$oppgaveId",
+            "behandlingId": "$behandlingId",
+            "skalTildeles": "$skalTildeles",
+            "frist": "$frist",
+            "@opprettet": "$opprettet",
+            "saksbehandlerOid": "$saksbehandlerOid",
+            "saksbehandlerIdent": "$saksbehandlerIdent",
+            "notatTekst": "$notatTekst",
+            "årsaker": ${årsaker.map { årsak ->
+            """
+                {"årsak": "${årsak.årsak}", "key": "${årsak.key}"}
+            """
+            }}
+         }""".trimMargin()
+
+
+
     fun Annullering.toJson(): String =
         """{
             "@event_name": "annullering",

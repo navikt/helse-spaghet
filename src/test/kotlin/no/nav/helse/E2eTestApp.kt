@@ -13,9 +13,10 @@ import com.github.navikt.tbd_libs.test_support.TestDataSource
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.helse.TestData.toJson
+import no.nav.helse.TestData.toJsonUtenNotatTekst
 import org.slf4j.LoggerFactory
 
-private val tables = "annullering,annullering_arsak,begrunnelse,flyway_schema_history,funksjonell_feil,godkjenning,godkjenning_overstyringer,godkjenningsbehov,godkjenningsbehov_losning,godkjenningsbehov_losning_begrunnelse,hendelse_ikke_håndtert_årsak,oppgave,oppgave_endret,regelverksvarsel,revurdering,revurdering_vedtaksperiode,schedule,skatteinntekter_lagt_til_grunn,soknad,soknad_haandtert,utkast_til_vedtak,varsel,vedtaksperiode_aktivitet,vedtaksperiode_data,vedtaksperiode_tilstandsendring,vedtaksperiode_venter,warning_for_godkjenning"
+private val tables = "annullering,annullering_arsak,begrunnelse,flyway_schema_history,funksjonell_feil,godkjenning,godkjenning_overstyringer,godkjenningsbehov,godkjenningsbehov_losning,godkjenningsbehov_losning_begrunnelse,hendelse_ikke_håndtert_årsak,oppgave,oppgave_endret,regelverksvarsel,revurdering,revurdering_vedtaksperiode,schedule,skatteinntekter_lagt_til_grunn,soknad,soknad_haandtert,utkast_til_vedtak,varsel,vedtaksperiode_aktivitet,vedtaksperiode_data,vedtaksperiode_tilstandsendring,vedtaksperiode_venter,warning_for_godkjenning,lagt_paa_vent"
 private val databaseContainer = DatabaseContainers.container("spaghet", CleanupStrategy.tables(tables), walLevelLogical = true)
 
 class E2eTestApp() {
@@ -42,6 +43,11 @@ class E2eTestApp() {
         mockLog()
         testDataSource = databaseContainer.nyTilkobling()
         rapid.setupRivers(dataSource, speedClient)
+    }
+
+    fun LagtPåVent.sendTilRapid(medNotat: Boolean) {
+        print(toJson())
+        if (medNotat) rapid.sendTestMessage(toJson()) else rapid.sendTestMessage(toJsonUtenNotatTekst())
     }
 
     fun Annullering.sendTilRapid() {

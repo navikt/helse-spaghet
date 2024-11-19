@@ -22,6 +22,9 @@ object Util {
     fun <T> DataSource.withSession(f: Session.() -> T) =
         sessionOf(this).use(f)
 
+    fun <T> DataSource.withSessionAndReturnGeneratedKey(f: Session.() -> T) =
+        sessionOf(this, returnGeneratedKey = true).use(f)
+
     fun List<String>.toJson() =
         map { "\"$it\"" }
             .joinToString(
