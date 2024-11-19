@@ -29,15 +29,6 @@ class LagtPåVentRiver(rapidsConnection: RapidsConnection, private val dataSourc
         }.register(this)
     }
 
-    override fun onPreconditionError(error: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
-        sikkerlogg.error("Klarte ikke å lese lagt_på_vent event! ${error.toExtendedReport()}")
-    }
-
-    override fun onSevere(error: MessageProblems.MessageException, context: MessageContext) {
-        sikkerlogg.error("Klarte ikke å lese lagt_på_vent event! ${error.printStackTrace()}")
-
-    }
-
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
