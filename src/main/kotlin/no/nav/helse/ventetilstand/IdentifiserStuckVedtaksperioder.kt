@@ -94,7 +94,7 @@ internal class IdentifiserStuckVedtaksperioder(
                 Venteklassifisering.NYHET -> "*$it* :news:"
             }
         }
-        private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId)}/${kibanaUrl}]"
+        private fun VenterPå.suffix(fnr: String, vedtaksperiodeId: UUID, spurteDuClient: SpurteDuClient) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (utvikler)", tbdgruppeProd)}/${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (saksbehandler)", tbdSpannerProd)}/${kibanaUrl}]"
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
         private fun ingentingStuck(packet: JsonMessage, context: MessageContext, tidsbruk: Duration) {
@@ -112,18 +112,20 @@ internal class IdentifiserStuckVedtaksperioder(
         }}
 
         private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
-        private fun SpurteDuClient.spannerUrl(fnr: String, vedtaksperiodeId: UUID): String {
+        private const val tbdSpannerProd = "382f42f4-f46b-40c1-849b-38d6b5a1f639"
+
+        private fun SpurteDuClient.spannerUrl(fnr: String, vedtaksperiodeId: UUID, linktext: String, tilgang: String): String {
             val payload = SkjulRequest.SkjulTekstRequest(
                 tekst = objectMapper.writeValueAsString(mapOf(
                     "ident" to fnr,
                     "identtype" to "FNR"
                 )),
-                påkrevdTilgang = tbdgruppeProd
+                påkrevdTilgang = tilgang
             )
 
             val spurteDuLink = skjul(payload)
             val spannerLink = "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}?vedtaksperiodeId=$vedtaksperiodeId"
-            return "<$spannerLink|Spanner>"
+            return "<$spannerLink|$linktext>"
         }
 
         private val VenterPå.kibanaUrl get() = "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22${vedtaksperiodeId}%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
