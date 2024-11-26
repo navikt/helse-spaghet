@@ -215,23 +215,27 @@ internal class VedtaksperiodeVentetilstandTest {
         ventetSiden: LocalDateTime = LocalDateTime.parse("2023-03-04T21:34:17.96322")
     ) = """
         {
-          "@event_name": "vedtaksperiode_venter",
-          "organisasjonsnummer": "123456789",
-          "vedtaksperiodeId": "$vedtaksperiodeId",
-          "skjæringstidspunkt": "2019-01-01",
-          "ventetSiden": "$ventetSiden",
-          "venterTil": "+999999999-12-31T23:59:59.999999999",
-          "venterPå": {
-            "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
-            "skjæringstidspunkt": "2018-01-01",
-            "organisasjonsnummer": "987654321",
-            "venteårsak": {
-              "hva": "$venterPå",
-              "hvorfor": ${venterPåHvorfor?.let { "\"$it\"" }}
-            }
-          },
+          "@event_name": "vedtaksperioder_venter",
           "@id": "$hendelseId",
-          "fødselsnummer": "$fødselsnummer"
+          "fødselsnummer": "$fødselsnummer",
+          "vedtaksperioder": [
+            {
+              "organisasjonsnummer": "123456789",
+              "vedtaksperiodeId": "$vedtaksperiodeId",
+              "skjæringstidspunkt": "2019-01-01",
+              "ventetSiden": "$ventetSiden",
+              "venterTil": "+999999999-12-31T23:59:59.999999999",
+              "venterPå": {
+                "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
+                "skjæringstidspunkt": "2018-01-01",
+                "organisasjonsnummer": "987654321",
+                "venteårsak": {
+                  "hva": "$venterPå",
+                  "hvorfor": ${venterPåHvorfor?.let { "\"$it\"" }}
+                }
+              }
+            }
+          ]
         }
     """
 
