@@ -2,40 +2,46 @@ package no.nav.helse.ventetilstand
 
 import kotliquery.*
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
 import org.intellij.lang.annotations.Language
-import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
+import no.nav.helse.sikkerlogg
 
 internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource) {
 
-    internal fun venter(vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
+    internal fun venter(fødselsnummer: String, vedtaksperiodeVenter: List<VedtaksperiodeVenter>, hendelse: Hendelse) {
         sessionOf(dataSource).use { session ->
             session.transaction { transaction ->
-                val vedtaksperiodeId = vedtaksperiodeVenter.vedtaksperiodeId
-                if (transaction.hent(vedtaksperiodeId) == vedtaksperiodeVenter) return logger.info("Ingen endring på ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
-                transaction.venterIkke(vedtaksperiodeVenter.vedtaksperiodeId) // Sletter eventuell eksisterende rad
-                transaction.execute(queryOf(VENTER, mapOf(
-                    "hendelseId" to hendelse.id,
-                    "hendelse" to hendelse.hendelse,
-                    "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
-                    "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
-                    "fodselsnummer" to vedtaksperiodeVenter.fødselsnummer,
-                    "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
-                    "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
-                    "venterTil" to vedtaksperiodeVenter.venterTil,
-                    "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
-                    "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
-                    "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
-                    "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
-                    "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
-                    "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
-                )))
-                logger.info("Lagret ny ventetilstand for {}", keyValue("vedtaksperiodeId", vedtaksperiodeId))
+                transaction.venterIkke(fødselsnummer)
+                if (vedtaksperiodeVenter.isEmpty()) return sikkerlogg.info("Personen med {} venter ikke på noe", keyValue("fødselsnummer", fødselsnummer))
+                vedtaksperiodeVenter.forEach { transaction.venter(fødselsnummer, it, hendelse) }
+                sikkerlogg.info("Personen med {} har ${vedtaksperiodeVenter.size} perioder som venter", keyValue("fødselsnummer", fødselsnummer))
             }
         }
+    }
+
+    private fun TransactionalSession.venter(fødselsnummer: String, vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
+        execute(queryOf(VENTER, mapOf(
+            "hendelseId" to hendelse.id,
+            "hendelse" to hendelse.hendelse, // TODO: Dette med hendelser er jo rimelig uinteressant nå. Slette?
+            "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
+            "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
+            "fodselsnummer" to fødselsnummer,
+            "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
+            "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
+            "venterTil" to vedtaksperiodeVenter.venterTil,
+            "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
+            "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
+            "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
+            "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
+            "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
+            "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
+        )))
+    }
+
+    private fun TransactionalSession.venterIkke(fødselsnummer: String) {
+        execute(queryOf(PERSON_VENTER_IKKE, mapOf("fodselsnummer" to fødselsnummer)))
     }
 
     private fun Session.venterIkke(vedtaksperiodeId: UUID) = execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeId)))
@@ -50,15 +56,7 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         }
     }
 
-    private fun TransactionalSession.hent(vedtaksperiodeId: UUID) =
-        single(queryOf(HENT_OM_VENTER, mapOf("vedtaksperiodeId" to vedtaksperiodeId))) { row -> row.vedtaksperiodeVenter }
-
     private companion object {
-        private val logger = LoggerFactory.getLogger(VedtaksperiodeVentetilstandDao::class.java)
-
-        @Language("PostgreSQL")
-        private val HENT_OM_VENTER = "SELECT * FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
-
         @Language("PostgreSQL")
         private val VENTER = """
             INSERT INTO vedtaksperiode_venter(hendelseId, hendelse, vedtaksperiodeId, skjaeringstidspunkt, fodselsnummer, organisasjonsnummer, ventetSiden, venterTil, venterForAlltid, venterPaVedtaksperiodeId, venterPaSkjaeringstidspunkt, venterPaOrganisasjonsnummer, venterPaHva, venterPaHvorfor)
@@ -67,6 +65,9 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         @Language("PostgreSQL")
         private val VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
+
+        @Language("PostgreSQL")
+        private val PERSON_VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = :fodselsnummer"
 
         @Language("PostgreSQL")
         private val STUCK = """

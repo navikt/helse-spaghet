@@ -37,24 +37,27 @@ internal class VedtaksperiodeVenterRiver (
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
-        packet["vedtaksperioder"].forEach { t ->
-            val dto = objectMapper.convertValue<VedtaksperiodeVenterDto>(t)
-            dao.venter(VedtaksperiodeVenter.opprett(
-                vedtaksperiodeId = dto.vedtaksperiodeId,
-                skjæringstidspunkt = dto.skjæringstidspunkt,
-                fødselsnummer = packet["fødselsnummer"].asText(),
-                organisasjonsnummer = dto.organisasjonsnummer,
-                ventetSiden = dto.ventetSiden,
-                venterTil = dto.venterTil,
-                venterPå = VenterPå(
-                    vedtaksperiodeId = dto.venterPå.vedtaksperiodeId,
-                    organisasjonsnummer = dto.venterPå.organisasjonsnummer,
-                    skjæringstidspunkt = dto.venterPå.skjæringstidspunkt,
-                    hva = dto.venterPå.venteårsak.hva,
-                    hvorfor = dto.venterPå.venteårsak.hvorfor
+        val fødselsnummer = packet["fødselsnummer"].asText()
+        val vedtaksperiodeVenter = packet["vedtaksperioder"]
+            .map { json -> objectMapper.convertValue<VedtaksperiodeVenterDto>(json) }
+            .map { dto ->
+                VedtaksperiodeVenter.opprett(
+                    vedtaksperiodeId = dto.vedtaksperiodeId,
+                    skjæringstidspunkt = dto.skjæringstidspunkt,
+                    fødselsnummer = fødselsnummer,
+                    organisasjonsnummer = dto.organisasjonsnummer,
+                    ventetSiden = dto.ventetSiden,
+                    venterTil = dto.venterTil,
+                    venterPå = VenterPå(
+                        vedtaksperiodeId = dto.venterPå.vedtaksperiodeId,
+                        organisasjonsnummer = dto.venterPå.organisasjonsnummer,
+                        skjæringstidspunkt = dto.venterPå.skjæringstidspunkt,
+                        hva = dto.venterPå.venteårsak.hva,
+                        hvorfor = dto.venterPå.venteårsak.hvorfor
+                    )
                 )
-            ), packet.hendelse)
         }
+        dao.venter(fødselsnummer, vedtaksperiodeVenter, packet.hendelse)
     }
 }
 
