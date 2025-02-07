@@ -14,7 +14,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         sessionOf(dataSource).use { session ->
             session.transaction { transaction ->
                 transaction.venterIkke(fødselsnummer)
-                if (vedtaksperiodeVenter.isEmpty()) return sikkerlogg.info("Personen med {} venter ikke på noe", keyValue("fødselsnummer", fødselsnummer))
                 vedtaksperiodeVenter.forEach { transaction.venter(fødselsnummer, it, hendelse) }
                 sikkerlogg.info("Personen med {} har ${vedtaksperiodeVenter.size} perioder som venter", keyValue("fødselsnummer", fødselsnummer))
             }
