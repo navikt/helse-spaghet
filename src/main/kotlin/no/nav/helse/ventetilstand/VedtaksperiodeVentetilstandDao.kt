@@ -7,23 +7,31 @@ import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource
 import no.nav.helse.sikkerlogg
+import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 
 internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource) {
 
     internal fun venter(fødselsnummer: String, vedtaksperiodeVenter: List<VedtaksperiodeVenter>, hendelse: Hendelse) {
         sessionOf(dataSource).use { session ->
             session.transaction { transaction ->
-                transaction.venterIkke(fødselsnummer)
-                vedtaksperiodeVenter.forEach { transaction.venter(fødselsnummer, it, hendelse) }
-                sikkerlogg.info("Personen med {} har ${vedtaksperiodeVenter.size} perioder som venter", keyValue("fødselsnummer", fødselsnummer))
+                val ventetFør = transaction.venter(fødselsnummer)
+                val (bevar, insert) = vedtaksperiodeVenter.partition { it in ventetFør }
+                transaction.venterIkke(fødselsnummer, bevar)
+                insert.forEach { transaction.venter(fødselsnummer, it, hendelse) }
+                sikkerlogg.info("Personen med {} har totalt ${vedtaksperiodeVenter.size} perioder som venter hvorav ${insert.size} hadde ny informasjon", keyValue("fødselsnummer", fødselsnummer))
             }
         }
     }
 
+    private fun TransactionalSession.venter(fødselsnummer: String) =
+        list(queryOf(PERSON_VENTER, mapOf("fodselsnummer" to fødselsnummer))) { row ->
+            row.vedtaksperiodeVenter
+        }
+
     private fun TransactionalSession.venter(fødselsnummer: String, vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
         execute(queryOf(VENTER, mapOf(
             "hendelseId" to hendelse.id,
-            "hendelse" to hendelse.hendelse, // TODO: Dette med hendelser er jo rimelig uinteressant nå. Slette?
+            "hendelse" to hendelse.hendelse,
             "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
             "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
             "fodselsnummer" to fødselsnummer,
@@ -39,8 +47,12 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         )))
     }
 
-    private fun TransactionalSession.venterIkke(fødselsnummer: String) {
-        execute(queryOf(PERSON_VENTER_IKKE, mapOf("fodselsnummer" to fødselsnummer)))
+    private fun TransactionalSession.venterIkke(fødselsnummer: String, bevar: List<VedtaksperiodeVenter>) {
+        val statement = when (bevar.isEmpty()) {
+            true -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer'"
+            false -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer' AND vedtaksperiodeId NOT IN (${bevar.joinToString { "'${it.vedtaksperiodeId}'" }})"
+        }
+        execute(queryOf(statement))
     }
 
     private fun Session.venterIkke(vedtaksperiodeId: UUID) = execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeId)))
@@ -63,10 +75,10 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         """
 
         @Language("PostgreSQL")
-        private val VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
+        private val PERSON_VENTER = "SELECT * FROM vedtaksperiode_venter WHERE fodselsnummer = :fodselsnummer"
 
         @Language("PostgreSQL")
-        private val PERSON_VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = :fodselsnummer"
+        private val VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
 
         @Language("PostgreSQL")
         private val STUCK = """

@@ -185,7 +185,6 @@ internal class VedtaksperiodeVentetilstandTest {
     }
 
     @Test
-    @Disabled("Disse kjedelige testene kan fikses til uka")
     fun `Ignorer meldinger med lik informasjon`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
