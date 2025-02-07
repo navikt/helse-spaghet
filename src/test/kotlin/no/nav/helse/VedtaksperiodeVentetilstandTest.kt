@@ -24,7 +24,7 @@ internal class VedtaksperiodeVentetilstandTest {
         assertNull(hentOmVenter(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         assertNotNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        rapid.sendTestMessage(ingenVenter())
         assertNull(hentOmVenter(vedtaksperiodeId))
     }
 
@@ -32,14 +32,22 @@ internal class VedtaksperiodeVentetilstandTest {
     fun `Gjentatte like vedtaksperiodeVenter lagres ikke, men så fort noe endres lagres det`() = e2eTest {
         val vedtaksperiodeId = UUID.randomUUID()
         val venterPåVedtaksperiodeId = UUID.randomUUID()
+        val førsteVenterPåGodkjenningHendelseId = UUID.randomUUID()
+        val venterPåUtbetalingHendelseId = UUID.randomUUID()
+        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, hendelseId = førsteVenterPåGodkjenningHendelseId))
+        assertEquals(førsteVenterPåGodkjenningHendelseId, hentHendelseId(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(førsteVenterPåGodkjenningHendelseId, hentHendelseId(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(førsteVenterPåGodkjenningHendelseId, hentHendelseId(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
+        assertEquals(førsteVenterPåGodkjenningHendelseId, hentHendelseId(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING"))
+        assertEquals(førsteVenterPåGodkjenningHendelseId, hentHendelseId(vedtaksperiodeId))
+        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId, "UTBETALING", hendelseId = venterPåUtbetalingHendelseId))
         assertEquals("UTBETALING", hentOmVenter(vedtaksperiodeId)!!.venterPå.hva)
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        assertEquals(venterPåUtbetalingHendelseId, hentHendelseId(vedtaksperiodeId))
+        rapid.sendTestMessage(ingenVenter())
         assertNull(hentOmVenter(vedtaksperiodeId))
     }
 
@@ -50,7 +58,7 @@ internal class VedtaksperiodeVentetilstandTest {
         assertNull(hentOmVenter(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         assertNotNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
+        rapid.sendTestMessage(ingenVenter(vedtaksperiodeId))
         assertNull(hentOmVenter(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         assertNotNull(hentOmVenter(vedtaksperiodeId))
@@ -80,22 +88,6 @@ internal class VedtaksperiodeVentetilstandTest {
     }
 
     @Test
-    fun `Ignorerer urelevante vedtaksperiode_endret`() = e2eTest {
-        val vedtaksperiodeId = UUID.randomUUID()
-        val venterPåVedtaksperiodeId = UUID.randomUUID()
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
-        assertNotNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        assertNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId))
-    }
-
-    @Test
     @Disabled("Disse kjedelige testene kan fikses til uka")
     fun `Hente ut siste ventetilstand på de som venter`() = e2eTest {
         val vedtaksperiodeId1 = UUID.randomUUID()
@@ -116,27 +108,14 @@ internal class VedtaksperiodeVentetilstandTest {
         // vedtaksperiode1 fortsetter å vente med samme årsak
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1))
         // vedtaksperiode2 slutter å vente
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId2))
         // vedtaksperiode 3 slutter å vente, og begynner å vente på noe annet
-        rapid.sendTestMessage(vedtaksperiodeEndret(vedtaksperiodeId3))
+        rapid.sendTestMessage(ingenVenter(vedtaksperiodeId3))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3, "UTBETALING"))
 
         assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId3), hentVedtaksperiodeIderSomVenter())
         val venteårsaker = hentDeSomVenter()
         assertEquals("GODKJENNING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId1 }.venterPå.hva)
         assertEquals("UTBETALING", venteårsaker.single { it.vedtaksperiodeId == vedtaksperiodeId3 }.venterPå.hva)
-    }
-
-    @Test
-    fun `venter ikke lengre når vi får eksplisitt signal på at vedtaksperiode ikke venter`() = e2eTest {
-        assertEquals(emptySet<VedtaksperiodeVenter>(), hentDeSomVenter())
-        val vedtaksperiodeId = UUID.randomUUID()
-        val vedtaksperiodeVenter = vedtaksperiodeVenter(vedtaksperiodeId, UUID.randomUUID(), "HJELP", UUID.randomUUID())
-        rapid.sendTestMessage(vedtaksperiodeVenter)
-        assertEquals("HJELP", hentDeSomVenter().single().venterPå.hva)
-        val vedtaksperiodeVenterIkke = vedtaksperiodeVenterIkke(vedtaksperiodeId)
-        rapid.sendTestMessage(vedtaksperiodeVenterIkke)
-        assertEquals(emptySet<VedtaksperiodeVenter>(), hentDeSomVenter())
     }
 
     @Test
@@ -242,25 +221,16 @@ internal class VedtaksperiodeVentetilstandTest {
     """
 
     @Language("JSON")
-    private fun vedtaksperiodeEndret(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID(), fødselsnummer: String = "11111111111") = """
-         {
-          "@event_name": "vedtaksperiode_endret",
-          "organisasjonsnummer": "123456789",
-          "vedtaksperiodeId": "$vedtaksperiodeId",
-          "gjeldendeTilstand": "AVVENTER_INNTEKTSMELDING",
-          "forrigeTilstand": "AVVENTER_INFOTRYGDHISTORIKK",
+    private fun ingenVenter(
+        hendelseId: UUID = UUID.randomUUID(),
+        fødselsnummer: String = "11111111111",
+    ) = """
+        {
+          "@event_name": "vedtaksperioder_venter",
           "@id": "$hendelseId",
-          "fødselsnummer": "$fødselsnummer"
-        } 
-    """
-
-    @Language("JSON")
-    private fun vedtaksperiodeVenterIkke(vedtaksperiodeId: UUID, hendelseId: UUID = UUID.randomUUID()) = """
-         {
-          "@event_name": "vedtaksperiode_venter_ikke",
-          "vedtaksperiodeId": "$vedtaksperiodeId",
-          "@id": "$hendelseId"
-        } 
+          "fødselsnummer": "$fødselsnummer",
+          "vedtaksperioder": []
+        }
     """
 
     private fun E2eTestApp.hentDeSomVenter() =

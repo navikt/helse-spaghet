@@ -55,12 +55,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
         execute(queryOf(statement))
     }
 
-    private fun Session.venterIkke(vedtaksperiodeId: UUID) = execute(queryOf(VENTER_IKKE, mapOf("vedtaksperiodeId" to vedtaksperiodeId)))
-
-    internal fun venterIkke(vedtaksperiodeId: UUID, hendelse: Hendelse) {
-        sessionOf(dataSource).use { session -> session.venterIkke(vedtaksperiodeId) }
-    }
-
     internal fun stuck() = sessionOf(dataSource).use { session ->
         session.list(Query(STUCK)) { row ->
             row.vedtaksperiodeVenterMedMetadata
@@ -76,9 +70,6 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
 
         @Language("PostgreSQL")
         private val PERSON_VENTER = "SELECT * FROM vedtaksperiode_venter WHERE fodselsnummer = :fodselsnummer"
-
-        @Language("PostgreSQL")
-        private val VENTER_IKKE = "DELETE FROM vedtaksperiode_venter WHERE vedtaksperiodeId = :vedtaksperiodeId"
 
         @Language("PostgreSQL")
         private val STUCK = """

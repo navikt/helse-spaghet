@@ -2,7 +2,6 @@ package no.nav.helse.ventetilstand
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import java.time.DayOfWeek
 import java.time.LocalDate
 

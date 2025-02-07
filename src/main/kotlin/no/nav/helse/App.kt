@@ -19,8 +19,6 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.ventetilstand.*
 import no.nav.helse.ventetilstand.IdentifiserStuckVedtaksperioder
-import no.nav.helse.ventetilstand.VedtaksperiodeEndretRiver
-import no.nav.helse.ventetilstand.VedtaksperiodeVenterIkkeRiver
 import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -87,8 +85,6 @@ internal fun <T : RapidsConnection> T.setupRivers(
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingFerdigstiltRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
-    VedtaksperiodeVenterIkkeRiver(this, vedtaksperiodeVentetilstandDao)
-    VedtaksperiodeEndretRiver(this, vedtaksperiodeVentetilstandDao)
     IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, spurteDuClient)
     OppsummerVedtaksperiodeVenter(this, oppsummeringDao)
     OppsummerVedtaksperiodeVenterExternal(this, oppsummeringDao)
