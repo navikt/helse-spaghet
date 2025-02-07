@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import org.junit.jupiter.api.Disabled
 
 internal class VedtaksperiodeVentetilstandTest {
 
@@ -88,7 +87,6 @@ internal class VedtaksperiodeVentetilstandTest {
     }
 
     @Test
-    @Disabled("Disse kjedelige testene kan fikses til uka")
     fun `Hente ut siste ventetilstand på de som venter`() = e2eTest {
         val vedtaksperiodeId1 = UUID.randomUUID()
         val venterPåVedtaksperiodeId1 = UUID.randomUUID()
@@ -99,18 +97,29 @@ internal class VedtaksperiodeVentetilstandTest {
         val vedtaksperiodeId3 = UUID.randomUUID()
         val venterPåVedtaksperiodeId3 = UUID.randomUUID()
 
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId2, venterPåVedtaksperiodeId2))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3))
-
+        rapid.sendTestMessage(vedtaksperioderVenter(perioder = setOf(
+            TestperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1)
+        )))
+        assertEquals(setOf(vedtaksperiodeId1), hentVedtaksperiodeIderSomVenter())
+        rapid.sendTestMessage(vedtaksperioderVenter(perioder = setOf(
+            TestperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1),
+            TestperiodeVenter(vedtaksperiodeId2, venterPåVedtaksperiodeId2)
+        )))
+        assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId2), hentVedtaksperiodeIderSomVenter())
+        rapid.sendTestMessage(vedtaksperioderVenter(perioder = setOf(
+            TestperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1),
+            TestperiodeVenter(vedtaksperiodeId2, venterPåVedtaksperiodeId2),
+            TestperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3),
+        )))
         assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId2, vedtaksperiodeId3), hentVedtaksperiodeIderSomVenter())
 
-        // vedtaksperiode1 fortsetter å vente med samme årsak
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1))
-        // vedtaksperiode2 slutter å vente
+        // vedtaksperiode 1 fortsetter å vente med samme årsak
+        // vedtaksperiode 2 slutter å vente
         // vedtaksperiode 3 slutter å vente, og begynner å vente på noe annet
-        rapid.sendTestMessage(ingenVenter(vedtaksperiodeId3))
-        rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3, "UTBETALING"))
+        rapid.sendTestMessage(vedtaksperioderVenter(perioder = setOf(
+            TestperiodeVenter(vedtaksperiodeId1, venterPåVedtaksperiodeId1),
+            TestperiodeVenter(vedtaksperiodeId3, venterPåVedtaksperiodeId3, venterPå = "UTBETALING"),
+        )))
 
         assertEquals(setOf(vedtaksperiodeId1, vedtaksperiodeId3), hentVedtaksperiodeIderSomVenter())
         val venteårsaker = hentDeSomVenter()
@@ -194,29 +203,46 @@ internal class VedtaksperiodeVentetilstandTest {
         fødselsnummer: String = "11111111111",
         venterPåHvorfor: String? = "TESTOLINI",
         ventetSiden: LocalDateTime = LocalDateTime.parse("2023-03-04T21:34:17.96322")
+    )= vedtaksperioderVenter(
+        fødselsnummer = fødselsnummer,
+        hendelseId = hendelseId,
+        perioder = setOf(TestperiodeVenter(
+            vedtaksperiodeId = vedtaksperiodeId,
+            venterPåVedtaksperiodeId = venterPåVedtaksperiodeId,
+            venterPå = venterPå,
+            venterPåHvorfor = venterPåHvorfor,
+            ventetSiden = ventetSiden
+        ))
+    )
+
+    @Language("JSON")
+    private fun vedtaksperioderVenter(
+        fødselsnummer: String = "11111111111",
+        hendelseId: UUID = UUID.randomUUID(),
+        perioder: Collection<TestperiodeVenter>,
     ) = """
         {
           "@event_name": "vedtaksperioder_venter",
           "@id": "$hendelseId",
           "fødselsnummer": "$fødselsnummer",
-          "vedtaksperioder": [
-            {
-              "organisasjonsnummer": "123456789",
-              "vedtaksperiodeId": "$vedtaksperiodeId",
-              "skjæringstidspunkt": "2019-01-01",
-              "ventetSiden": "$ventetSiden",
-              "venterTil": "+999999999-12-31T23:59:59.999999999",
-              "venterPå": {
-                "vedtaksperiodeId": "$venterPåVedtaksperiodeId",
-                "skjæringstidspunkt": "2018-01-01",
-                "organisasjonsnummer": "987654321",
-                "venteårsak": {
-                  "hva": "$venterPå",
-                  "hvorfor": ${venterPåHvorfor?.let { "\"$it\"" }}
+          "vedtaksperioder": ${perioder.map { """
+              {
+                "organisasjonsnummer": "123456789",
+                "vedtaksperiodeId": "${it.vedtaksperiodeId}",
+                "skjæringstidspunkt": "2019-01-01",
+                "ventetSiden": "${it.ventetSiden}",
+                "venterTil": "+999999999-12-31T23:59:59.999999999",
+                "venterPå": {
+                  "vedtaksperiodeId": "${it.venterPåVedtaksperiodeId}",
+                  "skjæringstidspunkt": "2018-01-01",
+                  "organisasjonsnummer": "987654321",
+                  "venteårsak": {
+                    "hva": "${it.venterPå}",
+                    "hvorfor": ${it.venterPåHvorfor?.let { "\"$it\"" }}
+                  }
                 }
               }
-            }
-          ]
+          """}}
         }
     """
 
@@ -264,4 +290,12 @@ internal class VedtaksperiodeVentetilstandTest {
         }
         return VedtaksperiodeVentetilstandDao(dataSource).stuck().map { it.vedtaksperiodeVenter }
     }
+
+    private data class TestperiodeVenter(
+        val vedtaksperiodeId: UUID,
+        val venterPåVedtaksperiodeId: UUID,
+        val venterPå: String = "GODKJENNING",
+        val venterPåHvorfor: String? = "TESTOLINI",
+        val ventetSiden: LocalDateTime = LocalDateTime.parse("2023-03-04T21:34:17.96322")
+    )
 }

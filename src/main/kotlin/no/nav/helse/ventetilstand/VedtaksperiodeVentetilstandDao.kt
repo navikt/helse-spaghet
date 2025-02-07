@@ -4,7 +4,6 @@ import kotliquery.*
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
 import org.intellij.lang.annotations.Language
-import java.util.*
 import javax.sql.DataSource
 import no.nav.helse.sikkerlogg
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
