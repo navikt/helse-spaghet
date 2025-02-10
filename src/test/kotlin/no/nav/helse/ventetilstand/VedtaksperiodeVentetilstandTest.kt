@@ -1,18 +1,16 @@
-package no.nav.helse
+package no.nav.helse.ventetilstand
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest
-import no.nav.helse.ventetilstand.VedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
-import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao
-import no.nav.helse.ventetilstand.VenterPå
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.helse.E2eTestApp
 
 internal class VedtaksperiodeVentetilstandTest {
 
@@ -206,13 +204,15 @@ internal class VedtaksperiodeVentetilstandTest {
     )= vedtaksperioderVenter(
         fødselsnummer = fødselsnummer,
         hendelseId = hendelseId,
-        perioder = setOf(TestperiodeVenter(
+        perioder = setOf(
+            TestperiodeVenter(
             vedtaksperiodeId = vedtaksperiodeId,
             venterPåVedtaksperiodeId = venterPåVedtaksperiodeId,
             venterPå = venterPå,
             venterPåHvorfor = venterPåHvorfor,
             ventetSiden = ventetSiden
-        ))
+        )
+        )
     )
 
     @Language("JSON")
