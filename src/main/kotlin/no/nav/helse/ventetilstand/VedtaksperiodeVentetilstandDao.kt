@@ -17,7 +17,17 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
                 val (bevar, insert) = vedtaksperiodeVenter.partition { it in ventetFør }
                 transaction.venterIkke(fødselsnummer, bevar)
                 insert.forEach { transaction.venter(fødselsnummer, it, hendelse) }
-                sikkerlogg.info("Personen med {} har totalt ${vedtaksperiodeVenter.size} perioder som venter hvorav ${insert.size} hadde ny informasjon", keyValue("fødselsnummer", fødselsnummer))
+
+                val antallVentetFør = ventetFør.size
+                val antallVenterNå = vedtaksperiodeVenter.size
+                val antallNyInformasjon = insert.size
+
+                when (listOf(antallVentetFør, antallVenterNå, antallNyInformasjon).all { it == 0 }) {
+                    true -> { /* Skulle ønske vi kunne returne her, men da rollbacket transactionen 🤔 */ }
+                    false -> {
+                        sikkerlogg.info("Personen med {} venter i systemet. VentetFør=$antallVentetFør, VenterNå=$antallVenterNå, NyInformasjon=$antallNyInformasjon", keyValue("fødselsnummer", fødselsnummer))
+                    }
+                }
             }
         }
     }

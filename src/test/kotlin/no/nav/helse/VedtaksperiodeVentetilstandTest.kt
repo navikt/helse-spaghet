@@ -57,7 +57,7 @@ internal class VedtaksperiodeVentetilstandTest {
         assertNull(hentOmVenter(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         assertNotNull(hentOmVenter(vedtaksperiodeId))
-        rapid.sendTestMessage(ingenVenter(vedtaksperiodeId))
+        rapid.sendTestMessage(ingenVenter())
         assertNull(hentOmVenter(vedtaksperiodeId))
         rapid.sendTestMessage(vedtaksperiodeVenter(vedtaksperiodeId, venterPåVedtaksperiodeId))
         assertNotNull(hentOmVenter(vedtaksperiodeId))
@@ -220,7 +220,7 @@ internal class VedtaksperiodeVentetilstandTest {
         fødselsnummer: String = "11111111111",
         hendelseId: UUID = UUID.randomUUID(),
         perioder: Collection<TestperiodeVenter>,
-    ) = """
+    )  = """
         {
           "@event_name": "vedtaksperioder_venter",
           "@id": "$hendelseId",
@@ -248,16 +248,9 @@ internal class VedtaksperiodeVentetilstandTest {
 
     @Language("JSON")
     private fun ingenVenter(
-        hendelseId: UUID = UUID.randomUUID(),
         fødselsnummer: String = "11111111111",
-    ) = """
-        {
-          "@event_name": "vedtaksperioder_venter",
-          "@id": "$hendelseId",
-          "fødselsnummer": "$fødselsnummer",
-          "vedtaksperioder": []
-        }
-    """
+        hendelseId: UUID = UUID.randomUUID(),
+    ) = vedtaksperioderVenter(fødselsnummer, hendelseId, emptySet())
 
     private fun E2eTestApp.hentDeSomVenter() =
         sessionOf(dataSource).use { session ->
