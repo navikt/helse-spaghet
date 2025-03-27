@@ -5,6 +5,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.result_object.ok
+import com.github.navikt.tbd_libs.spedisjon.HentMeldingResponse
+import com.github.navikt.tbd_libs.spedisjon.SpedisjonClient
 import com.github.navikt.tbd_libs.speed.IdentResponse
 import com.github.navikt.tbd_libs.speed.SpeedClient
 import com.github.navikt.tbd_libs.test_support.CleanupStrategy
@@ -12,6 +14,8 @@ import com.github.navikt.tbd_libs.test_support.DatabaseContainers
 import com.github.navikt.tbd_libs.test_support.TestDataSource
 import io.mockk.every
 import io.mockk.mockk
+import java.util.*
+import java.time.LocalDateTime
 import no.nav.helse.TestData.toJson
 import no.nav.helse.TestData.toJsonUtenNotatTekst
 import org.slf4j.LoggerFactory
@@ -39,10 +43,24 @@ class E2eTestApp() {
         }
     }
 
+    val spedisjonClient = mockk<SpedisjonClient> {
+        every { hentMelding(any(), any()) } answers {
+            HentMeldingResponse(
+                type = "inntektsmelding",
+                fnr = "99999999999",
+                internDokumentId = UUID.randomUUID(),
+                eksternDokumentId = UUID.randomUUID(),
+                rapportertDato = LocalDateTime.now(),
+                duplikatkontroll = "test_duplikatkontroll",
+                jsonBody = "{}"
+            ).ok()
+        }
+    }
+
     private fun start() {
         mockLog()
         testDataSource = databaseContainer.nyTilkobling()
-        rapid.setupRivers(dataSource, speedClient)
+        rapid.setupRivers(dataSource, speedClient, spedisjonClient)
     }
 
     fun LagtPåVent.sendTilRapid(medNotat: Boolean) {

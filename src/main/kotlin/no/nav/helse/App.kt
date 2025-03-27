@@ -12,6 +12,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.result_object.Result
 import com.github.navikt.tbd_libs.speed.SpeedClient
 import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
+import com.github.navikt.tbd_libs.spedisjon.SpedisjonClient
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -60,8 +61,13 @@ fun main() {
         objectMapper = objectMapper,
         tokenProvider = azureClient
     )
+    val spedisjonClient = SpedisjonClient(
+        httpClient = HttpClient.newHttpClient(),
+        objectMapper = objectMapper,
+        tokenProvider = azureClient
+    )
     RapidApplication.create(env.raw, meterRegistry = meterRegistry)
-        .setupRivers(dataSource, speedClient)
+        .setupRivers(dataSource, speedClient, spedisjonClient)
         .setupMigration(dataSourceBuilder)
         .start()
 }
@@ -69,6 +75,7 @@ fun main() {
 internal fun <T : RapidsConnection> T.setupRivers(
     dataSource: DataSource,
     speedClient: SpeedClient,
+    spedisjonClient: SpedisjonClient,
     vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource),
     oppsummeringDao: OppsummeringDao = OppsummeringDao(dataSource),
     spurteDuClient: SpurteDuClient = spurteDuClient()
@@ -98,6 +105,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     SkatteinntekterLagtTilGrunnRiver(this, dataSource)
     UtkastTilVedtakRiver(this, dataSource)
     LagtPåVentRiver(this, dataSource)
+    InntektsmeldingHåndtertRiver(this, dataSource, spedisjonClient)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {

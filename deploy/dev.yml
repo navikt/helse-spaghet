@@ -40,6 +40,7 @@ spec:
       rules:
         - application: spurtedu
         - application: speed-api
+        - application: spedisjon
   azure:
     application:
       enabled: true

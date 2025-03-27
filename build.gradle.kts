@@ -34,6 +34,7 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
+    implementation("com.github.navikt.tbd-libs:spedisjon-client:$tbdLibsVersion")
 
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
