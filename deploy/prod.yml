@@ -50,7 +50,7 @@ spec:
       tenant: nav.no
   gcp:
     sqlInstances:
-      - type: POSTGRES_15
+      - type: POSTGRES_17
         diskAutoresize: true
         pointInTimeRecovery: true
         diskSize: 120
