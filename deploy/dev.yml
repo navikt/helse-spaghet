@@ -47,7 +47,7 @@ spec:
       tenant: trygdeetaten.no
   gcp:
     sqlInstances:
-      - type: POSTGRES_15
+      - type: POSTGRES_17
         diskAutoresize: true
         name: spaghet2
         tier: db-f1-micro
