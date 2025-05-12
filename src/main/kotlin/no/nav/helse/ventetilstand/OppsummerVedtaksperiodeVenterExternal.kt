@@ -42,7 +42,7 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 "slackmelding", mapOf(
                     "melding" to "$melding\n\n",
                     "level" to "INFO",
-                    "channel" to "GE89UHQM7",
+                    "channel" to "C08RSLJ6W4R",
                     "utenPrefix" to true,
                     "utenSuffix" to true,
                     "system_participating_services" to packet["system_participating_services"]
