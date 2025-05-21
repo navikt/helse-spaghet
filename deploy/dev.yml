@@ -59,7 +59,7 @@ spec:
               - name: bigquery_datastream
         flags:
           - name: cloudsql.logical_decoding
-            value: "on"
+            value: 'on'
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
@@ -67,3 +67,7 @@ spec:
       value: tbd-spaghet-v1
     - name: KAFKA_RESET_POLICY
       value: earliest
+  observability:
+    logging:
+      destinations:
+        - id: elastic
