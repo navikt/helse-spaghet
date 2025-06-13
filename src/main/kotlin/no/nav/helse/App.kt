@@ -106,6 +106,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     UtkastTilVedtakRiver(this, dataSource)
     LagtPåVentRiver(this, dataSource)
     InntektsmeldingHåndtertRiver(this, dataSource, spedisjonClient)
+    AnalytiskDatapakkeRiver(this, dataSource, speedClient)
 }
 
 private fun RapidsConnection.setupMigration(dataSourceBuilder: DataSourceBuilder) = apply {
