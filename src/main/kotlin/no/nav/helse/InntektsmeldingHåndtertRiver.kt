@@ -8,6 +8,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.result_object.getOrThrow
+import com.github.navikt.tbd_libs.result_object.map
+import com.github.navikt.tbd_libs.result_object.tryCatch
 import com.github.navikt.tbd_libs.spedisjon.SpedisjonClient
 import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
@@ -48,8 +50,13 @@ internal class InntektsmeldingHåndtertRiver(
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         // Hent ekstern dokument ID fra spedisjon
-        val dokumentId = spedisjonClient.hentMelding(hendelseId).getOrThrow().eksternDokumentId
-
+        val dokumentId = try {
+            spedisjonClient.hentMelding(hendelseId).getOrThrow().eksternDokumentId
+        } catch (exception: RuntimeException) {
+            sikkerlogg.error("Kunne ikke hente ekstern dokument ID for inntektsmelding $hendelseId", exception)
+            logg.error("Feil ved henting av ekstern dokument ID for inntektsmelding $hendelseId", exception)
+            throw exception
+        }
         insertInnektsmeldingHåndtert(vedtaksperiodeId, hendelseId, dokumentId, opprettet)
     }
 
