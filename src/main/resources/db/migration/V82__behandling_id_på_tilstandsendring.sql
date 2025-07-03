@@ -1,0 +1,1 @@
+ALTER TABLE vedtaksperiode_tilstandsendring ADD COLUMN behandling_id uuid;

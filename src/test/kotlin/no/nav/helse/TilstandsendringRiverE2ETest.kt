@@ -28,6 +28,7 @@ class TilstandsendringRiverE2ETest {
                 listOf(
                     Tilstandsendring(
                         vedtaksperiodeId = endring.vedtaksperiodeId,
+                        behandlingId = endring.behandlingId,
                         tidsstempel = endring.opprettet,
                         tilstandFra = endring.forrigeTilstand,
                         tilstandTil = endring.gjeldendeTilstand,
@@ -48,6 +49,7 @@ class TilstandsendringRiverE2ETest {
                 .map { row ->
                     Tilstandsendring(
                         vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
+                        behandlingId = UUID.fromString(row.string("behandling_id")),
                         tidsstempel = row.localDateTime("tidsstempel"),
                         tilstandFra = row.string("tilstand_fra"),
                         tilstandTil = row.string("tilstand_til"),
@@ -61,6 +63,7 @@ class TilstandsendringRiverE2ETest {
 
     private data class Tilstandsendring(
         val vedtaksperiodeId: UUID,
+        val behandlingId: UUID,
         val tidsstempel: LocalDateTime,
         val tilstandFra: String,
         val tilstandTil: String,

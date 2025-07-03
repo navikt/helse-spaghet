@@ -6,7 +6,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
@@ -31,7 +30,7 @@ class TilstandendringRiver(
                 }
             }
             validate {
-                it.requireKey("vedtaksperiodeId", "@id")
+                it.requireKey("vedtaksperiodeId", "@id", "behandlingId")
                 it.require("@opprettet", JsonNode::asLocalDateTime)
                 it.requireKey("@forårsaket_av.id", "@forårsaket_av.event_name")
                 it.requireKey("forrigeTilstand", "gjeldendeTilstand")
@@ -42,9 +41,11 @@ class TilstandendringRiver(
 
     override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+        val behandlingId = UUID.fromString(packet["behandlingId"].asText())
         insertTilstandsendring(
             id = UUID.fromString(packet["@id"].asText()),
             vedtaksperiodeId = vedtaksperiodeId,
+            behandlingId= behandlingId,
             tidsstempel = packet["@opprettet"].asLocalDateTime(),
             tilstandFra = packet["forrigeTilstand"].asText(),
             tilstandTil = packet["gjeldendeTilstand"].asText(),
@@ -56,6 +57,7 @@ class TilstandendringRiver(
     private fun insertTilstandsendring(
         id: UUID,
         vedtaksperiodeId: UUID,
+        behandlingId: UUID,
         tidsstempel: LocalDateTime,
         tilstandFra: String,
         tilstandTil: String,
@@ -68,6 +70,7 @@ class TilstandendringRiver(
 INSERT INTO vedtaksperiode_tilstandsendring(
     id,
     vedtaksperiode_id,
+    behandling_id,
     tidsstempel,
     tilstand_fra,
     tilstand_til,
@@ -76,6 +79,7 @@ INSERT INTO vedtaksperiode_tilstandsendring(
 VALUES(
     :id,
     :vedtaksperiode_id,
+    :behandling_id,
     :tidsstempel,
     :tilstand_fra,
     :tilstand_til,
@@ -87,6 +91,7 @@ VALUES(
                     query, mapOf(
                         "id" to id,
                         "vedtaksperiode_id" to vedtaksperiodeId,
+                        "behandling_id" to behandlingId,
                         "tidsstempel" to tidsstempel,
                         "tilstand_fra" to tilstandFra,
                         "tilstand_til" to tilstandTil,

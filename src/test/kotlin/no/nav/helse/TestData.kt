@@ -122,6 +122,7 @@ object TestData {
 
     data class VedtaksperiodeEndret(
         val vedtaksperiodeId: UUID = randomUUID(),
+        val behandlingId: UUID = randomUUID(),
         val aktiviteter: List<Aktivitet> = listOf(),
         val meldingsId: UUID = randomUUID(),
         val opprettet: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
@@ -137,6 +138,7 @@ object TestData {
             """{
             "@event_name": "vedtaksperiode_endret",
             "vedtaksperiodeId": "$vedtaksperiodeId",
+            "behandlingId": "$behandlingId",
             "gjeldendeTilstand": "$gjeldendeTilstand",
             "forrigeTilstand": "$forrigeTilstand",
             "@opprettet": "$opprettet",

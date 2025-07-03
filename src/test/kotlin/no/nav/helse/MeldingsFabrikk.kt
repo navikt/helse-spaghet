@@ -82,6 +82,7 @@ fun løsningNyttFormat(
 fun vedtaksperiodeEndret(
     id: UUID = UUID.randomUUID(),
     vedtaksperiodeId: UUID = UUID.randomUUID(),
+    behandlingId: UUID = UUID.randomUUID(),
     orgnummer: String = "98765432",
     timestamp: LocalDateTime = LocalDateTime.now(),
     tilstandFra: String = "AVVENTER_GODKJENNING",
@@ -89,6 +90,7 @@ fun vedtaksperiodeEndret(
 ) = """
 {
   "vedtaksperiodeId": "$vedtaksperiodeId",
+  "behandlingId": "$behandlingId",
   "organisasjonsnummer": "$orgnummer",
   "gjeldendeTilstand": "$tilstandFra",
   "forrigeTilstand": "$tilstandTil",
