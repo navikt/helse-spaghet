@@ -53,9 +53,15 @@ internal class InntektsmeldingHåndtertRiver(
         val dokumentId = try {
             spedisjonClient.hentMelding(hendelseId).getOrThrow().eksternDokumentId
         } catch (exception: RuntimeException) {
-            sikkerlogg.error("Kunne ikke hente ekstern dokument ID for inntektsmelding $hendelseId", exception)
-            logg.error("Feil ved henting av ekstern dokument ID for inntektsmelding $hendelseId", exception)
-            throw exception
+            // I dev så kan det hende at spedisjon ikke har inntektsmedlingen, da Spleis-testdata sender den rett på rapid.
+            // Så i dev så setter vi en random UUID som dokumentId hvis den ikke finnes. I prod er dette en feil.
+            if (System.getenv("NAIS_CLUSTER_NAME") == "dev-gcp") {
+                UUID.randomUUID()
+            } else {
+                sikkerlogg.error("Kunne ikke hente ekstern dokument ID for inntektsmelding $hendelseId", exception)
+                logg.error("Feil ved henting av ekstern dokument ID for inntektsmelding $hendelseId", exception)
+                throw exception
+            }
         }
         insertInnektsmeldingHåndtert(vedtaksperiodeId, hendelseId, dokumentId, opprettet)
     }
