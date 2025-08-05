@@ -129,10 +129,10 @@ class GodkjenningLøsningRiver(
             godkjent = jsonNode["godkjent"].asBoolean(),
             saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asText(),
             godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
-            årsak = jsonNode.optional("årsak")?.asText(),
-            begrunnelser = jsonNode.optional("begrunnelser")?.map(JsonNode::asText),
-            kommentar = jsonNode.optional("kommentar")?.asText()?.takeIf { it.isNotBlank() },
+            årsak = jsonNode.getIfNotNull("årsak")?.asText(),
+            begrunnelser = jsonNode.getIfNotNull("begrunnelser")?.map(JsonNode::asText),
+            kommentar = jsonNode.getIfNotNull("kommentar")?.asText()?.takeIf { it.isNotBlank() },
         )
 
-    private fun JsonNode.optional(name: String) = takeIf { hasNonNull(name) }?.get(name)
+    private fun JsonNode.getIfNotNull(name: String) = takeIf { hasNonNull(name) }?.get(name)
 }
