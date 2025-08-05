@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.2.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
 }
 
 repositories {
@@ -42,13 +43,29 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of("21"))
-    }
+    jvmToolchain(21)
 }
 
 tasks {
-
+    build {
+        doLast {
+            val erLokaltBygg = !System.getenv().containsKey("GITHUB_ACTION")
+            val manglerPreCommitHook = !File(".git/hooks/pre-commit").isFile
+            if (erLokaltBygg && manglerPreCommitHook) {
+                println(
+                    """
+                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ¯\_(⊙︿⊙)_/¯ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    !            Hei du! Det ser ut til at du mangler en pre-commit-hook :/         !
+                    ! Du kan installere den ved å kjøre './gradlew addKtlintFormatGitPreCommitHook' !
+                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    """.trimIndent(),
+                )
+            }
+        }
+    }
+    test {
+        useJUnitPlatform()
+    }
     named<Jar>("jar") {
         archiveBaseName.set("app")
 
@@ -64,13 +81,6 @@ tasks {
                 val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
                 if (!file.exists()) it.copyTo(file)
             }
-        }
-    }
-
-    withType<Test> {
-        useJUnitPlatform()
-        testLogging {
-            events("passed", "skipped", "failed")
         }
     }
 }
