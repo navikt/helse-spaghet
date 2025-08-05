@@ -5,11 +5,10 @@ import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest
 import no.nav.helse.TestData.nyOppgave
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class OppgaveEndretRiverTest {
-
     @Test
     fun `lagre oppgave i databasen`() {
         e2eTest {
@@ -57,7 +56,7 @@ class OppgaveEndretRiverTest {
             session.run(
                 queryOf(query, id)
                     .map { it.int(1) }
-                    .asSingle
+                    .asSingle,
             ) ?: 0
         }
 
@@ -68,7 +67,7 @@ class OppgaveEndretRiverTest {
             session.run(
                 queryOf(query, id)
                     .map { it.int(1) }
-                    .asSingle
+                    .asSingle,
             ) ?: 0
         }
 }

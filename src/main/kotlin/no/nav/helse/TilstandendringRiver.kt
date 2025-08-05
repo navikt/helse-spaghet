@@ -17,40 +17,44 @@ import javax.sql.DataSource
 
 class TilstandendringRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
-
     init {
-        River(rapidApplication).apply {
-            precondition {
-                it.requireValue("@event_name", "vedtaksperiode_endret")
-                it.requireKey("gjeldendeTilstand")
-                it.require("forrigeTilstand") { forrigeTilstand ->
-                    require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
+        River(rapidApplication)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "vedtaksperiode_endret")
+                    it.requireKey("gjeldendeTilstand")
+                    it.require("forrigeTilstand") { forrigeTilstand ->
+                        require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
+                    }
                 }
-            }
-            validate {
-                it.requireKey("vedtaksperiodeId", "@id", "behandlingId")
-                it.require("@opprettet", JsonNode::asLocalDateTime)
-                it.requireKey("@forårsaket_av.id", "@forårsaket_av.event_name")
-                it.requireKey("forrigeTilstand", "gjeldendeTilstand")
-            }
-
-        }.register(this)
+                validate {
+                    it.requireKey("vedtaksperiodeId", "@id", "behandlingId")
+                    it.require("@opprettet", JsonNode::asLocalDateTime)
+                    it.requireKey("@forårsaket_av.id", "@forårsaket_av.event_name")
+                    it.requireKey("forrigeTilstand", "gjeldendeTilstand")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         val behandlingId = UUID.fromString(packet["behandlingId"].asText())
         insertTilstandsendring(
             id = UUID.fromString(packet["@id"].asText()),
             vedtaksperiodeId = vedtaksperiodeId,
-            behandlingId= behandlingId,
+            behandlingId = behandlingId,
             tidsstempel = packet["@opprettet"].asLocalDateTime(),
             tilstandFra = packet["forrigeTilstand"].asText(),
             tilstandTil = packet["gjeldendeTilstand"].asText(),
             kilde = UUID.fromString(packet["@forårsaket_av.id"].asText()),
-            kildeType = packet["@forårsaket_av.event_name"].asText()
+            kildeType = packet["@forårsaket_av.event_name"].asText(),
         )
     }
 
@@ -62,7 +66,7 @@ class TilstandendringRiver(
         tilstandFra: String,
         tilstandTil: String,
         kilde: UUID,
-        kildeType: String
+        kildeType: String,
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -88,7 +92,8 @@ VALUES(
 ) ON CONFLICT DO NOTHING;"""
             session.run(
                 queryOf(
-                    query, mapOf(
+                    query,
+                    mapOf(
                         "id" to id,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "behandling_id" to behandlingId,
@@ -96,9 +101,9 @@ VALUES(
                         "tilstand_fra" to tilstandFra,
                         "tilstand_til" to tilstandTil,
                         "kilde" to kilde,
-                        "kilde_type" to kildeType
-                    )
-                ).asUpdate
+                        "kilde_type" to kildeType,
+                    ),
+                ).asUpdate,
             )
         }
     }

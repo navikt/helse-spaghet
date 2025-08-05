@@ -17,20 +17,25 @@ import javax.sql.DataSource
 
 class UtkastTilVedtakRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "utkast_til_vedtak") }
-            validate {
-                it.requireKey("@opprettet", "@id", "tags", "behandlingId", "vedtaksperiodeId")
-                it.interestedIn("vedtaksperiodeId")
-            }
-
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "utkast_til_vedtak") }
+                validate {
+                    it.requireKey("@opprettet", "@id", "tags", "behandlingId", "vedtaksperiodeId")
+                    it.interestedIn("vedtaksperiodeId")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         val behandlingId = UUID.fromString(packet["behandlingId"].asText())
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -40,7 +45,11 @@ class UtkastTilVedtakRiver(
         logg.info("Lagret utkast_til_vedtak for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         sikkerlogg.error("Klarte ikke å lese utkast_til_vedtak event! ${problems.toExtendedReport()}")
     }
 
@@ -49,7 +58,7 @@ class UtkastTilVedtakRiver(
         opprettet: LocalDateTime,
         vedtaksperiodeId: UUID,
         behandlingId: UUID,
-        tags: List<String>
+        tags: List<String>,
     ) {
         @Language("PostgreSQL")
         val insertUtkastTilVedtak =
@@ -57,14 +66,15 @@ class UtkastTilVedtakRiver(
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
-                    insertUtkastTilVedtak, mapOf(
+                    insertUtkastTilVedtak,
+                    mapOf(
                         "id" to id,
                         "opprettet" to opprettet,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "behandling_id" to behandlingId,
-                        "tags" to tags.joinToString(prefix = "{", postfix = "}")
-                    )
-                ).asUpdate
+                        "tags" to tags.joinToString(prefix = "{", postfix = "}"),
+                    ),
+                ).asUpdate,
             )
         }
     }

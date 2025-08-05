@@ -17,25 +17,26 @@ data class Annullering(
     val begrunnelser: List<String>,
     val kommentar: String?,
     val opprettet: LocalDateTime,
-    val arsaker: List<AnnulleringArsak>?
+    val arsaker: List<AnnulleringArsak>?,
 ) {
     companion object {
-        fun JsonNode.parseAnnullering(): Annullering {
-            return Annullering(
+        fun JsonNode.parseAnnullering(): Annullering =
+            Annullering(
                 saksbehandler = this["saksbehandler"]["oid"].asUuid(),
                 vedtaksperiodeId = this["vedtaksperiodeId"].asUuid(),
-                begrunnelser = this["arsaker"]?.takeUnless { it.isEmpty }?.let { it.map { arsak -> arsak["arsak"].asText() } }
-                    ?: this["begrunnelser"].map { it.asText() },
+                begrunnelser =
+                    this["arsaker"]?.takeUnless { it.isEmpty }?.let { it.map { arsak -> arsak["arsak"].asText() } }
+                        ?: this["begrunnelser"].map { it.asText() },
                 kommentar = this["kommentar"].asNullableText(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
-                arsaker = this["arsaker"]?.map {
-                    AnnulleringArsak(
-                        key = it["key"].asText(),
-                        arsak = it["arsak"].asText()
-                    )
-                } ?: emptyList(),
+                arsaker =
+                    this["arsaker"]?.map {
+                        AnnulleringArsak(
+                            key = it["key"].asText(),
+                            arsak = it["arsak"].asText(),
+                        )
+                    } ?: emptyList(),
             )
-        }
 
         fun Session.insertAnnullering(annullering: Annullering) {
             @Language("PostgreSQL")
@@ -59,7 +60,7 @@ data class Annullering(
                     annullering.begrunnelser.toJson(),
                     annullering.kommentar,
                     annullering.opprettet,
-                ).asUpdate
+                ).asUpdate,
             )
 
             if (annullering.arsaker?.isNotEmpty() == true) {
@@ -77,8 +78,8 @@ data class Annullering(
                             årsakStatement,
                             arsak.arsak,
                             arsak.key,
-                            annullering.vedtaksperiodeId
-                        ).asUpdate
+                            annullering.vedtaksperiodeId,
+                        ).asUpdate,
                     )
                 }
             }

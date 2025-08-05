@@ -13,20 +13,26 @@ import org.postgresql.util.PSQLException
 import java.util.*
 import javax.sql.DataSource
 
-class SkatteinntekterLagtTilGrunnRiver(rapidsConnection: RapidsConnection, private val dataSource: DataSource) : River.PacketListener {
-
-
-
+class SkatteinntekterLagtTilGrunnRiver(
+    rapidsConnection: RapidsConnection,
+    private val dataSource: DataSource,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition { it.requireValue("@event_name", "skatteinntekter_lagt_til_grunn") }
-            validate {
-                it.requireKey("vedtaksperiodeId", "behandlingId", "organisasjonsnummer", "fødselsnummer", "@id")
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition { it.requireValue("@event_name", "skatteinntekter_lagt_til_grunn") }
+                validate {
+                    it.requireKey("vedtaksperiodeId", "behandlingId", "organisasjonsnummer", "fødselsnummer", "@id")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         sikkerlogg.info("Leste melding: ${packet.toJson()}")
         val vedtaksperiodeId = packet["vedtaksperiodeId"].asText().let { UUID.fromString(it) }
         val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
@@ -41,21 +47,30 @@ class SkatteinntekterLagtTilGrunnRiver(rapidsConnection: RapidsConnection, priva
                     VALUES(:vedtaksperiode_id, :behandling_id, :hendelse_id, :fnr, :orgnummer, :data::jsonb)
                     """
 
-                session.update(queryOf(insert, mapOf(
-                    "vedtaksperiode_id" to vedtaksperiodeId,
-                    "behandling_id" to behandlingId,
-                    "hendelse_id" to hendelseId,
-                    "fnr" to fnr,
-                    "orgnummer" to orgnummer,
-                    "data" to packet.toJson()
-                )))
+                session.update(
+                    queryOf(
+                        insert,
+                        mapOf(
+                            "vedtaksperiode_id" to vedtaksperiodeId,
+                            "behandling_id" to behandlingId,
+                            "hendelse_id" to hendelseId,
+                            "fnr" to fnr,
+                            "orgnummer" to orgnummer,
+                            "data" to packet.toJson(),
+                        ),
+                    ),
+                )
             }
         } catch (error: PSQLException) {
             logg.error("Klarte ikke lagre skatteinntekter lagt til grunn for hendelseId $hendelseId")
         }
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         sikkerlogg.error(problems.toExtendedReport())
     }
 }

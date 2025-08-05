@@ -9,29 +9,31 @@ import org.junit.jupiter.api.Test
 
 class SøknadHåndtertE2ETest {
     @Test
-    fun `lagrer kobling mellom søknad og vedtaksperiode`() = e2eTest {
-        rapid.sendTestMessage(søknadHåndtertEvent())
-        assertEquals(1, tellSøknadHåndtert())
-    }
+    fun `lagrer kobling mellom søknad og vedtaksperiode`() =
+        e2eTest {
+            rapid.sendTestMessage(søknadHåndtertEvent())
+            assertEquals(1, tellSøknadHåndtert())
+        }
 
     @Test
-    fun `lagrer ikke duplikat kobling mellom søknad og vedtaksperiode`() = e2eTest {
-        rapid.sendTestMessage(søknadHåndtertEvent())
-        rapid.sendTestMessage(søknadHåndtertEvent())
-        assertEquals(1, tellSøknadHåndtert())
-    }
+    fun `lagrer ikke duplikat kobling mellom søknad og vedtaksperiode`() =
+        e2eTest {
+            rapid.sendTestMessage(søknadHåndtertEvent())
+            rapid.sendTestMessage(søknadHåndtertEvent())
+            assertEquals(1, tellSøknadHåndtert())
+        }
 
-    private fun E2eTestApp.tellSøknadHåndtert(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellSøknadHåndtert(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM soknad_haandtert"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
-    private fun søknadHåndtertEvent() = """
+    private fun søknadHåndtertEvent() =
+        """
         {
           "@event_name": "søknad_håndtert",
           "søknadId": "e0653625-02ac-40ae-a74d-7bdf45c4a903",

@@ -9,61 +9,65 @@ import org.junit.jupiter.api.Test
 
 internal class SendtSøknadRiverTest {
     @Test
-    fun `lagrer søknadNav`() = e2eTest {
-        rapid.sendTestMessage(sendtSøknadNav())
-        assertEquals(1, tellSøknader())
-        assertEquals("sendt_søknad_nav", eventName())
-    }
+    fun `lagrer søknadNav`() =
+        e2eTest {
+            rapid.sendTestMessage(sendtSøknadNav())
+            assertEquals(1, tellSøknader())
+            assertEquals("sendt_søknad_nav", eventName())
+        }
 
     @Test
-    fun `lagrer søknadArbeidsgiver`() = e2eTest {
-        rapid.sendTestMessage(sendtSøknadArbeidsgiver())
-        assertEquals(1, tellSøknader())
-        assertEquals("sendt_søknad_arbeidsgiver", eventName())
-    }
+    fun `lagrer søknadArbeidsgiver`() =
+        e2eTest {
+            rapid.sendTestMessage(sendtSøknadArbeidsgiver())
+            assertEquals(1, tellSøknader())
+            assertEquals("sendt_søknad_arbeidsgiver", eventName())
+        }
 
     @Test
-    fun `lagrer søknadArbeidsledig`() = e2eTest {
-        rapid.sendTestMessage(sendtSøknadArbeidsledig())
-        assertEquals(1, tellSøknader())
-        assertEquals("sendt_søknad_arbeidsledig", eventName())
-    }
+    fun `lagrer søknadArbeidsledig`() =
+        e2eTest {
+            rapid.sendTestMessage(sendtSøknadArbeidsledig())
+            assertEquals(1, tellSøknader())
+            assertEquals("sendt_søknad_arbeidsledig", eventName())
+        }
 
     @Test
-    fun `lagrer søknadFrilanser`() = e2eTest {
-        rapid.sendTestMessage(sendtSøknadFrilanser())
-        assertEquals(1, tellSøknader())
-        assertEquals("sendt_søknad_frilanser", eventName())
-    }
+    fun `lagrer søknadFrilanser`() =
+        e2eTest {
+            rapid.sendTestMessage(sendtSøknadFrilanser())
+            assertEquals(1, tellSøknader())
+            assertEquals("sendt_søknad_frilanser", eventName())
+        }
 
     @Test
-    fun `lagrer søknadSelvstendigNæringsdrivende`() = e2eTest {
-        rapid.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
-        assertEquals(1, tellSøknader())
-        assertEquals("sendt_søknad_selvstendig", eventName())
-    }
+    fun `lagrer søknadSelvstendigNæringsdrivende`() =
+        e2eTest {
+            rapid.sendTestMessage(sendtSøknadSelvstendigNæringsdrivende())
+            assertEquals(1, tellSøknader())
+            assertEquals("sendt_søknad_selvstendig", eventName())
+        }
 
-    private fun E2eTestApp.tellSøknader(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellSøknader(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM soknad"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
-    private fun E2eTestApp.eventName(): String {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.eventName(): String =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT event FROM soknad"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.string(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.string(1) }.asSingle),
             )
         }
-    }
 
-    private fun sendtSøknadArbeidsgiver() = """
+    private fun sendtSøknadArbeidsgiver() =
+        """
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
@@ -73,7 +77,8 @@ internal class SendtSøknadRiverTest {
         }
     """
 
-    private fun sendtSøknadNav() = """
+    private fun sendtSøknadNav() =
+        """
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
@@ -83,7 +88,8 @@ internal class SendtSøknadRiverTest {
         }
     """
 
-    private fun sendtSøknadArbeidsledig() = """
+    private fun sendtSøknadArbeidsledig() =
+        """
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
@@ -93,7 +99,8 @@ internal class SendtSøknadRiverTest {
         }
     """
 
-    private fun sendtSøknadFrilanser() = """
+    private fun sendtSøknadFrilanser() =
+        """
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",
@@ -103,7 +110,8 @@ internal class SendtSøknadRiverTest {
         }
     """
 
-    private fun sendtSøknadSelvstendigNæringsdrivende() = """
+    private fun sendtSøknadSelvstendigNæringsdrivende() =
+        """
         {
         "id": "c06e3ec2-ba0d-3dca-8db1-5b3200c63745",
         "@id": "162fc482-d871-4036-94af-a79112d82abe",

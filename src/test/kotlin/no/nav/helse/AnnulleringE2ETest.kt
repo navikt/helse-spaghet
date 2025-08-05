@@ -92,17 +92,18 @@ class AnnulleringE2ETest {
 
     @Test
     fun `Folk som skriver identer i oid-feltet skal ikke ta ned spaghet`() {
-        val feilMelding = """{
+        val feilMelding =
+            """{
             "@event_name": "annullering",
             "saksbehandler": {"oid": "X000000"},
             "vedtaksperiodeId": "0344ff99-b92b-4c35-ae2e-75964666099d",
             "begrunnelser": ["because"],
             "@opprettet": "${LocalDateTime.now()}"
-         }""".trimMargin()
+         }
+            """.trimMargin()
         e2eTest {
             rapid.sendTestMessage(feilMelding)
             assertEquals(0, dataSource.annulleringer().size)
         }
-
     }
 }

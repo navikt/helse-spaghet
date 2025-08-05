@@ -4,28 +4,29 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.*
 
 internal class VarselE2ETest {
     @Test
-    fun `lagrer varsel`() = e2eTest {
-        rapid.sendTestMessage(aktivitetsloggNyAktivitet())
-        assertEquals(1, tellVarsel())
-    }
+    fun `lagrer varsel`() =
+        e2eTest {
+            rapid.sendTestMessage(aktivitetsloggNyAktivitet())
+            assertEquals(1, tellVarsel())
+        }
 
-    private fun E2eTestApp.tellVarsel(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellVarsel(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM regelverksvarsel"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
-    private fun aktivitetsloggNyAktivitet() = """
+    private fun aktivitetsloggNyAktivitet() =
+        """
         {
         "@event_name": "aktivitetslogg_ny_aktivitet",
         "aktiviteter": [

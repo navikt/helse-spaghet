@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class LagtPåVentE2ETest {
-
     @Test
     fun `kan lese inn lagt_på_vent`() {
         e2eTest {
@@ -29,23 +28,21 @@ class LagtPåVentE2ETest {
         }
     }
 
-    private fun E2eTestApp.tellLagtPåVent(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellLagtPåVent(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM lagt_paa_vent"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
-    private fun E2eTestApp.tellLagtPåVentÅrsaker(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellLagtPåVentÅrsaker(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM lagt_paa_vent_arsak"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 }

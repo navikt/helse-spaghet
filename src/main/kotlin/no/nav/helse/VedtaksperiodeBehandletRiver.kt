@@ -20,22 +20,27 @@ import javax.sql.DataSource
 
 class VedtaksperiodeBehandletRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition {
-                it.requireAll("@behov", listOf("Godkjenning"))
-                it.forbid("@final")
-            }
-            validate {
-                it.requireKey("@behovId", "vedtaksperiodeId", "@løsning")
-            }
-
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition {
+                    it.requireAll("@behov", listOf("Godkjenning"))
+                    it.forbid("@final")
+                }
+                validate {
+                    it.requireKey("@behovId", "vedtaksperiodeId", "@løsning")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val json = objectMapper.readTree(packet.toJson())
         val behovId = UUID.fromString(json["@behovId"].asText())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
@@ -59,55 +64,57 @@ class VedtaksperiodeBehandletRiver(
         return (løsning(json)["godkjenttidspunkt"]?.asLocalDateTime() ?: json["godkjenttidspunkt"].asLocalDateTime())
     }
 
-    private fun finnIdentitet(løsning: JsonNode) = when {
-        løsning.valueOrNull("automatiskBehandling")?.asBoolean() == true -> SPESIALIST_OID
-        else -> løsning["saksbehandlerIdent"].asText()
-    }
+    private fun finnIdentitet(løsning: JsonNode) =
+        when {
+            løsning.valueOrNull("automatiskBehandling")?.asBoolean() == true -> SPESIALIST_OID
+            else -> løsning["saksbehandlerIdent"].asText()
+        }
 
-    private fun løsning(json: JsonNode): JsonNode {
-        return json["@løsning"]["Godkjenning"]
-    }
+    private fun løsning(json: JsonNode): JsonNode = json["@løsning"]["Godkjenning"]
 
     private fun insertLøsning(
         session: Session,
         id: UUID,
         godkjentTidspunkt: LocalDateTime,
         saksbehandlerIdentitet: String,
-        løsning: JsonNode
+        løsning: JsonNode,
     ) {
         @Language("PostgreSQL")
         val løsningInsert =
             """INSERT INTO godkjenningsbehov_losning(id, godkjent, automatisk_behandling, arsak, godkjent_av, godkjenttidspunkt) VALUES(:id, :godkjent, :automatisk_behandling, :arsak, :godkjent_av, :godkjenttidspunkt) ON CONFLICT DO NOTHING;"""
         session.run(
             queryOf(
-                løsningInsert, mapOf(
+                løsningInsert,
+                mapOf(
                     "id" to id,
                     "godkjent" to løsning["godkjent"].asBoolean(),
                     "automatisk_behandling" to (løsning["automatiskBehandling"]?.asBoolean(false) ?: false),
                     "arsak" to løsning.valueOrNull("årsak")?.asText(),
                     "godkjent_av" to saksbehandlerIdentitet,
-                    "godkjenttidspunkt" to godkjentTidspunkt
-                )
-            ).asUpdate
+                    "godkjenttidspunkt" to godkjentTidspunkt,
+                ),
+            ).asUpdate,
         )
     }
 
     private fun insertBegrunnelser(
         session: Session,
         id: UUID?,
-        løsning: JsonNode
+        løsning: JsonNode,
     ) {
         val begrunnelser = løsning["begrunnelser"]
+
         @Language("PostgreSQL")
         val begrunnelseInsert = "INSERT INTO godkjenningsbehov_losning_begrunnelse(id, begrunnelse) VALUES(:id, :begrunnelse) ON CONFLICT DO NOTHING;"
         begrunnelser.forEach { begrunnelse ->
             session.run(
                 queryOf(
-                    begrunnelseInsert, mapOf(
+                    begrunnelseInsert,
+                    mapOf(
                         "id" to id,
-                        "begrunnelse" to begrunnelse.asText()
-                    )
-                ).asUpdate
+                        "begrunnelse" to begrunnelse.asText(),
+                    ),
+                ).asUpdate,
             )
         }
     }

@@ -16,30 +16,37 @@ import javax.sql.DataSource
 
 class RevurderingFerdigstiltRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "revurdering_ferdigstilt") }
-            validate {
-                it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
-                it.require("@opprettet", JsonNode::asLocalDateTime)
-                it.requireKey("status")
-                it.requireArray("berørtePerioder") {
-                    require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asText()) }
-                    requireKey("status")
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "revurdering_ferdigstilt") }
+                validate {
+                    it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
+                    it.require("@opprettet", JsonNode::asLocalDateTime)
+                    it.requireKey("status")
+                    it.requireArray("berørtePerioder") {
+                        require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asText()) }
+                        requireKey("status")
+                    }
                 }
-            }
-        }.register(this)
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val revurderingId = UUID.fromString(packet["revurderingId"].asText())
         val status = packet["status"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
-        val berørtePerioder = packet["berørtePerioder"].map { periode ->
-            UUID.fromString(periode.path("vedtaksperiodeId").asText()) to periode.path("status").asText()
-        }
+        val berørtePerioder =
+            packet["berørtePerioder"].map { periode ->
+                UUID.fromString(periode.path("vedtaksperiodeId").asText()) to periode.path("status").asText()
+            }
 
         logg.info("Legger inn data fra revurdering_ferdigstilt i databasen")
 
@@ -48,20 +55,26 @@ class RevurderingFerdigstiltRiver(
                 session.run(
                     queryOf(
                         statement = statement,
-                        paramMap = mapOf(
-                            "revurderingId" to revurderingId,
-                            "oppdatert" to opprettet,
-                            "status" to status,
-                        )
-                    ).asUpdate
+                        paramMap =
+                            mapOf(
+                                "revurderingId" to revurderingId,
+                                "oppdatert" to opprettet,
+                                "status" to status,
+                            ),
+                    ).asUpdate,
                 )
 
                 berørtePerioder.forEach { (vedtaksperiodeId, status) ->
-                    session.run(queryOf(statement2, mapOf(
-                        "status" to status,
-                        "vedtaksperiodeId" to vedtaksperiodeId,
-                        "revurderingId" to revurderingId
-                    )).asExecute)
+                    session.run(
+                        queryOf(
+                            statement2,
+                            mapOf(
+                                "status" to status,
+                                "vedtaksperiodeId" to vedtaksperiodeId,
+                                "revurderingId" to revurderingId,
+                            ),
+                        ).asExecute,
+                    )
                 }
             }
         }
@@ -73,6 +86,5 @@ class RevurderingFerdigstiltRiver(
 
         @Language("PostgreSQL")
         val statement2 = """ UPDATE revurdering_vedtaksperiode SET status=CAST(:status as revurderingstatus) WHERE vedtaksperiode_id=:vedtaksperiodeId AND revurdering_id=:revurderingId """
-
     }
 }

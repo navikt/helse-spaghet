@@ -15,20 +15,25 @@ import java.util.*
 import javax.sql.DataSource
 
 class SøknadHåndtertRiver(
-        rapidApplication: RapidsConnection,
-        private val dataSource: DataSource
+    rapidApplication: RapidsConnection,
+    private val dataSource: DataSource,
 ) : River.PacketListener {
-
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "søknad_håndtert") }
-            validate {
-                it.requireKey("søknadId", "vedtaksperiodeId", "@opprettet")
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "søknad_håndtert") }
+                validate {
+                    it.requireKey("søknadId", "vedtaksperiodeId", "@opprettet")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val søknadHendelseId = UUID.fromString(packet["søknadId"].asText())
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -37,7 +42,11 @@ class SøknadHåndtertRiver(
         logg.info("Lagrer kobling mellom søknad $søknadHendelseId og vedtaksperiode $vedtaksperiodeId")
     }
 
-    private fun insertSøknadHåndtert(søknadHendelseId: UUID, vedtaksperiodeId: UUID, opprettet: LocalDateTime) {
+    private fun insertSøknadHåndtert(
+        søknadHendelseId: UUID,
+        vedtaksperiodeId: UUID,
+        opprettet: LocalDateTime,
+    ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = """
@@ -47,12 +56,13 @@ class SøknadHåndtertRiver(
             """
             session.run(
                 queryOf(
-                    query, mapOf(
+                    query,
+                    mapOf(
                         "soknad_hendelse_id" to søknadHendelseId,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "opprettet" to opprettet,
-                    )
-                ).asExecute
+                    ),
+                ).asExecute,
             )
         }
     }

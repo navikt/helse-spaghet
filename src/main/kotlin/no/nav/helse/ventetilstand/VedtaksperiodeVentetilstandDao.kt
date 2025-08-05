@@ -2,15 +2,20 @@ package no.nav.helse.ventetilstand
 
 import kotliquery.*
 import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.helse.sikkerlogg
+import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
-import no.nav.helse.sikkerlogg
-import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 
-internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource) {
-
-    internal fun venter(fødselsnummer: String, vedtaksperiodeVenter: List<VedtaksperiodeVenter>, hendelse: Hendelse) {
+internal class VedtaksperiodeVentetilstandDao(
+    private val dataSource: DataSource,
+) {
+    internal fun venter(
+        fødselsnummer: String,
+        vedtaksperiodeVenter: List<VedtaksperiodeVenter>,
+        hendelse: Hendelse,
+    ) {
         sessionOf(dataSource).use { session ->
             session.transaction { transaction ->
                 val ventetFør = transaction.venter(fødselsnummer)
@@ -37,38 +42,52 @@ internal class VedtaksperiodeVentetilstandDao(private val dataSource: DataSource
             row.vedtaksperiodeVenter
         }
 
-    private fun TransactionalSession.venter(fødselsnummer: String, vedtaksperiodeVenter: VedtaksperiodeVenter, hendelse: Hendelse) {
-        execute(queryOf(VENTER, mapOf(
-            "hendelseId" to hendelse.id,
-            "hendelse" to hendelse.hendelse,
-            "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
-            "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
-            "fodselsnummer" to fødselsnummer,
-            "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
-            "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
-            "venterTil" to vedtaksperiodeVenter.venterTil,
-            "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
-            "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
-            "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
-            "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
-            "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
-            "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor
-        )))
+    private fun TransactionalSession.venter(
+        fødselsnummer: String,
+        vedtaksperiodeVenter: VedtaksperiodeVenter,
+        hendelse: Hendelse,
+    ) {
+        execute(
+            queryOf(
+                VENTER,
+                mapOf(
+                    "hendelseId" to hendelse.id,
+                    "hendelse" to hendelse.hendelse,
+                    "vedtaksperiodeId" to vedtaksperiodeVenter.vedtaksperiodeId,
+                    "skjaeringstidspunkt" to vedtaksperiodeVenter.skjæringstidspunkt,
+                    "fodselsnummer" to fødselsnummer,
+                    "organisasjonsnummer" to vedtaksperiodeVenter.organisasjonsnummer,
+                    "ventetSiden" to vedtaksperiodeVenter.ventetSiden,
+                    "venterTil" to vedtaksperiodeVenter.venterTil,
+                    "venterForAlltid" to (vedtaksperiodeVenter.venterTil.year == 9999),
+                    "venterPaVedtaksperiodeId" to vedtaksperiodeVenter.venterPå.vedtaksperiodeId,
+                    "venterPaSkjaeringstidspunkt" to vedtaksperiodeVenter.venterPå.skjæringstidspunkt,
+                    "venterPaOrganisasjonsnummer" to vedtaksperiodeVenter.venterPå.organisasjonsnummer,
+                    "venterPaHva" to vedtaksperiodeVenter.venterPå.hva,
+                    "venterPaHvorfor" to vedtaksperiodeVenter.venterPå.hvorfor,
+                ),
+            ),
+        )
     }
 
-    private fun TransactionalSession.venterIkke(fødselsnummer: String, bevar: List<VedtaksperiodeVenter>) {
-        val statement = when (bevar.isEmpty()) {
-            true -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer'"
-            false -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer' AND vedtaksperiodeId NOT IN (${bevar.joinToString { "'${it.vedtaksperiodeId}'" }})"
-        }
+    private fun TransactionalSession.venterIkke(
+        fødselsnummer: String,
+        bevar: List<VedtaksperiodeVenter>,
+    ) {
+        val statement =
+            when (bevar.isEmpty()) {
+                true -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer'"
+                false -> "DELETE FROM vedtaksperiode_venter WHERE fodselsnummer = '$fødselsnummer' AND vedtaksperiodeId NOT IN (${bevar.joinToString { "'${it.vedtaksperiodeId}'" }})"
+            }
         execute(queryOf(statement))
     }
 
-    internal fun stuck() = sessionOf(dataSource).use { session ->
-        session.list(Query(STUCK)) { row ->
-            row.vedtaksperiodeVenterMedMetadata
+    internal fun stuck() =
+        sessionOf(dataSource).use { session ->
+            session.list(Query(STUCK)) { row ->
+                row.vedtaksperiodeVenterMedMetadata
+            }
         }
-    }
 
     private companion object {
         @Language("PostgreSQL")

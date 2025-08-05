@@ -14,28 +14,36 @@ import java.util.*
 import javax.sql.DataSource
 
 class SendtSøknadRiver(
-        rapidApplication: RapidsConnection,
-        private val dataSource: DataSource
+    rapidApplication: RapidsConnection,
+    private val dataSource: DataSource,
 ) : River.PacketListener {
-
     init {
-        River(rapidApplication).apply {
-            precondition {
-                it.requireAny("@event_name", listOf(
-                    "sendt_søknad_nav",
-                    "sendt_søknad_arbeidsgiver",
-                    "sendt_søknad_selvstendig",
-                    "sendt_søknad_frilanser",
-                    "sendt_søknad_arbeidsledig")
-                )
-            }
-            validate {
-                it.requireKey("id", "@id", "type", "arbeidssituasjon")
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition {
+                    it.requireAny(
+                        "@event_name",
+                        listOf(
+                            "sendt_søknad_nav",
+                            "sendt_søknad_arbeidsgiver",
+                            "sendt_søknad_selvstendig",
+                            "sendt_søknad_frilanser",
+                            "sendt_søknad_arbeidsledig",
+                        ),
+                    )
+                }
+                validate {
+                    it.requireKey("id", "@id", "type", "arbeidssituasjon")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val dokumentId = packet["id"].asUuid()
         val hendelseId = packet["@id"].asUuid()
         val eventName = packet["@event_name"].asText()
@@ -49,7 +57,7 @@ class SendtSøknadRiver(
         hendelseId: UUID,
         eventName: String,
         soknadstype: String,
-        arbeidssituasjon: String
+        arbeidssituasjon: String,
     ) {
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
@@ -57,14 +65,15 @@ class SendtSøknadRiver(
                 """INSERT INTO soknad(dokument_id, hendelse_id, event, soknadstype, arbeidssituasjon) VALUES(:dokumentId, :hendelseId, :event, :soknadstype, :arbeidssituasjon) ON CONFLICT DO NOTHING"""
             session.run(
                 queryOf(
-                    query, mapOf(
+                    query,
+                    mapOf(
                         "dokumentId" to dokumentId,
                         "hendelseId" to hendelseId,
                         "event" to eventName,
                         "soknadstype" to soknadstype,
-                        "arbeidssituasjon" to arbeidssituasjon
-                    )
-                ).asExecute
+                        "arbeidssituasjon" to arbeidssituasjon,
+                    ),
+                ).asExecute,
             )
         }
         logg.info("Lagrer søknad med dokumentId $dokumentId og hendelseId $hendelseId")

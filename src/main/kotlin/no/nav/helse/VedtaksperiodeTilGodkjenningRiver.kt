@@ -16,22 +16,27 @@ import javax.sql.DataSource
 
 class VedtaksperiodeTilGodkjenningRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireAll("@behov", listOf("Godkjenning")) }
-            validate {
-                it.requireKey("@behovId", "@opprettet")
-                it.interestedIn("vedtaksperiodeId")
-                it.forbid("@løsning")
-                it.forbid("@final")
-            }
-
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireAll("@behov", listOf("Godkjenning")) }
+                validate {
+                    it.requireKey("@behovId", "@opprettet")
+                    it.interestedIn("vedtaksperiodeId")
+                    it.forbid("@løsning")
+                    it.forbid("@final")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val json = objectMapper.readTree(packet.toJson())
         val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
         val behovOpprettet = json["@opprettet"].asLocalDateTime()
@@ -47,7 +52,7 @@ class VedtaksperiodeTilGodkjenningRiver(
         periodetype: String?,
         inntektskilde: String,
         vedtaksperiodeId: UUID,
-        tidspunkt: LocalDateTime
+        tidspunkt: LocalDateTime,
     ) {
         @Language("PostgreSQL")
         val insertGodkjenningsbehov =
@@ -55,14 +60,15 @@ class VedtaksperiodeTilGodkjenningRiver(
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
-                    insertGodkjenningsbehov, mapOf(
+                    insertGodkjenningsbehov,
+                    mapOf(
                         "id" to id,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "periodetype" to periodetype,
                         "inntektskilde" to inntektskilde,
-                        "tidspunkt" to tidspunkt
-                    )
-                ).asUpdate
+                        "tidspunkt" to tidspunkt,
+                    ),
+                ).asUpdate,
             )
         }
     }

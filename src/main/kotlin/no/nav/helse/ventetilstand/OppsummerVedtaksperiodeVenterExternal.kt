@@ -9,45 +9,54 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.ventetilstand.OppsummeringDao.VentegruppeExternal
 import org.slf4j.LoggerFactory
 
-internal class OppsummerVedtaksperiodeVenterExternal (
+internal class OppsummerVedtaksperiodeVenterExternal(
     rapidsConnection: RapidsConnection,
-    private val dao: OppsummeringDao
-): River.PacketListener {
-
+    private val dao: OppsummeringDao,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition { it.requireValue("@event_name", "oppsummer_vedtaksperiode_venter") }
-            validate {
-                it.requireKey("system_participating_services", "simplified_for_external_purposes")
-            }
-        }.register(this)
-        River(rapidsConnection).apply {
-            precondition {
-                it.requireValue("@event_name", "halv_time")
-                it.requireValue("time", 8)
-                it.requireValue("minutt", 30)
-                it.requireAny("ukedag", listOf("MONDAY"))
-            }
-            validate {
-                it.requireKey("system_participating_services")
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition { it.requireValue("@event_name", "oppsummer_vedtaksperiode_venter") }
+                validate {
+                    it.requireKey("system_participating_services", "simplified_for_external_purposes")
+                }
+            }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "halv_time")
+                    it.requireValue("time", 8)
+                    it.requireValue("minutt", 30)
+                    it.requireAny("ukedag", listOf("MONDAY"))
+                }
+                validate {
+                    it.requireKey("system_participating_services")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         try {
             val oppsummering = dao.oppsummeringExternal()
             val melding = lagMelding(oppsummering)
-            val slackmelding = JsonMessage.newMessage(
-                "slackmelding", mapOf(
-                    "melding" to "$melding\n\n",
-                    "level" to "INFO",
-                    "channel" to "C08RSLJ6W4R",
-                    "utenPrefix" to true,
-                    "utenSuffix" to true,
-                    "system_participating_services" to packet["system_participating_services"]
-                )
-            ).toJson()
+            val slackmelding =
+                JsonMessage
+                    .newMessage(
+                        "slackmelding",
+                        mapOf(
+                            "melding" to "$melding\n\n",
+                            "level" to "INFO",
+                            "channel" to "C08RSLJ6W4R",
+                            "utenPrefix" to true,
+                            "utenSuffix" to true,
+                            "system_participating_services" to packet["system_participating_services"],
+                        ),
+                    ).toJson()
             context.publish(slackmelding)
         } catch (exception: Exception) {
             sikkerlogg.error("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
@@ -57,30 +66,33 @@ internal class OppsummerVedtaksperiodeVenterExternal (
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
-        private fun String.emoji() = when(this) {
-            "UNDER 30 DAGER" -> ":large_green_circle:"
-            "MELLOM 30 OG 90 DAGER" -> ":large_yellow_circle:"
-            "OVER 90 DAGER" -> ":red_circle:"
-            else -> ""
-        }
+        private fun String.emoji() =
+            when (this) {
+                "UNDER 30 DAGER" -> ":large_green_circle:"
+                "MELLOM 30 OG 90 DAGER" -> ":large_yellow_circle:"
+                "OVER 90 DAGER" -> ":red_circle:"
+                else -> ""
+            }
 
-        private fun String.hvem() = when(this) {
-            "INFORMASJON FRA ARBEIDSGIVER" -> "arbeidsgiver"
-            "SAKSBEHANDLER" -> "saksbehandler"
-            "SØKNAD" -> "den sykmeldte"
-            else -> this
-        }
+        private fun String.hvem() =
+            when (this) {
+                "INFORMASJON FRA ARBEIDSGIVER" -> "arbeidsgiver"
+                "SAKSBEHANDLER" -> "saksbehandler"
+                "SØKNAD" -> "den sykmeldte"
+                else -> this
+            }
 
         private fun lagMelding(oppsummering: List<VentegruppeExternal>): String {
-            var melding = """
-            God mandag! :monday: 
-            
-            Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
-            
-            Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :excited: :lets_go:
-            
-            
-            """.trimIndent()
+            var melding =
+                """
+                God mandag! :monday: 
+                
+                Her er et øyeblikksbilde over ventetid for de sykmeldte før de får sykepengesøknaden sin ferdig behandlet :sonic-waiting:
+                
+                Ønsket med denne informasjonen er å synliggjøre hvor mange perioder som venter på behandling og hvorfor :excited: :lets_go:
+                
+                
+                """.trimIndent()
             val ventegrupper = oppsummering.groupBy { it.årsak }
             ventegrupper.forEach { (gruppe, data) ->
                 melding += "*Har ventet på ${gruppe.hvem()}* \n"
@@ -90,14 +102,15 @@ internal class OppsummerVedtaksperiodeVenterExternal (
                 melding += "\n"
             }
 
-            melding += """
-            *Ettertanker*
-                1. Det er bare saker som venter i ny løsning som er omfattet
-                2. Det er ikke den totale ventetiden som vises, kun ventetiden i nåværende tilstand. Man kan vente over 90 dager på arbeidsgiver, for så å vente over 90 dager på saksbehandler.
+            melding +=
+                """
+                *Ettertanker*
+                    1. Det er bare saker som venter i ny løsning som er omfattet
+                    2. Det er ikke den totale ventetiden som vises, kun ventetiden i nåværende tilstand. Man kan vente over 90 dager på arbeidsgiver, for så å vente over 90 dager på saksbehandler.
 
-            Med vennlig hilsen,
-            Viggo Velferdsvenn
-            """.trimIndent()
+                Med vennlig hilsen,
+                Viggo Velferdsvenn
+                """.trimIndent()
             return melding
         }
     }

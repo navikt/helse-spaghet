@@ -10,12 +10,19 @@ import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
 
-private val objectMapper: ObjectMapper = jacksonObjectMapper()
-    .registerModule(JavaTimeModule())
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+private val objectMapper: ObjectMapper =
+    jacksonObjectMapper()
+        .registerModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
 @Language("JSON")
-fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype: String, id: UUID = UUID.randomUUID(), inntektskilde: String = "EN_ARBEIDSGIVER") = """
+fun behovNyttFormat(
+    fødselsnummer: String,
+    vedtaksperiodeId: UUID,
+    periodetype: String,
+    id: UUID = UUID.randomUUID(),
+    inntektskilde: String = "EN_ARBEIDSGIVER",
+) = """
         {
           "@event_name": "behov",
           "@opprettet": "2020-06-02T12:00:00.000000",
@@ -49,19 +56,21 @@ fun behovNyttFormat(fødselsnummer: String, vedtaksperiodeId: UUID, periodetype:
         }
     """
 
-
 fun løsningNyttFormat(
-        fødselsnummer: String,
-        vedtaksperiodeId: UUID,
-        periodetype: String,
-        id: UUID = UUID.randomUUID(),
-        refusjonstype: String? = "FULL_REFUSJON",
-        automatiskBehandlet: Boolean = false,
-        saksbehandlerIdent: String = "Z999999",
-) =
-    objectMapper.readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id)).apply {
-            set<ObjectNode>(
-                "@løsning", objectMapper.readTree(""" {
+    fødselsnummer: String,
+    vedtaksperiodeId: UUID,
+    periodetype: String,
+    id: UUID = UUID.randomUUID(),
+    refusjonstype: String? = "FULL_REFUSJON",
+    automatiskBehandlet: Boolean = false,
+    saksbehandlerIdent: String = "Z999999",
+) = objectMapper
+    .readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id))
+    .apply {
+        set<ObjectNode>(
+            "@løsning",
+            objectMapper.readTree(
+                """ {
                 "Godkjenning": {
                     "godkjent": true,
                     "saksbehandlerIdent": "$saksbehandlerIdent",
@@ -74,8 +83,9 @@ fun løsningNyttFormat(
             }
           },
                 }
-            }"""))
-            .put("@besvart", "2020-06-02T13:00:00.000000")
+            }""",
+            ),
+        ).put("@besvart", "2020-06-02T13:00:00.000000")
     }.toString()
 
 @Language("JSON")
@@ -86,7 +96,7 @@ fun vedtaksperiodeEndret(
     orgnummer: String = "98765432",
     timestamp: LocalDateTime = LocalDateTime.now(),
     tilstandFra: String = "AVVENTER_GODKJENNING",
-    tilstandTil: String = "AVVENTER_SIMULERING"
+    tilstandTil: String = "AVVENTER_SIMULERING",
 ) = """
 {
   "vedtaksperiodeId": "$vedtaksperiodeId",

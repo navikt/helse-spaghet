@@ -14,26 +14,28 @@ import no.nav.helse.Util.jsonNode
 import no.nav.helse.Util.withSessionAndReturnGeneratedKey
 import javax.sql.DataSource
 
-class LagtPåVentRiver(rapidsConnection: RapidsConnection, private val dataSource: DataSource): River.PacketListener {
-
+class LagtPåVentRiver(
+    rapidsConnection: RapidsConnection,
+    private val dataSource: DataSource,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition {
-                it.requireValue("@event_name", "lagt_på_vent")
-            }
-            validate {
-                it.requireKey("oppgaveId", "skalTildeles", "frist", "saksbehandlerIdent", "@opprettet", "årsaker", "saksbehandlerOid", "behandlingId")
-                it.interestedIn("notatTekst")
-
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "lagt_på_vent")
+                }
+                validate {
+                    it.requireKey("oppgaveId", "skalTildeles", "frist", "saksbehandlerIdent", "@opprettet", "årsaker", "saksbehandlerOid", "behandlingId")
+                    it.interestedIn("notatTekst")
+                }
+            }.register(this)
     }
 
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
-        meterRegistry: MeterRegistry
+        meterRegistry: MeterRegistry,
     ) {
         val jsonNode = packet.jsonNode()
         val lagtPåVent = jsonNode.parseLeggPåVent()
@@ -43,7 +45,11 @@ class LagtPåVentRiver(rapidsConnection: RapidsConnection, private val dataSourc
         sikkerlogg.info("Leser inn hendelse {}", kv("lagt_på_vent", packet.toJson()))
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         sikkerlogg.error("Klarte ikke å lese lagt_på_vent event! ${problems.toExtendedReport()}")
     }
 }

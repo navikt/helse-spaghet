@@ -19,30 +19,37 @@ import javax.sql.DataSource
 
 class OppgaveEndretRiver(
     rapidsConnection: RapidsConnection,
-    private val dataSource: DataSource
-): River.PacketListener {
+    private val dataSource: DataSource,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition { it.requireAny("@event_name", listOf("oppgave_opprettet", "oppgave_oppdatert")) }
-            validate {
-                it.requireKey("oppgaveId", "fødselsnummer", "@opprettet", "behandlingId")
-                it.requireKey("tilstand")
-                it.requireArray("egenskaper")
-                it.interestedIn("saksbehandler")
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition { it.requireAny("@event_name", listOf("oppgave_opprettet", "oppgave_oppdatert")) }
+                validate {
+                    it.requireKey("oppgaveId", "fødselsnummer", "@opprettet", "behandlingId")
+                    it.requireKey("tilstand")
+                    it.requireArray("egenskaper")
+                    it.interestedIn("saksbehandler")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
-        val oppgaveEndret = OppgaveEndret(
-            id = packet["oppgaveId"].asLong(),
-            fødselsnummer = packet["fødselsnummer"].asText(),
-            behandlingId = packet["behandlingId"].asUuid(),
-            tilstand = packet["tilstand"].asText(),
-            egenskaper = packet["egenskaper"].map { it.asText() },
-            tildelt = !packet["saksbehandler"].isMissingOrNull(),
-            opprettet = packet["@opprettet"].asLocalDateTime()
-        )
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
+        val oppgaveEndret =
+            OppgaveEndret(
+                id = packet["oppgaveId"].asLong(),
+                fødselsnummer = packet["fødselsnummer"].asText(),
+                behandlingId = packet["behandlingId"].asUuid(),
+                tilstand = packet["tilstand"].asText(),
+                egenskaper = packet["egenskaper"].map { it.asText() },
+                tildelt = !packet["saksbehandler"].isMissingOrNull(),
+                opprettet = packet["@opprettet"].asLocalDateTime(),
+            )
         oppgaveEndret.lagre()
     }
 
@@ -53,7 +60,7 @@ class OppgaveEndretRiver(
         val tilstand: String,
         val egenskaper: List<String>,
         val tildelt: Boolean,
-        val opprettet: LocalDateTime
+        val opprettet: LocalDateTime,
     )
 
     private fun OppgaveEndret.lagre() {
@@ -70,18 +77,20 @@ class OppgaveEndretRiver(
         val query = "INSERT INTO oppgave (id, fødselsnummer, behandling_id, opprettet) VALUES(:id, :fodselsnummer, :behandlingId, :opprettet) ON CONFLICT DO NOTHING"
         run(
             queryOf(
-                query, mapOf(
+                query,
+                mapOf(
                     "id" to oppgaveEndret.id,
                     "fodselsnummer" to oppgaveEndret.fødselsnummer,
                     "behandlingId" to oppgaveEndret.behandlingId,
-                    "opprettet" to oppgaveEndret.opprettet
-                )
-            ).asUpdate
+                    "opprettet" to oppgaveEndret.opprettet,
+                ),
+            ).asUpdate,
         )
     }
 
     private fun TransactionalSession.lagreOppgaveendring(oppgaveEndret: OppgaveEndret) {
         val egenskaperForDatabase = oppgaveEndret.egenskaper.joinToString { """ "$it" """ }
+
         @Language("PostgreSQL")
         val query =
             """
@@ -90,13 +99,14 @@ class OppgaveEndretRiver(
             """
         run(
             queryOf(
-                query, mapOf(
+                query,
+                mapOf(
                     "oppgave_ref" to oppgaveEndret.id,
                     "tilstand" to oppgaveEndret.tilstand,
                     "tidspunkt" to oppgaveEndret.opprettet,
                     "tildelt" to oppgaveEndret.tildelt,
-                )
-            ).asUpdate
+                ),
+            ).asUpdate,
         )
     }
 }

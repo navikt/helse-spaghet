@@ -14,11 +14,11 @@ import com.github.navikt.tbd_libs.test_support.DatabaseContainers
 import com.github.navikt.tbd_libs.test_support.TestDataSource
 import io.mockk.every
 import io.mockk.mockk
-import java.util.*
-import java.time.LocalDateTime
 import no.nav.helse.TestData.toJson
 import no.nav.helse.TestData.toJsonUtenNotatTekst
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.*
 
 private val tables = "annullering,annullering_arsak,begrunnelse,flyway_schema_history,funksjonell_feil,godkjenning,godkjenning_overstyringer,godkjenningsbehov,godkjenningsbehov_losning,godkjenningsbehov_losning_begrunnelse,hendelse_ikke_håndtert_årsak,oppgave,oppgave_endret,regelverksvarsel,revurdering,revurdering_vedtaksperiode,schedule,skatteinntekter_lagt_til_grunn,soknad,soknad_haandtert,utkast_til_vedtak,varsel,vedtaksperiode_aktivitet,vedtaksperiode_data,vedtaksperiode_tilstandsendring,vedtaksperiode_venter,warning_for_godkjenning,lagt_paa_vent"
 private val databaseContainer = DatabaseContainers.container("spaghet", CleanupStrategy.tables(tables), walLevelLogical = true)
@@ -31,31 +31,33 @@ class E2eTestApp {
     val dataSource get() = testDataSource.ds
 
     val standardAktørId = "9999999999999"
-    val speedClient = mockk<SpeedClient> {
-        val innkommendefnr = mutableListOf<String>()
-        every { hentFødselsnummerOgAktørId(capture(innkommendefnr), any()) } answers {
-            IdentResponse(
-                fødselsnummer = innkommendefnr.last(),
-                aktørId = standardAktørId,
-                npid = null,
-                kilde = IdentResponse.KildeResponse.PDL
-            ).ok()
+    val speedClient =
+        mockk<SpeedClient> {
+            val innkommendefnr = mutableListOf<String>()
+            every { hentFødselsnummerOgAktørId(capture(innkommendefnr), any()) } answers {
+                IdentResponse(
+                    fødselsnummer = innkommendefnr.last(),
+                    aktørId = standardAktørId,
+                    npid = null,
+                    kilde = IdentResponse.KildeResponse.PDL,
+                ).ok()
+            }
         }
-    }
 
-    val spedisjonClient = mockk<SpedisjonClient> {
-        every { hentMelding(any(), any()) } answers {
-            HentMeldingResponse(
-                type = "denne_type_kan_være_hva_som_helst_fordi_spaghet_bare_tar_ekstern_dokument_id_uansett",
-                fnr = "99999999999",
-                internDokumentId = UUID.randomUUID(),
-                eksternDokumentId = UUID.randomUUID(),
-                rapportertDato = LocalDateTime.now(),
-                duplikatkontroll = "test_duplikatkontroll",
-                jsonBody = "{}"
-            ).ok()
+    val spedisjonClient =
+        mockk<SpedisjonClient> {
+            every { hentMelding(any(), any()) } answers {
+                HentMeldingResponse(
+                    type = "denne_type_kan_være_hva_som_helst_fordi_spaghet_bare_tar_ekstern_dokument_id_uansett",
+                    fnr = "99999999999",
+                    internDokumentId = UUID.randomUUID(),
+                    eksternDokumentId = UUID.randomUUID(),
+                    rapportertDato = LocalDateTime.now(),
+                    duplikatkontroll = "test_duplikatkontroll",
+                    jsonBody = "{}",
+                ).ok()
+            }
         }
-    }
 
     private fun start() {
         mockLog()
@@ -96,9 +98,9 @@ class E2eTestApp {
         listAppender = ListAppender()
     }
 
-
     companion object {
         private val testEnv by lazy { E2eTestApp() }
+
         fun e2eTest(f: E2eTestApp.() -> Unit) {
             try {
                 testEnv.start()

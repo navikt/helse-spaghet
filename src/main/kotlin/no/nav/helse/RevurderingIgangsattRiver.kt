@@ -17,34 +17,40 @@ import javax.sql.DataSource
 
 class RevurderingIgangsattRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { 
-                it.requireValue("@event_name", "overstyring_igangsatt")
-                it.requireValue("typeEndring", "REVURDERING")
-            }
-            validate {
-                it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
-                it.require("@opprettet", JsonNode::asLocalDateTime)
-                it.require("skjæringstidspunkt", JsonNode::asLocalDate)
-                it.require("periodeForEndringFom", JsonNode::asLocalDate)
-                it.require("periodeForEndringTom", JsonNode::asLocalDate)
-                it.require("kilde") { kilde -> UUID.fromString(kilde.asText()) }
-                it.requireKey("årsak")
-                it.requireArray("berørtePerioder") {
-                    require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asText()) }
-                    require("periodeFom", JsonNode::asLocalDate)
-                    require("periodeTom", JsonNode::asLocalDate)
-                    require("skjæringstidspunkt", JsonNode::asLocalDate)
-                    requireKey("orgnummer")
+        River(rapidApplication)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "overstyring_igangsatt")
+                    it.requireValue("typeEndring", "REVURDERING")
                 }
-            }
-        }.register(this)
+                validate {
+                    it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
+                    it.require("@opprettet", JsonNode::asLocalDateTime)
+                    it.require("skjæringstidspunkt", JsonNode::asLocalDate)
+                    it.require("periodeForEndringFom", JsonNode::asLocalDate)
+                    it.require("periodeForEndringTom", JsonNode::asLocalDate)
+                    it.require("kilde") { kilde -> UUID.fromString(kilde.asText()) }
+                    it.requireKey("årsak")
+                    it.requireArray("berørtePerioder") {
+                        require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asText()) }
+                        require("periodeFom", JsonNode::asLocalDate)
+                        require("periodeTom", JsonNode::asLocalDate)
+                        require("skjæringstidspunkt", JsonNode::asLocalDate)
+                        requireKey("orgnummer")
+                    }
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val revurderingId = packet["revurderingId"].let { UUID.fromString(it.asText()) }
         val årsak = packet["årsak"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -67,16 +73,17 @@ class RevurderingIgangsattRiver(
                 session.run(
                     queryOf(
                         statement = statement,
-                        paramMap = mapOf(
-                            "id" to revurderingId,
-                            "opprettet" to opprettet,
-                            "kilde" to kilde,
-                            "skjaeringstidspunkt" to skjæringstidspunkt,
-                            "fom" to periodeForEndringFom,
-                            "tom" to periodeForEndringTom,
-                            "aarsak" to årsak,
-                        )
-                    ).asExecute
+                        paramMap =
+                            mapOf(
+                                "id" to revurderingId,
+                                "opprettet" to opprettet,
+                                "kilde" to kilde,
+                                "skjaeringstidspunkt" to skjæringstidspunkt,
+                                "fom" to periodeForEndringFom,
+                                "tom" to periodeForEndringTom,
+                                "aarsak" to årsak,
+                            ),
+                    ).asExecute,
                 )
 
                 @Language("PostgreSQL")
@@ -89,17 +96,18 @@ class RevurderingIgangsattRiver(
                 session.run(
                     queryOf(
                         statement = statement2,
-                        *berørtePerioder.flatMap { periode ->
-                            listOf(
-                                revurderingId,
-                                periode.path("vedtaksperiodeId").let { UUID.fromString(it.asText()) },
-                                periode.path("periodeFom").asLocalDate(),
-                                periode.path("periodeTom").asLocalDate(),
-                                periode.path("skjæringstidspunkt").asLocalDate(),
-                                periode.path("orgnummer").asText(),
-                            )
-                        }.toTypedArray()
-                    ).asExecute
+                        *berørtePerioder
+                            .flatMap { periode ->
+                                listOf(
+                                    revurderingId,
+                                    periode.path("vedtaksperiodeId").let { UUID.fromString(it.asText()) },
+                                    periode.path("periodeFom").asLocalDate(),
+                                    periode.path("periodeTom").asLocalDate(),
+                                    periode.path("skjæringstidspunkt").asLocalDate(),
+                                    periode.path("orgnummer").asText(),
+                                )
+                            }.toTypedArray(),
+                    ).asExecute,
                 )
             }
         }

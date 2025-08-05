@@ -5,7 +5,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import com.github.navikt.tbd_libs.result_object.getOrThrow
 import com.github.navikt.tbd_libs.retry.retryBlocking
@@ -22,62 +21,78 @@ import javax.sql.DataSource
 class VedtaksperiodeEndretRiver(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource,
-    private val speedClient: SpeedClient
+    private val speedClient: SpeedClient,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "vedtaksperiode_endret") }
-            validate {
-                it.requireKey(
-                    "@id",
-                    "fødselsnummer",
-                    "organisasjonsnummer",
-                    "vedtaksperiodeId",
-                    "gjeldendeTilstand",
-                    "fom",
-                    "tom",
-                    "skjæringstidspunkt"
-                )
-            }
-
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "vedtaksperiode_endret") }
+                validate {
+                    it.requireKey(
+                        "@id",
+                        "fødselsnummer",
+                        "organisasjonsnummer",
+                        "vedtaksperiodeId",
+                        "gjeldendeTilstand",
+                        "fom",
+                        "tom",
+                        "skjæringstidspunkt",
+                    )
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         lagreVedtaksperiodedata(speedClient, packet["gjeldendeTilstand"].asText(), packet, dataSource)
     }
 }
+
 class VedtaksperiodeOpprettetRiver(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource,
-    private val speedClient: SpeedClient
+    private val speedClient: SpeedClient,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "vedtaksperiode_opprettet") }
-            validate {
-                it.requireKey(
-                    "@id",
-                    "fødselsnummer",
-                    "organisasjonsnummer",
-                    "vedtaksperiodeId",
-                    "skjæringstidspunkt",
-                    "fom",
-                    "tom"
-                )
-            }
-
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "vedtaksperiode_opprettet") }
+                validate {
+                    it.requireKey(
+                        "@id",
+                        "fødselsnummer",
+                        "organisasjonsnummer",
+                        "vedtaksperiodeId",
+                        "skjæringstidspunkt",
+                        "fom",
+                        "tom",
+                    )
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         lagreVedtaksperiodedata(speedClient, "START", packet, dataSource)
     }
 }
 
 private val minsteDato = LocalDate.of(-4500, 1, 1)
 
-private fun lagreVedtaksperiodedata(speedClient: SpeedClient, tilstand: String, packet: JsonMessage, dataSource: DataSource) {
+private fun lagreVedtaksperiodedata(
+    speedClient: SpeedClient,
+    tilstand: String,
+    packet: JsonMessage,
+    dataSource: DataSource,
+) {
     val ident = packet["fødselsnummer"].asText()
     val callId = packet["@id"].asText()
 
@@ -90,22 +105,24 @@ private fun lagreVedtaksperiodedata(speedClient: SpeedClient, tilstand: String, 
     val skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate().coerceAtLeast(minsteDato)
     try {
         sessionOf(dataSource).use { session ->
-            val upsert = """
-                        insert into vedtaksperiode_data (vedtaksperiodeId, fnr, aktorId, yrkesaktivitet, fom, tom, skjaeringstidspunkt, tilstand, oppdatert)
-                        values (:vedtaksperiodeId, :fnr, :aktorId, :yrkesaktivitet, :fom, :tom, :skjaeringstidspunkt, :tilstand, :oppdatert)
-                        on conflict(vedtaksperiodeId) do update
-                            set fnr = excluded.fnr,  
-                                aktorId = excluded.aktorId,
-                                fom = excluded.fom,
-                                tom = excluded.tom,
-                                yrkesaktivitet = excluded.yrkesaktivitet,
-                                skjaeringstidspunkt = excluded.skjaeringstidspunkt,
-                                tilstand = excluded.tilstand,
-                                oppdatert = excluded.oppdatert;
-                    """.trimIndent()
+            val upsert =
+                """
+                insert into vedtaksperiode_data (vedtaksperiodeId, fnr, aktorId, yrkesaktivitet, fom, tom, skjaeringstidspunkt, tilstand, oppdatert)
+                values (:vedtaksperiodeId, :fnr, :aktorId, :yrkesaktivitet, :fom, :tom, :skjaeringstidspunkt, :tilstand, :oppdatert)
+                on conflict(vedtaksperiodeId) do update
+                    set fnr = excluded.fnr,  
+                        aktorId = excluded.aktorId,
+                        fom = excluded.fom,
+                        tom = excluded.tom,
+                        yrkesaktivitet = excluded.yrkesaktivitet,
+                        skjaeringstidspunkt = excluded.skjaeringstidspunkt,
+                        tilstand = excluded.tilstand,
+                        oppdatert = excluded.oppdatert;
+                """.trimIndent()
             session.update(
                 queryOf(
-                    upsert, mapOf(
+                    upsert,
+                    mapOf(
                         "vedtaksperiodeId" to vedtaksperiodeId,
                         "fnr" to identer.fødselsnummer,
                         "aktorId" to identer.aktørId,
@@ -114,9 +131,9 @@ private fun lagreVedtaksperiodedata(speedClient: SpeedClient, tilstand: String, 
                         "tom" to tom,
                         "skjaeringstidspunkt" to skjæringstidspunkt,
                         "tilstand" to tilstand,
-                        "oppdatert" to LocalDateTime.now()
-                    )
-                )
+                        "oppdatert" to LocalDateTime.now(),
+                    ),
+                ),
             )
         }
     } catch (err: PSQLException) {

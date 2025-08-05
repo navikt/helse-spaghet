@@ -15,22 +15,27 @@ import javax.sql.DataSource
 
 class AnnulleringRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "annullering") }
-            validate {
-                it.requireKey("vedtaksperiodeId", "begrunnelser", "@opprettet")
-                it.require("saksbehandler.oid") { node -> node.asUuid() }
-                it.interestedIn("kommentar")
-                it.interestedIn("arsaker")
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "annullering") }
+                validate {
+                    it.requireKey("vedtaksperiodeId", "begrunnelser", "@opprettet")
+                    it.require("saksbehandler.oid") { node -> node.asUuid() }
+                    it.interestedIn("kommentar")
+                    it.interestedIn("arsaker")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
-
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val jsonNode = packet.jsonNode()
         val annullering = jsonNode.parseAnnullering()
         dataSource.withSession {

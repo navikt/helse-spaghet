@@ -19,23 +19,31 @@ import javax.sql.DataSource
 
 class HendelseIkkeHåndtertRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "hendelse_ikke_håndtert") }
-            validate {
-                it.requireKey("hendelseId", "@opprettet")
-                it.interestedIn("årsaker")
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "hendelse_ikke_håndtert") }
+                validate {
+                    it.requireKey("hendelseId", "@opprettet")
+                    it.interestedIn("årsaker")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val hendelseId = UUID.fromString(packet["hendelseId"].asText())
         val opprettet = packet["@opprettet"].asLocalDateTime()
-        val årsaker = packet["årsaker"].takeUnless(JsonNode::isMissingOrNull)
-            ?.map { it.asText() } ?: emptyList()
+        val årsaker =
+            packet["årsaker"]
+                .takeUnless(JsonNode::isMissingOrNull)
+                ?.map { it.asText() } ?: emptyList()
 
         if (årsaker.isEmpty()) logg.warn("Mangler årsaker i hendelse_ikke_håndtert")
 
@@ -44,10 +52,14 @@ class HendelseIkkeHåndtertRiver(
                 this.insertHendelseIkkeHåndtertÅrsak(hendelseId, opprettet, årsak)
             }
         }
-        logg.info("Lagret hendelse_ikke_håndtert for hendelseId=${hendelseId}")
+        logg.info("Lagret hendelse_ikke_håndtert for hendelseId=$hendelseId")
     }
 
-    fun Session.insertHendelseIkkeHåndtertÅrsak(hendelseId: UUID, opprettet: LocalDateTime, årsak: String) {
+    fun Session.insertHendelseIkkeHåndtertÅrsak(
+        hendelseId: UUID,
+        opprettet: LocalDateTime,
+        årsak: String,
+    ) {
         @Language("PostgreSQL")
         val statement = """
                 INSERT INTO hendelse_ikke_håndtert_årsak(
@@ -63,7 +75,7 @@ class HendelseIkkeHåndtertRiver(
                 hendelseId,
                 opprettet,
                 årsak,
-            ).asUpdate
+            ).asUpdate,
         )
     }
 }

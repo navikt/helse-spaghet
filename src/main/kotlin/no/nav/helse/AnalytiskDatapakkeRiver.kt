@@ -12,54 +12,54 @@ import com.github.navikt.tbd_libs.result_object.getOrThrow
 import com.github.navikt.tbd_libs.retry.retryBlocking
 import com.github.navikt.tbd_libs.speed.SpeedClient
 import io.micrometer.core.instrument.MeterRegistry
-import java.time.LocalDateTime
-import java.util.UUID
-import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.jsonNode
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
+import java.util.*
+import javax.sql.DataSource
 
 class AnalytiskDatapakkeRiver(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource,
-    private val speedClient: SpeedClient
+    private val speedClient: SpeedClient,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "analytisk_datapakke") }
-            validate {
-                it.requireKey(
-                    "@opprettet",
-                    "@id",
-                    "behandlingId",
-                    "vedtaksperiodeId",
-                    "yrkesaktivitetstype",
-                    "skjæringstidspunkt",
-                    "fom",
-                    "tom",
-                    "harAndreInntekterIBeregning",
-                    "antallGjenståendeSykedagerEtterPeriode.antallDager",
-                    "antallGjenståendeSykedagerEtterPeriode.nettoDager",
-                    "antallForbrukteSykedagerEtterPeriode.antallDager",
-                    "antallForbrukteSykedagerEtterPeriode.nettoDager",
-                    "beløpTilBruker.totalBeløp",
-                    "beløpTilBruker.nettoBeløp",
-                    "beløpTilArbeidsgiver.totalBeløp",
-                    "beløpTilArbeidsgiver.nettoBeløp",
-                    "fødselsnummer"
-                )
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "analytisk_datapakke") }
+                validate {
+                    it.requireKey(
+                        "@opprettet",
+                        "@id",
+                        "behandlingId",
+                        "vedtaksperiodeId",
+                        "yrkesaktivitetstype",
+                        "skjæringstidspunkt",
+                        "fom",
+                        "tom",
+                        "harAndreInntekterIBeregning",
+                        "antallGjenståendeSykedagerEtterPeriode.antallDager",
+                        "antallGjenståendeSykedagerEtterPeriode.nettoDager",
+                        "antallForbrukteSykedagerEtterPeriode.antallDager",
+                        "antallForbrukteSykedagerEtterPeriode.nettoDager",
+                        "beløpTilBruker.totalBeløp",
+                        "beløpTilBruker.nettoBeløp",
+                        "beløpTilArbeidsgiver.totalBeløp",
+                        "beløpTilArbeidsgiver.nettoBeløp",
+                        "fødselsnummer",
+                    )
+                }
+            }.register(this)
     }
 
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
-        meterRegistry: MeterRegistry
+        meterRegistry: MeterRegistry,
     ) {
-
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
         val behandlingId = UUID.fromString(packet["behandlingId"].asText())
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -70,31 +70,38 @@ class AnalytiskDatapakkeRiver(
         val aktorId = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }.aktørId
 
         // Kopier packet, ta vekk doble eller uinteressante felter
-        val datapakke = packet.jsonNode().apply {
-            this as ObjectNode
-            remove(
-                listOf(
-                    "@event_name",
-                    "@id",
-                    "fødselsnummer",
-                    "@opprettet",
-                    "system_read_count",
-                    "system_participating_services"
-                )
-            )
-        }.toString()
+        val datapakke =
+            packet
+                .jsonNode()
+                .apply {
+                    this as ObjectNode
+                    remove(
+                        listOf(
+                            "@event_name",
+                            "@id",
+                            "fødselsnummer",
+                            "@opprettet",
+                            "system_read_count",
+                            "system_participating_services",
+                        ),
+                    )
+                }.toString()
 
         insertAnalytiskDatapakke(
             aktorId,
             opprettet,
             vedtaksperiodeId,
             behandlingId,
-            datapakke
+            datapakke,
         )
         logg.info("Lagret Analytisk Datapakke for vedtaksperiodeId=$vedtaksperiodeId")
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         sikkerlogg.error("Klarte ikke å lese analytisk_datapakke event! ${problems.toExtendedReport()}")
     }
 
@@ -103,7 +110,7 @@ class AnalytiskDatapakkeRiver(
         opprettet: LocalDateTime,
         vedtaksperiodeId: UUID,
         behandlingId: UUID,
-        datapakke: String
+        datapakke: String,
     ) {
         @Language("PostgreSQL")
         val insertAnalytiskDatapakke =
@@ -113,16 +120,16 @@ class AnalytiskDatapakkeRiver(
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
-                    insertAnalytiskDatapakke, mapOf(
+                    insertAnalytiskDatapakke,
+                    mapOf(
                         "aktor_id" to aktorId,
                         "opprettet" to opprettet,
                         "vedtaksperiode_id" to vedtaksperiodeId,
                         "behandling_id" to behandlingId,
-                        "datapakke" to datapakke
-                    )
-                ).asUpdate
+                        "datapakke" to datapakke,
+                    ),
+                ).asUpdate,
             )
         }
     }
 }
-

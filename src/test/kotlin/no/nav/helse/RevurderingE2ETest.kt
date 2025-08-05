@@ -12,82 +12,82 @@ import java.util.*
 
 class RevurderingE2ETest {
     @Test
-    fun `lagrer i databasen`() = e2eTest {
-        val revurderingId = UUID.randomUUID()
-        rapid.sendTestMessage(revurderingIgangsatt(revurderingId))
-        rapid.sendTestMessage(revurderingFerdigstilt(revurderingId))
-        assertEquals(1, tellRevurdering())
-        assertEquals("FERDIGSTILT_AUTOMATISK", statusForRevurdering(revurderingId))
-        val vedtaksperioder = revurderingVedtaksperioder()
-        assertEquals(setOf(
-            RevurderingVedtaksperiode(
-                fom = LocalDate.parse("2022-11-07"),
-                tom = LocalDate.parse("2022-11-29"),
-                skjæringstidspunkt = LocalDate.parse("2022-10-03"),
-                status = "FERDIGSTILT_AUTOMATISK"
-            ),
-            RevurderingVedtaksperiode(
-                fom = LocalDate.parse("2022-11-30"),
-                tom = LocalDate.parse("2022-12-15"),
-                skjæringstidspunkt = LocalDate.parse("2022-10-03"),
-                status = "FERDIGSTILT_AUTOMATISK"
+    fun `lagrer i databasen`() =
+        e2eTest {
+            val revurderingId = UUID.randomUUID()
+            rapid.sendTestMessage(revurderingIgangsatt(revurderingId))
+            rapid.sendTestMessage(revurderingFerdigstilt(revurderingId))
+            assertEquals(1, tellRevurdering())
+            assertEquals("FERDIGSTILT_AUTOMATISK", statusForRevurdering(revurderingId))
+            val vedtaksperioder = revurderingVedtaksperioder()
+            assertEquals(
+                setOf(
+                    RevurderingVedtaksperiode(
+                        fom = LocalDate.parse("2022-11-07"),
+                        tom = LocalDate.parse("2022-11-29"),
+                        skjæringstidspunkt = LocalDate.parse("2022-10-03"),
+                        status = "FERDIGSTILT_AUTOMATISK",
+                    ),
+                    RevurderingVedtaksperiode(
+                        fom = LocalDate.parse("2022-11-30"),
+                        tom = LocalDate.parse("2022-12-15"),
+                        skjæringstidspunkt = LocalDate.parse("2022-10-03"),
+                        status = "FERDIGSTILT_AUTOMATISK",
+                    ),
+                ),
+                vedtaksperioder.toSet(),
             )
-        ), vedtaksperioder.toSet())
+        }
 
-    }
-
-
-    private fun E2eTestApp.tellRevurdering(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellRevurdering(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM revurdering"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
-
-    private fun E2eTestApp.statusForRevurdering(id: UUID): String {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.statusForRevurdering(id: UUID): String =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT status FROM revurdering where id='$id' LIMIT 1;"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.string(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.string(1) }.asSingle),
             )
         }
-    }
 
-    private fun E2eTestApp.revurderingVedtaksperioder(): List<RevurderingVedtaksperiode> {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.revurderingVedtaksperioder(): List<RevurderingVedtaksperiode> =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT status, periode_fom, periode_tom, skjaeringstidspunkt FROM revurdering_vedtaksperiode"
             requireNotNull(
-                session.run(queryOf(query).map { row ->
-                    RevurderingVedtaksperiode(
-                        fom = row.localDate("periode_fom"),
-                        tom = row.localDate("periode_tom"),
-                        skjæringstidspunkt = row.localDate("skjaeringstidspunkt"),
-                        status = row.string("status")
-                    )
-                }.asList)
+                session.run(
+                    queryOf(query)
+                        .map { row ->
+                            RevurderingVedtaksperiode(
+                                fom = row.localDate("periode_fom"),
+                                tom = row.localDate("periode_tom"),
+                                skjæringstidspunkt = row.localDate("skjaeringstidspunkt"),
+                                status = row.string("status"),
+                            )
+                        }.asList,
+                ),
             )
         }
-    }
 
     private data class RevurderingVedtaksperiode(
         val fom: LocalDate,
         val tom: LocalDate,
         val skjæringstidspunkt: LocalDate,
-        val status: String
+        val status: String,
     )
-
 
     @Language("JSON")
     fun revurderingIgangsatt(
         revurderingId: UUID,
         kilde: UUID = UUID.randomUUID(),
-        årsak: String = "KORRIGERT_SØKNAD"
+        årsak: String = "KORRIGERT_SØKNAD",
     ) = """{
         "@event_name":"overstyring_igangsatt",
         "fødselsnummer":"fnr",
@@ -121,11 +121,10 @@ class RevurderingE2ETest {
     }
     """
 
-
     @Language("JSON")
     fun revurderingFerdigstilt(
         revurderingId: UUID,
-        status: String = "FERDIGSTILT_AUTOMATISK"
+        status: String = "FERDIGSTILT_AUTOMATISK",
     ) = """{
         "@event_name":"revurdering_ferdigstilt",
         "revurderingId": "$revurderingId",
@@ -144,5 +143,4 @@ class RevurderingE2ETest {
         "@opprettet":"${LocalDateTime.now()}"
     }
     """
-
 }

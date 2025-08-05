@@ -21,23 +21,33 @@ import javax.sql.DataSource
  */
 class VarselEndretRiver(
     rapidApplication: RapidsConnection,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "varsel_endret") }
-            validate {
-                it.requireKey(
-                    "@id", "@opprettet",
-                    "varseltittel", "varselkode", "gjeldende_status",
-                    "varsel_id", "vedtaksperiode_id"
-                )
-                it.interestedIn("behandling_id")
-            }
-        }.register(this)
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "varsel_endret") }
+                validate {
+                    it.requireKey(
+                        "@id",
+                        "@opprettet",
+                        "varseltittel",
+                        "varselkode",
+                        "gjeldende_status",
+                        "varsel_id",
+                        "vedtaksperiode_id",
+                    )
+                    it.interestedIn("behandling_id")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiode_id"].asText())
         val tittel = packet["varseltittel"].asText()
         val meldingOpprettet = packet["@opprettet"].asLocalDateTime()
@@ -45,21 +55,23 @@ class VarselEndretRiver(
         val behandlingId = packet["behandling_id"].textValue()?.let { UUID.fromString(it) }
         val varselId = packet["varsel_id"].asUuid()
         val varselkode = packet["varselkode"].asText()
-        val kilde = with(varselkode) {
-            when {
-                startsWith("SB") -> "Spesialist"
-                startsWith("RV") -> "Spleis"
-                else -> throw IllegalStateException("Støtter ikke varselkode: $this")
+        val kilde =
+            with(varselkode) {
+                when {
+                    startsWith("SB") -> "Spesialist"
+                    startsWith("RV") -> "Spleis"
+                    else -> throw IllegalStateException("Støtter ikke varselkode: $this")
+                }
             }
-        }
-        val varsel = Varsel(
-            id = varselId,
-            vedtaksperiodeId = vedtaksperiodeId,
-            kode = varselkode,
-            melding = tittel,
-            kilde = kilde,
-            status = status
-        )
+        val varsel =
+            Varsel(
+                id = varselId,
+                vedtaksperiodeId = vedtaksperiodeId,
+                kode = varselkode,
+                melding = tittel,
+                kilde = kilde,
+                status = status,
+            )
 
         sessionOf(dataSource).use { session ->
             session.insertVarsel(varsel, meldingOpprettet, behandlingId)
@@ -73,11 +85,15 @@ class VarselEndretRiver(
         val kode: String,
         val melding: String,
         val kilde: String,
-        val status: String
+        val status: String,
     )
 
     private companion object {
-        private fun Session.insertVarsel(varsel: Varsel, sistEndret: LocalDateTime, behandlingId: UUID?): Int {
+        private fun Session.insertVarsel(
+            varsel: Varsel,
+            sistEndret: LocalDateTime,
+            behandlingId: UUID?,
+        ): Int {
             @Language("PostgreSQL")
             val statement = """
                 INSERT INTO varsel(varsel_id, behandling_id, vedtaksperiode_id, varselkode, kilde, tittel, status, sist_endret, godkjenning_varsel_id)
@@ -87,7 +103,8 @@ class VarselEndretRiver(
 
             return run(
                 queryOf(
-                    statement, mapOf(
+                    statement,
+                    mapOf(
                         "varselId" to varsel.id,
                         "behandlingId" to behandlingId,
                         "varselkode" to varsel.kode,
@@ -95,9 +112,9 @@ class VarselEndretRiver(
                         "tittel" to varsel.melding,
                         "status" to varsel.status,
                         "vedtaksperiodeId" to varsel.vedtaksperiodeId,
-                        "sistEndret" to sistEndret
-                    )
-                ).asUpdate
+                        "sistEndret" to sistEndret,
+                    ),
+                ).asUpdate,
             )
         }
     }

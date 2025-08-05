@@ -6,11 +6,21 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 internal class VenteklassifiseringTest {
-
     @Test
     fun `gamle greier`() {
         val torsdag = torsdag(LocalDate.parse("2024-09-05"))
-        assertEquals(Venteklassifisering.VANLIG, venteklassifisering(registrert = torsdag.minusDays(5).minusHours(23).minusMinutes(59).minusSeconds(59), torsdag))
+        assertEquals(
+            Venteklassifisering.VANLIG,
+            venteklassifisering(
+                registrert =
+                    torsdag
+                        .minusDays(5)
+                        .minusHours(23)
+                        .minusMinutes(59)
+                        .minusSeconds(59),
+                torsdag,
+            ),
+        )
         assertEquals(Venteklassifisering.GAMMEL, venteklassifisering(registrert = torsdag.minusDays(6), torsdag))
     }
 
@@ -37,8 +47,12 @@ internal class VenteklassifiseringTest {
     }
 
     private fun mandag(dato: LocalDate) = dato.atStartOfDay().also { check(it.dayOfWeek == DayOfWeek.MONDAY) }
+
     private fun torsdag(dato: LocalDate) = dato.atStartOfDay().also { check(it.dayOfWeek == DayOfWeek.THURSDAY) }
+
     private fun fredag(dato: LocalDate) = dato.atStartOfDay().also { check(it.dayOfWeek == DayOfWeek.FRIDAY) }
+
     private fun lørdag(dato: LocalDate) = dato.atStartOfDay().also { check(it.dayOfWeek == DayOfWeek.SATURDAY) }
+
     private fun søndag(dato: LocalDate) = dato.atStartOfDay().also { check(it.dayOfWeek == DayOfWeek.SUNDAY) }
 }

@@ -11,101 +11,117 @@ import java.util.*
 
 class VedtaksperiodeDataE2ETest {
     @Test
-    fun `send en enkel melding, lagre en enkelt periode`() = e2eTest {
-        val id = UUID.randomUUID()
-        rapid.sendTestMessage(vedtakOpprettet(
-            id,
-            "01010112345",
-            "et organisasjonsnummer",
-            LocalDate.of(2020, 1, 1),
-            LocalDate.of(2020, 1, 31),
-            LocalDate.of(2020, 1, 1)
-        ))
+    fun `send en enkel melding, lagre en enkelt periode`() =
+        e2eTest {
+            val id = UUID.randomUUID()
+            rapid.sendTestMessage(
+                vedtakOpprettet(
+                    id,
+                    "01010112345",
+                    "et organisasjonsnummer",
+                    LocalDate.of(2020, 1, 1),
+                    LocalDate.of(2020, 1, 31),
+                    LocalDate.of(2020, 1, 1),
+                ),
+            )
 
-        assertFelt(
-            id,
-            forventetFnr = "01010112345",
-            forventetAktørId = standardAktørId,
-            forventetYrkesaktivitet = "et organisasjonsnummer",
-            forventetFom = LocalDate.of(2020, 1, 1),
-            forventetTom = LocalDate.of(2020, 1, 31),
-            forventetSkjæringstidspunkt = LocalDate.of(2020, 1, 1),
-            forventetTilstand = "START"
-        )
-    }
-
-    @Test
-    fun `send samme periode igjen, men annen data`() = e2eTest {
-        val id = UUID.randomUUID()
-        rapid.sendTestMessage(vedtakOpprettet(
-            vedtaksperiodeId = id,
-            fnr = "01010112345",
-            yrkesaktivitet = "et organisasjonsnummer",
-            fom = LocalDate.of(2020, 1, 1),
-            tom = LocalDate.of(2020, 1, 31),
-            skjæringstidspunkt = LocalDate.of(2020, 1, 1)
-        ))
-        rapid.sendTestMessage(vedtakEndret(
-            vedtaksperiodeId = id,
-            fnr = "99999999999",
-            yrkesaktivitet = "kølgruvene",
-            fom = LocalDate.of(2029, 1, 1),
-            tom = LocalDate.of(2029, 1, 31),
-            skjæringstidspunkt = LocalDate.of(2029, 1, 1),
-            tilstand = "AVSLUTTET_UTEN_UTBETALING"
-        ))
-
-        assertFelt(
-            vedtaksperiodeId = id,
-            forventetFnr = "99999999999",
-            forventetAktørId = standardAktørId,
-            forventetYrkesaktivitet = "kølgruvene",
-            forventetFom = LocalDate.of(2029, 1, 1),
-            forventetTom = LocalDate.of(2029, 1, 31),
-            forventetSkjæringstidspunkt = LocalDate.of(2029, 1, 1),
-            forventetTilstand = "AVSLUTTET_UTEN_UTBETALING"
-        )
-    }
+            assertFelt(
+                id,
+                forventetFnr = "01010112345",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "et organisasjonsnummer",
+                forventetFom = LocalDate.of(2020, 1, 1),
+                forventetTom = LocalDate.of(2020, 1, 31),
+                forventetSkjæringstidspunkt = LocalDate.of(2020, 1, 1),
+                forventetTilstand = "START",
+            )
+        }
 
     @Test
-    fun `send person avstemt`() = e2eTest {
-        val første = UUID.randomUUID()
-        val andre = UUID.randomUUID()
-        val tredje = UUID.randomUUID()
-        rapid.sendTestMessage(personAvstemt(første, andre, tredje))
-        assertFelt(
-            første,
-            forventetFnr = "1",
-            forventetAktørId = standardAktørId,
-            forventetYrkesaktivitet = "12",
-            forventetSkjæringstidspunkt = LocalDate.of(2001, 1, 1),
-            forventetTilstand = "START",
-            forventetFom = LocalDate.of(2001, 1, 1),
-            forventetTom = LocalDate.of(2001, 1, 11)
-        )
-        assertFelt(
-            andre,
-            forventetFnr = "1",
-            forventetAktørId = standardAktørId,
-            forventetYrkesaktivitet = "12",
-            forventetSkjæringstidspunkt = LocalDate.of(2002, 2, 2),
-            forventetTilstand = "AVSLUTTET_UTEN_UTBETALING",
-            forventetFom = LocalDate.of(2002, 2, 2),
-            forventetTom = LocalDate.of(2002, 2, 22)
-        )
-        assertFelt(
-            tredje,
-            forventetFnr = "1",
-            forventetAktørId = standardAktørId,
-            forventetYrkesaktivitet = "3",
-            forventetSkjæringstidspunkt = LocalDate.of(2003, 3, 3),
-            forventetTilstand = "AVSLUTTET",
-            forventetFom = LocalDate.of(2003, 3, 3),
-            forventetTom = LocalDate.of(2003, 3, 13)
-        )
-    }
+    fun `send samme periode igjen, men annen data`() =
+        e2eTest {
+            val id = UUID.randomUUID()
+            rapid.sendTestMessage(
+                vedtakOpprettet(
+                    vedtaksperiodeId = id,
+                    fnr = "01010112345",
+                    yrkesaktivitet = "et organisasjonsnummer",
+                    fom = LocalDate.of(2020, 1, 1),
+                    tom = LocalDate.of(2020, 1, 31),
+                    skjæringstidspunkt = LocalDate.of(2020, 1, 1),
+                ),
+            )
+            rapid.sendTestMessage(
+                vedtakEndret(
+                    vedtaksperiodeId = id,
+                    fnr = "99999999999",
+                    yrkesaktivitet = "kølgruvene",
+                    fom = LocalDate.of(2029, 1, 1),
+                    tom = LocalDate.of(2029, 1, 31),
+                    skjæringstidspunkt = LocalDate.of(2029, 1, 1),
+                    tilstand = "AVSLUTTET_UTEN_UTBETALING",
+                ),
+            )
 
-    private fun vedtakOpprettet(vedtaksperiodeId: UUID, fnr: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate) = """
+            assertFelt(
+                vedtaksperiodeId = id,
+                forventetFnr = "99999999999",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "kølgruvene",
+                forventetFom = LocalDate.of(2029, 1, 1),
+                forventetTom = LocalDate.of(2029, 1, 31),
+                forventetSkjæringstidspunkt = LocalDate.of(2029, 1, 1),
+                forventetTilstand = "AVSLUTTET_UTEN_UTBETALING",
+            )
+        }
+
+    @Test
+    fun `send person avstemt`() =
+        e2eTest {
+            val første = UUID.randomUUID()
+            val andre = UUID.randomUUID()
+            val tredje = UUID.randomUUID()
+            rapid.sendTestMessage(personAvstemt(første, andre, tredje))
+            assertFelt(
+                første,
+                forventetFnr = "1",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "12",
+                forventetSkjæringstidspunkt = LocalDate.of(2001, 1, 1),
+                forventetTilstand = "START",
+                forventetFom = LocalDate.of(2001, 1, 1),
+                forventetTom = LocalDate.of(2001, 1, 11),
+            )
+            assertFelt(
+                andre,
+                forventetFnr = "1",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "12",
+                forventetSkjæringstidspunkt = LocalDate.of(2002, 2, 2),
+                forventetTilstand = "AVSLUTTET_UTEN_UTBETALING",
+                forventetFom = LocalDate.of(2002, 2, 2),
+                forventetTom = LocalDate.of(2002, 2, 22),
+            )
+            assertFelt(
+                tredje,
+                forventetFnr = "1",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "3",
+                forventetSkjæringstidspunkt = LocalDate.of(2003, 3, 3),
+                forventetTilstand = "AVSLUTTET",
+                forventetFom = LocalDate.of(2003, 3, 3),
+                forventetTom = LocalDate.of(2003, 3, 13),
+            )
+        }
+
+    private fun vedtakOpprettet(
+        vedtaksperiodeId: UUID,
+        fnr: String,
+        yrkesaktivitet: String,
+        fom: LocalDate,
+        tom: LocalDate,
+        skjæringstidspunkt: LocalDate,
+    ) = """
             {
             "@event_name": "vedtaksperiode_opprettet",
             "vedtaksperiodeId": "$vedtaksperiodeId",
@@ -117,7 +133,15 @@ class VedtaksperiodeDataE2ETest {
             }
         """
 
-    private fun vedtakEndret(vedtaksperiodeId: UUID, fnr: String, yrkesaktivitet: String, fom: LocalDate, tom: LocalDate, skjæringstidspunkt: LocalDate, tilstand: String) = """
+    private fun vedtakEndret(
+        vedtaksperiodeId: UUID,
+        fnr: String,
+        yrkesaktivitet: String,
+        fom: LocalDate,
+        tom: LocalDate,
+        skjæringstidspunkt: LocalDate,
+        tilstand: String,
+    ) = """
             {
             "@event_name": "vedtaksperiode_endret",
             "vedtaksperiodeId": "$vedtaksperiodeId",
@@ -131,7 +155,12 @@ class VedtaksperiodeDataE2ETest {
         """
 
     @Language("JSON")
-    private fun personAvstemt(første: UUID, andre: UUID, tredje: UUID): String = """
+    private fun personAvstemt(
+        første: UUID,
+        andre: UUID,
+        tredje: UUID,
+    ): String =
+        """
   {
     "@event_name": "person_avstemt",
     "fødselsnummer": "1",
@@ -165,7 +194,7 @@ class VedtaksperiodeDataE2ETest {
         }]
     }
 ]}
-    """.trimIndent()
+        """.trimIndent()
 
     private fun E2eTestApp.assertFelt(
         vedtaksperiodeId: UUID,
@@ -175,21 +204,25 @@ class VedtaksperiodeDataE2ETest {
         forventetFom: LocalDate,
         forventetTom: LocalDate,
         forventetSkjæringstidspunkt: LocalDate,
-        forventetTilstand: String
+        forventetTilstand: String,
     ) {
         val query = """select * from vedtaksperiode_data where vedtaksperiodeId = :vedtaksperiodeId"""
         sessionOf(dataSource).use { session ->
-            val actuals: Map<String, Any> = session.run(
-                queryOf(query, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
-                .map {
-                    mapOf("fnr" to it.string("fnr"),
-                        "aktørId" to it.string("aktorId"),
-                        "yrkesaktivitet" to it.string("yrkesaktivitet"),
-                        "fom" to it.localDate("fom"),
-                        "tom" to it.localDate("tom"),
-                        "tilstand" to it.string("tilstand"),
-                        "skjæringstidspunkt" to it.localDate("skjaeringstidspunkt"))
-                }.asSingle)!!
+            val actuals: Map<String, Any> =
+                session.run(
+                    queryOf(query, mapOf("vedtaksperiodeId" to vedtaksperiodeId))
+                        .map {
+                            mapOf(
+                                "fnr" to it.string("fnr"),
+                                "aktørId" to it.string("aktorId"),
+                                "yrkesaktivitet" to it.string("yrkesaktivitet"),
+                                "fom" to it.localDate("fom"),
+                                "tom" to it.localDate("tom"),
+                                "tilstand" to it.string("tilstand"),
+                                "skjæringstidspunkt" to it.localDate("skjaeringstidspunkt"),
+                            )
+                        }.asSingle,
+                )!!
 
             assertEquals(forventetFnr, actuals["fnr"]!!)
             assertEquals(forventetAktørId, actuals["aktørId"]!!)

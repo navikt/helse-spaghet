@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.E2eTestApp.Companion.e2eTest
@@ -11,24 +10,24 @@ import java.util.*
 
 class SkatteinntekterLagtTilGrunnE2ETest {
     @Test
-    fun `lagrer i databasen`() = e2eTest {
-        rapid.sendTestMessage(skatteinntekterLagtTilGrunnEvent())
-        assertEquals(1, tellSkatteinntekterLagtTilGrunn())
-    }
+    fun `lagrer i databasen`() =
+        e2eTest {
+            rapid.sendTestMessage(skatteinntekterLagtTilGrunnEvent())
+            assertEquals(1, tellSkatteinntekterLagtTilGrunn())
+        }
 
-    private fun E2eTestApp.tellSkatteinntekterLagtTilGrunn(): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun E2eTestApp.tellSkatteinntekterLagtTilGrunn(): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(*) FROM skatteinntekter_lagt_til_grunn"
             requireNotNull(
-                session.run(queryOf(query).map { row -> row.int(1) }.asSingle)
+                session.run(queryOf(query).map { row -> row.int(1) }.asSingle),
             )
         }
-    }
 
     @Language("JSON")
-    private fun skatteinntekterLagtTilGrunnEvent(vedtaksperiodeId: UUID = UUID.randomUUID()): String {
-        return """
+    private fun skatteinntekterLagtTilGrunnEvent(vedtaksperiodeId: UUID = UUID.randomUUID()): String =
+        """
        {
          "@event_name": "skatteinntekter_lagt_til_grunn",
          "organisasjonsnummer": "987654321",
@@ -54,6 +53,4 @@ class SkatteinntekterLagtTilGrunnE2ETest {
          "fødselsnummer": "12029240045"
        }
        """
-    }
-
 }

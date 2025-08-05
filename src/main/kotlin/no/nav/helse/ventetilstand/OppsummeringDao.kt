@@ -5,31 +5,43 @@ import kotliquery.sessionOf
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
-internal class OppsummeringDao(private val dataSource: DataSource) {
+internal class OppsummeringDao(
+    private val dataSource: DataSource,
+) {
+    internal data class Ventegruppe(
+        val årsak: String,
+        val antall: Int,
+        val propp: Boolean,
+    )
 
-    internal data class Ventegruppe(val årsak: String, val antall: Int, val propp: Boolean)
-    internal fun oppsummering() = sessionOf(dataSource).use { session ->
-        val oppsummering = session.list(Query(OPPSUMMERING)) { row ->
-            Ventegruppe(årsak = row.string("arsak"), propp = row.boolean("propp"), antall = row.int("antall"))
+    internal fun oppsummering() =
+        sessionOf(dataSource).use { session ->
+            val oppsummering =
+                session.list(Query(OPPSUMMERING)) { row ->
+                    Ventegruppe(årsak = row.string("arsak"), propp = row.boolean("propp"), antall = row.int("antall"))
+                }
+
+            val antallPersoner =
+                session.single(Query(ANTALL_PERSONER_SOM_VENTER)) { row ->
+                    row.int("antallPersoner")
+                } ?: 0
+            oppsummering to antallPersoner
         }
 
-        val antallPersoner = session.single(Query(ANTALL_PERSONER_SOM_VENTER)) { row ->
-            row.int("antallPersoner")
-        } ?: 0
-        oppsummering to antallPersoner
-    }
+    internal data class VentegruppeExternal(
+        val årsak: String,
+        val antall: Int,
+        val bucket: String,
+    )
 
-    internal data class VentegruppeExternal(val årsak: String, val antall: Int, val bucket: String)
-    internal fun oppsummeringExternal(): List<VentegruppeExternal> {
-        return sessionOf(dataSource).use { session ->
+    internal fun oppsummeringExternal(): List<VentegruppeExternal> =
+        sessionOf(dataSource).use { session ->
             session.list(Query(OPPSUMMERING_EXTERNAL)) { row ->
                 VentegruppeExternal(årsak = row.string("venter_på"), antall = row.int("antall"), bucket = row.string("ventet_i"))
             }
         }
-    }
 
     private companion object {
-
         @Language("PostgreSQL")
         private val OPPSUMMERING = """
             SELECT
@@ -69,5 +81,4 @@ internal class OppsummeringDao(private val dataSource: DataSource) {
             WHERE tidsstempel < now() - INTERVAL '5 MINUTES' -- Mulig de bare er i transit
         """
     }
-
 }

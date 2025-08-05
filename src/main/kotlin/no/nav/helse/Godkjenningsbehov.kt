@@ -13,15 +13,14 @@ class Godkjenningsbehov(
     val utbetalingType: String,
     val refusjonType: String?,
     val saksbehandleroverstyringer: List<UUID>,
-    val behandlingId: UUID
+    val behandlingId: UUID,
 ) {
-
     data class Løsning(
         val godkjent: Boolean,
         val saksbehandlerIdent: String,
         val godkjentTidspunkt: LocalDateTime,
         val årsak: String?,
         val begrunnelser: List<String>?,
-        val kommentar: String?
+        val kommentar: String?,
     )
 }

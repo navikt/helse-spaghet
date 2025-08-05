@@ -23,44 +23,50 @@ import javax.sql.DataSource
 class VedtaksperiodeAvstemt(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource,
-    private val speedClient: SpeedClient
+    private val speedClient: SpeedClient,
 ) : River.PacketListener {
     init {
-        River(rapidApplication).apply {
-            precondition { it.requireValue("@event_name", "person_avstemt") }
-            validate {
-                it.requireKey("@id", "fødselsnummer")
-                it.requireArray("arbeidsgivere") {
-                    requireKey("organisasjonsnummer")
-                    requireArray("vedtaksperioder") {
-                        requireKey("id", "tilstand", "oppdatert", "fom", "tom", "skjæringstidspunkt")
+        River(rapidApplication)
+            .apply {
+                precondition { it.requireValue("@event_name", "person_avstemt") }
+                validate {
+                    it.requireKey("@id", "fødselsnummer")
+                    it.requireArray("arbeidsgivere") {
+                        requireKey("organisasjonsnummer")
+                        requireArray("vedtaksperioder") {
+                            requireKey("id", "tilstand", "oppdatert", "fom", "tom", "skjæringstidspunkt")
+                        }
                     }
                 }
-            }
-
-        }.register(this)
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val ident = packet["fødselsnummer"].asText()
         val callId = packet["@id"].asText()
         val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
-        val data: List<VedtaksperiodeData> = packet["arbeidsgivere"].flatMap { arbeidsgiver ->
-            val orgnr = arbeidsgiver["organisasjonsnummer"].asText()
-            arbeidsgiver["vedtaksperioder"].map { vedtaksperiode ->
-                VedtaksperiodeData(
-                    id = vedtaksperiode["id"].asUuid(),
-                    fnr = identer.fødselsnummer,
-                    aktørId = identer.aktørId,
-                    yrkesaktivitet = orgnr,
-                    tilstand = vedtaksperiode["tilstand"].asText(),
-                    fom = vedtaksperiode["fom"].asLocalDate(),
-                    tom = vedtaksperiode["tom"].asLocalDate(),
-                    skjæringstidspunkt = vedtaksperiode["skjæringstidspunkt"].asLocalDate(),
-                    oppdatert = vedtaksperiode["oppdatert"].asLocalDateTime()
-                )
+        val data: List<VedtaksperiodeData> =
+            packet["arbeidsgivere"].flatMap { arbeidsgiver ->
+                val orgnr = arbeidsgiver["organisasjonsnummer"].asText()
+                arbeidsgiver["vedtaksperioder"].map { vedtaksperiode ->
+                    VedtaksperiodeData(
+                        id = vedtaksperiode["id"].asUuid(),
+                        fnr = identer.fødselsnummer,
+                        aktørId = identer.aktørId,
+                        yrkesaktivitet = orgnr,
+                        tilstand = vedtaksperiode["tilstand"].asText(),
+                        fom = vedtaksperiode["fom"].asLocalDate(),
+                        tom = vedtaksperiode["tom"].asLocalDate(),
+                        skjæringstidspunkt = vedtaksperiode["skjæringstidspunkt"].asLocalDate(),
+                        oppdatert = vedtaksperiode["oppdatert"].asLocalDateTime(),
+                    )
+                }
             }
-        }
         data.forEach { lagreVedtaksperiodedata(it, dataSource) }
     }
 }
@@ -74,28 +80,33 @@ private data class VedtaksperiodeData(
     val fom: LocalDate,
     val tom: LocalDate,
     val skjæringstidspunkt: LocalDate,
-    val oppdatert: LocalDateTime
+    val oppdatert: LocalDateTime,
 )
 
-private fun lagreVedtaksperiodedata(data: VedtaksperiodeData, dataSource: DataSource) {
+private fun lagreVedtaksperiodedata(
+    data: VedtaksperiodeData,
+    dataSource: DataSource,
+) {
     try {
         sessionOf(dataSource).use { session ->
-            val upsert = """
-                        insert into vedtaksperiode_data (vedtaksperiodeId, fnr, aktorId, yrkesaktivitet, fom, tom, skjaeringstidspunkt, tilstand, oppdatert)
-                        values (:vedtaksperiodeId, :fnr, :aktorId, :yrkesaktivitet, :fom, :tom, :skjaeringstidspunkt, :tilstand, :oppdatert)
-                        on conflict(vedtaksperiodeId) do update
-                            set fnr = excluded.fnr,  
-                                aktorId = excluded.aktorId,
-                                fom = excluded.fom,
-                                tom = excluded.tom,
-                                yrkesaktivitet = excluded.yrkesaktivitet,
-                                skjaeringstidspunkt = excluded.skjaeringstidspunkt,
-                                tilstand = excluded.tilstand,
-                                oppdatert = excluded.oppdatert;
-                    """.trimIndent()
+            val upsert =
+                """
+                insert into vedtaksperiode_data (vedtaksperiodeId, fnr, aktorId, yrkesaktivitet, fom, tom, skjaeringstidspunkt, tilstand, oppdatert)
+                values (:vedtaksperiodeId, :fnr, :aktorId, :yrkesaktivitet, :fom, :tom, :skjaeringstidspunkt, :tilstand, :oppdatert)
+                on conflict(vedtaksperiodeId) do update
+                    set fnr = excluded.fnr,  
+                        aktorId = excluded.aktorId,
+                        fom = excluded.fom,
+                        tom = excluded.tom,
+                        yrkesaktivitet = excluded.yrkesaktivitet,
+                        skjaeringstidspunkt = excluded.skjaeringstidspunkt,
+                        tilstand = excluded.tilstand,
+                        oppdatert = excluded.oppdatert;
+                """.trimIndent()
             session.update(
                 queryOf(
-                    upsert, mapOf(
+                    upsert,
+                    mapOf(
                         "vedtaksperiodeId" to data.id,
                         "fnr" to data.fnr,
                         "aktorId" to data.aktørId,
@@ -104,9 +115,9 @@ private fun lagreVedtaksperiodedata(data: VedtaksperiodeData, dataSource: DataSo
                         "tom" to data.tom,
                         "skjaeringstidspunkt" to data.skjæringstidspunkt,
                         "tilstand" to data.tilstand,
-                        "oppdatert" to data.oppdatert
-                    )
-                )
+                        "oppdatert" to data.oppdatert,
+                    ),
+                ),
             )
         }
     } catch (err: PSQLException) {

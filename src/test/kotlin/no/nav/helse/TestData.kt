@@ -14,45 +14,47 @@ import java.util.UUID.randomUUID
 import kotlin.random.Random.Default.nextLong
 
 object TestData {
-
-
-    val lagtPåVent = LagtPåVent(
-        oppgaveId = "12345".toLong(),
-        behandlingId = randomUUID(),
-        skalTildeles = false,
-        frist = LocalDate.now().plusDays(2),
-        opprettet = LocalDateTime.now(),
-        saksbehandlerOid = randomUUID(),
-        saksbehandlerIdent = "W12345",
-        notatTekst = "Hei",
-        årsaker = listOf(
-            LagtPåVentÅrsak(
-                key = "en key",
-                årsak = "en årsak"
-            ),
+    val lagtPåVent =
+        LagtPåVent(
+            oppgaveId = "12345".toLong(),
+            behandlingId = randomUUID(),
+            skalTildeles = false,
+            frist = LocalDate.now().plusDays(2),
+            opprettet = LocalDateTime.now(),
+            saksbehandlerOid = randomUUID(),
+            saksbehandlerIdent = "W12345",
+            notatTekst = "Hei",
+            årsaker =
+                listOf(
+                    LagtPåVentÅrsak(
+                        key = "en key",
+                        årsak = "en årsak",
+                    ),
+                ),
         )
-    )
 
-    val lagtPåVentFlereÅrsakerUtenNotat = LagtPåVent(
-        oppgaveId = "12345".toLong(),
-        behandlingId = randomUUID(),
-        skalTildeles = false,
-        frist = LocalDate.now().plusDays(2),
-        opprettet = LocalDateTime.now(),
-        saksbehandlerOid = randomUUID(),
-        saksbehandlerIdent = "W12345",
-        notatTekst = null,
-        årsaker = listOf(
-            LagtPåVentÅrsak(
-                key = "en key",
-                årsak = "en årsak"
-            ),
-            LagtPåVentÅrsak(
-                key = "to key",
-                årsak = "to årsak"
-            ),
+    val lagtPåVentFlereÅrsakerUtenNotat =
+        LagtPåVent(
+            oppgaveId = "12345".toLong(),
+            behandlingId = randomUUID(),
+            skalTildeles = false,
+            frist = LocalDate.now().plusDays(2),
+            opprettet = LocalDateTime.now(),
+            saksbehandlerOid = randomUUID(),
+            saksbehandlerIdent = "W12345",
+            notatTekst = null,
+            årsaker =
+                listOf(
+                    LagtPåVentÅrsak(
+                        key = "en key",
+                        årsak = "en årsak",
+                    ),
+                    LagtPåVentÅrsak(
+                        key = "to key",
+                        årsak = "to årsak",
+                    ),
+                ),
         )
-    )
 
     fun LagtPåVent.toJsonUtenNotatTekst(): String =
         """{
@@ -69,7 +71,8 @@ object TestData {
                 {"årsak": "${årsak.årsak}", "key": "${årsak.key}"}
             """
         }}
-         }""".trimMargin()
+         }
+        """.trimMargin()
 
     fun LagtPåVent.toJson(): String =
         """{
@@ -86,10 +89,9 @@ object TestData {
             """
                 {"årsak": "${årsak.årsak}", "key": "${årsak.key}"}
             """
-            }}
-         }""".trimMargin()
-
-
+        }}
+         }
+        """.trimMargin()
 
     fun Annullering.toJson(): String =
         """{
@@ -103,21 +105,26 @@ object TestData {
             """
                 {"arsak": "${arsak.arsak}", "key": "${arsak.key}"}
             """
-            }}
-         }""".trimMargin()
+        }}
+         }
+        """.trimMargin()
 
-    val annullering = Annullering(
-        saksbehandler = randomUUID(),
-        vedtaksperiodeId = randomUUID(),
-        begrunnelser = listOf(),
-        kommentar = null,
-        opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
-        arsaker = emptyList()
-    )
+    val annullering =
+        Annullering(
+            saksbehandler = randomUUID(),
+            vedtaksperiodeId = randomUUID(),
+            begrunnelser = listOf(),
+            kommentar = null,
+            opprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+            arsaker = emptyList(),
+        )
 
     fun Annullering.vedtaksperiodeId(it: UUID) = copy(vedtaksperiodeId = it)
+
     fun Annullering.kommentar(it: String) = copy(kommentar = it)
+
     fun Annullering.begrunnelse(it: String) = copy(begrunnelser = begrunnelser + it)
+
     fun Annullering.årsak(it: AnnulleringArsak) = copy(arsaker = arsaker?.plus(it))
 
     data class VedtaksperiodeEndret(
@@ -129,11 +136,14 @@ object TestData {
         val gjeldendeTilstand: String = "TIL_INFOTRYGD",
         val forrigeTilstand: String = "AVVENTER_GAP",
         val forårsaketAv: UUID = randomUUID(),
-        val kildeType: String? = null
+        val kildeType: String? = null,
     ) {
         fun forrigeTilstand(it: String) = copy(forrigeTilstand = it)
+
         fun gjeldendeTilstand(it: String) = copy(gjeldendeTilstand = it)
+
         fun kildeType(it: String) = copy(kildeType = it)
+
         fun toJson() =
             """{
             "@event_name": "vedtaksperiode_endret",
@@ -144,9 +154,8 @@ object TestData {
             "@opprettet": "$opprettet",
             "@id": "$meldingsId",
             "@forårsaket_av": {"id": "$forårsaketAv", "event_name": "$kildeType"}
-         }""".trimMargin()
-
-
+         }
+            """.trimMargin()
     }
 
     data class NyOppgave(
@@ -157,34 +166,38 @@ object TestData {
         val tilstand: String = "AvventerSaksbehandler",
     ) {
         fun id(id: Long) = copy(id = id)
+
         fun egenskaper(vararg egenskaper: String) = copy(egenskaper = egenskaper.toList())
+
         fun fødselsnummer(fødselsnummer: String) = copy(fødselsnummer = fødselsnummer)
+
         fun tilstand(tilstand: String) = copy(tilstand = tilstand)
 
         @Language("JSON")
-        fun toJson() = """
-        {
-          "@event_name": "oppgave_oppdatert",
-          "hendelseId": "698bbf15-af2c-40e9-9e6c-0e93b1a30b61",
-          "oppgaveId": $id,
-          "tilstand": "$tilstand",
-          "fødselsnummer": "$fødselsnummer",
-          "behandlingId": "$behandlingId",
-          "egenskaper": [
-            ${egenskaper.joinToString { """"$it"""" }}
-          ],
-          "beslutter": {
-            "epostadresse": "beslutter@nav.no",
-            "oid": "5ba9ce8b-b834-4109-866c-e14d35a28d74"
-          },
-          "saksbehandler": {
-            "epostadresse": "saksbehandler@nav.no",
-            "oid": "3208409d-d6e7-442b-a010-d2b14bd8bfbe"
-          },
-          "@id": "0bfd3123-e9e7-4519-8f8c-d750b576aa99",
-          "@opprettet": "2024-01-23T12:16:16.944417"
-        }
-        """.trimIndent()
+        fun toJson() =
+            """
+            {
+              "@event_name": "oppgave_oppdatert",
+              "hendelseId": "698bbf15-af2c-40e9-9e6c-0e93b1a30b61",
+              "oppgaveId": $id,
+              "tilstand": "$tilstand",
+              "fødselsnummer": "$fødselsnummer",
+              "behandlingId": "$behandlingId",
+              "egenskaper": [
+                ${egenskaper.joinToString { """"$it"""" }}
+              ],
+              "beslutter": {
+                "epostadresse": "beslutter@nav.no",
+                "oid": "5ba9ce8b-b834-4109-866c-e14d35a28d74"
+              },
+              "saksbehandler": {
+                "epostadresse": "saksbehandler@nav.no",
+                "oid": "3208409d-d6e7-442b-a010-d2b14bd8bfbe"
+              },
+              "@id": "0bfd3123-e9e7-4519-8f8c-d750b576aa99",
+              "@opprettet": "2024-01-23T12:16:16.944417"
+            }
+            """.trimIndent()
     }
 
     data class NyAktivitet(
@@ -195,9 +208,10 @@ object TestData {
         val gjeldendeTilstand: String = "TIL_INFOTRYGD",
         val forrigeTilstand: String = "AVVENTER_GAP",
         val forårsaketAv: UUID = randomUUID(),
-        val kontekstType: String? = null
+        val kontekstType: String? = null,
     ) {
         fun aktivitet(it: Aktivitet) = copy(aktiviteter = aktiviteter + it)
+
         fun toJson() =
             """{
             "@event_name": "aktivitetslogg_ny_aktivitet",
@@ -205,7 +219,8 @@ object TestData {
             "@opprettet": "$opprettet",
             "@id": "$meldingsId",
             "@forårsaket_av": {"id": "$forårsaketAv"}
-         }""".trimMargin()
+         }
+            """.trimMargin()
     }
 
     data class Aktivitet(
@@ -213,46 +228,55 @@ object TestData {
         val alvorlighetsgrad: String = Nivå.VARSEL.name,
         val varselkode: String? = "RV_IV_1",
         val tidsstempel: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
-        val kontekster: List<Map<String, Any>> = emptyList()
+        val kontekster: List<Map<String, Any>> = emptyList(),
     ) {
         fun error() = copy(alvorlighetsgrad = FUNKSJONELL_FEIL.name)
+
         fun info() = copy(alvorlighetsgrad = INFO.name, varselkode = null)
-        fun toJson() = """{
-            "melding" : "$melding",
-            "nivå" : "$alvorlighetsgrad",
-            ${if (varselkode != null) """ "varselkode": "$varselkode", """ else """"""}
-            "tidsstempel" : "$tidsstempel",
-            "kontekster": ${
-            kontekster.map { kontekst ->
-                """{
+
+        fun toJson() =
+            """
+            {
+             "melding" : "$melding",
+             "nivå" : "$alvorlighetsgrad",
+             ${if (varselkode != null) """ "varselkode": "$varselkode", """ else """"""}
+             "tidsstempel" : "$tidsstempel",
+             "kontekster": ${
+                kontekster.map { kontekst ->
+                    """{
                     "konteksttype": "${kontekst.getValue("konteksttype")}",
                     "kontekstmap": {
                     ${
-                    (kontekst.getValue("kontekstmap") as Map<String, String>).entries.joinToString {
-                        """
+                        (kontekst.getValue("kontekstmap") as Map<String, String>).entries.joinToString {
+                            """
                            "${it.key}": "${it.value}" 
                         """
+                        }
                     }
-                }
                     }
                 }
                 """
+                }
             }
-        }
-           }
-        """.trimIndent()
+            }
+            """.trimIndent()
 
         fun melding(it: String) = copy(melding = it)
-        fun vedtaksperiodeId(id: UUID) = copy(
-            kontekster = kontekster + listOf(
-                mapOf(
-                    "konteksttype" to "Vedtaksperiode",
-                    "kontekstmap" to mapOf(
-                        "vedtaksperiodeId" to id.toString()
-                    )
-                )
+
+        fun vedtaksperiodeId(id: UUID) =
+            copy(
+                kontekster =
+                    kontekster +
+                        listOf(
+                            mapOf(
+                                "konteksttype" to "Vedtaksperiode",
+                                "kontekstmap" to
+                                    mapOf(
+                                        "vedtaksperiodeId" to id.toString(),
+                                    ),
+                            ),
+                        ),
             )
-        )
 
         companion object {
             fun List<Aktivitet>.toJson(vedtaksperiodeId: UUID): String =

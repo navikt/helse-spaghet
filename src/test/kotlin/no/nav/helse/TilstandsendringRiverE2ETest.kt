@@ -11,14 +11,14 @@ import java.time.LocalDateTime
 import java.util.*
 
 class TilstandsendringRiverE2ETest {
-
     @Test
     fun `lagrer tilstandsendring`() {
         e2eTest {
-            val endring = vedtaksperiodeEndret
-                .forrigeTilstand("AVVENTER_GAP")
-                .gjeldendeTilstand("TIL_INFOTRYGD")
-                .kildeType("behov")
+            val endring =
+                vedtaksperiodeEndret
+                    .forrigeTilstand("AVVENTER_GAP")
+                    .gjeldendeTilstand("TIL_INFOTRYGD")
+                    .kildeType("behov")
 
             endring.sendTilRapid()
 
@@ -33,31 +33,31 @@ class TilstandsendringRiverE2ETest {
                         tilstandFra = endring.forrigeTilstand,
                         tilstandTil = endring.gjeldendeTilstand,
                         kilde = endring.forårsaketAv,
-                        kildeType = endring.kildeType!!
-                    )
-                ), tilstandsendringer
+                        kildeType = endring.kildeType!!,
+                    ),
+                ),
+                tilstandsendringer,
             )
         }
-
     }
 
     private fun E2eTestApp.hentTilstandsendringer(vedtaksperiodeId: UUID) =
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT * FROM vedtaksperiode_tilstandsendring WHERE vedtaksperiode_id=?;"
-            session.run(queryOf(query, vedtaksperiodeId)
-                .map { row ->
-                    Tilstandsendring(
-                        vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
-                        behandlingId = UUID.fromString(row.string("behandling_id")),
-                        tidsstempel = row.localDateTime("tidsstempel"),
-                        tilstandFra = row.string("tilstand_fra"),
-                        tilstandTil = row.string("tilstand_til"),
-                        kilde = UUID.fromString(row.string("kilde")),
-                        kildeType = row.string("kilde_type")
-                    )
-                }
-                .asList
+            session.run(
+                queryOf(query, vedtaksperiodeId)
+                    .map { row ->
+                        Tilstandsendring(
+                            vedtaksperiodeId = UUID.fromString(row.string("vedtaksperiode_id")),
+                            behandlingId = UUID.fromString(row.string("behandling_id")),
+                            tidsstempel = row.localDateTime("tidsstempel"),
+                            tilstandFra = row.string("tilstand_fra"),
+                            tilstandTil = row.string("tilstand_til"),
+                            kilde = UUID.fromString(row.string("kilde")),
+                            kildeType = row.string("kilde_type"),
+                        )
+                    }.asList,
             )
         }
 
@@ -68,6 +68,6 @@ class TilstandsendringRiverE2ETest {
         val tilstandFra: String,
         val tilstandTil: String,
         val kilde: UUID,
-        val kildeType: String
+        val kildeType: String,
     )
 }
