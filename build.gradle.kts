@@ -32,7 +32,7 @@ dependencies {
 
     implementation("com.zaxxer:HikariCP:7.0.0")
     implementation("org.flywaydb:flyway-database-postgresql:11.5.0")
-    implementation("com.github.seratch:kotliquery:1.9.0")
+    implementation("com.github.seratch:kotliquery:1.9.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
