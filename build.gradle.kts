@@ -65,6 +65,9 @@ tasks {
     }
     test {
         useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
     named<Jar>("jar") {
         archiveBaseName.set("app")
