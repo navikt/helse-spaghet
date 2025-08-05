@@ -1,11 +1,3 @@
-val junitJupiterVersion = "5.12.1"
-val postgresqlVersion = "42.7.5"
-val tbdLibsVersion = "2025.03.30-14.11-a91ce546"
-val rapidsAndRiversVersion = "2025061811051750237542.df739400e55e"
-val mockkVersion = "1.13.17"
-val hikariCPVersion = "6.3.0"
-val flywayVersion = "11.5.0"
-
 plugins {
     kotlin("jvm") version "2.2.0"
 }
@@ -27,23 +19,24 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
+private val tbdLibsVersion = "2025.03.30-14.11-a91ce546"
 dependencies {
-    implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
+    implementation("org.postgresql:postgresql:42.7.5")
+    implementation("com.github.navikt:rapids-and-rivers:2025061811051750237542.df739400e55e")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:spedisjon-client:$tbdLibsVersion")
 
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
+    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.5.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("io.mockk:mockk:1.13.17")
     testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:$tbdLibsVersion")
     testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
 }
