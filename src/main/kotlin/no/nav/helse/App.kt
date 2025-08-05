@@ -107,7 +107,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     OppgaveEndretRiver(this, dataSource)
     VedtaksperiodeEndretRiver(this, dataSource, speedClient)
     VedtaksperiodeOpprettetRiver(this, dataSource, speedClient)
-    VedtaksperiodeAvstemt(this, dataSource, speedClient)
+    PersonAvstemtRiver(this, dataSource, speedClient)
     SkatteinntekterLagtTilGrunnRiver(this, dataSource)
     UtkastTilVedtakRiver(this, dataSource)
     LagtPåVentRiver(this, dataSource)

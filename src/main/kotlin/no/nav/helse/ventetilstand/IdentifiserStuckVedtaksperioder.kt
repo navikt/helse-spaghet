@@ -111,7 +111,7 @@ internal class IdentifiserStuckVedtaksperioder(
             fnr: String,
             vedtaksperiodeId: UUID,
             spurteDuClient: SpurteDuClient,
-        ) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (utvikler)", tbdgruppeProd)}/${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (saksbehandler)", tbdSpannerProd)}/$kibanaUrl]"
+        ) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (utvikler)", TBD_GRUPPE_PROD)}/${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (saksbehandler)", TBD_SPANNER_PROD)}/$kibanaUrl]"
 
         private val JsonMessage.eventname get() = get("@event_name").asText()
 
@@ -148,8 +148,8 @@ internal class IdentifiserStuckVedtaksperioder(
                 }
             }
 
-        private const val tbdgruppeProd = "c0227409-2085-4eb2-b487-c4ba270986a3"
-        private const val tbdSpannerProd = "382f42f4-f46b-40c1-849b-38d6b5a1f639"
+        private const val TBD_GRUPPE_PROD = "c0227409-2085-4eb2-b487-c4ba270986a3"
+        private const val TBD_SPANNER_PROD = "382f42f4-f46b-40c1-849b-38d6b5a1f639"
 
         private fun SpurteDuClient.spannerUrl(
             fnr: String,

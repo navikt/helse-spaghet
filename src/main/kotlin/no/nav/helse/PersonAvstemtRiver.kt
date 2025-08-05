@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
-class VedtaksperiodeAvstemt(
+class PersonAvstemtRiver(
     rapidApplication: RapidsConnection,
     private val dataSource: DataSource,
     private val speedClient: SpeedClient,

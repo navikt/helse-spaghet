@@ -16,7 +16,7 @@ class AnalytiskDatapakkeE2ETest {
     @Test
     fun `lagrer analytisk datapakke i databasen`() =
         e2eTest {
-            rapid.sendTestMessage(AnalytiskDatapakkeEvent())
+            rapid.sendTestMessage(analytiskDatapakkeEvent())
             assertEquals(1, tellAnalytiskDatapakke())
         }
 
@@ -25,7 +25,7 @@ class AnalytiskDatapakkeE2ETest {
         e2eTest {
             val vedtaksperiodeId = UUID.randomUUID()
             val behandlingId = UUID.randomUUID()
-            rapid.sendTestMessage(AnalytiskDatapakkeEvent(vedtaksperiodeId = vedtaksperiodeId, behandlingId = behandlingId))
+            rapid.sendTestMessage(analytiskDatapakkeEvent(vedtaksperiodeId = vedtaksperiodeId, behandlingId = behandlingId))
 
             val lagretDatapakke =
                 sessionOf(dataSource).use { session ->
@@ -77,7 +77,7 @@ class AnalytiskDatapakkeE2ETest {
         }
 
     @Language("JSON")
-    private fun AnalytiskDatapakkeEvent(
+    private fun analytiskDatapakkeEvent(
         vedtaksperiodeId: UUID = UUID.randomUUID(),
         behandlingId: UUID = UUID.randomUUID(),
     ): String =
