@@ -7,7 +7,7 @@ val hikariCPVersion = "6.3.0"
 val flywayVersion = "11.5.0"
 
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.0"
 }
 
 repositories {
