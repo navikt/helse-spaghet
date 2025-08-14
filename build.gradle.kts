@@ -30,7 +30,7 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:spedisjon-client:$tbdLibsVersion")
 
-    implementation("com.zaxxer:HikariCP:7.0.0")
+    implementation("com.zaxxer:HikariCP:7.0.1")
     implementation("org.flywaydb:flyway-database-postgresql:11.11.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
