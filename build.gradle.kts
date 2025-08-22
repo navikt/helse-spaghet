@@ -31,7 +31,7 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:spedisjon-client:$tbdLibsVersion")
 
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.11.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.11.2")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
