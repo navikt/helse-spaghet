@@ -20,7 +20,7 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
-private val tbdLibsVersion = "2025.09.15-16.10-ac41dc5c"
+private val tbdLibsVersion = "2025.09.19-13.31-61342e73"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.8")
     implementation("com.github.navikt:rapids-and-rivers:2025080710011754553680.051be9b54ef9")
