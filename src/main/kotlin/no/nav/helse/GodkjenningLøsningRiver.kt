@@ -14,8 +14,19 @@ import com.github.navikt.tbd_libs.speed.SpeedClient
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import net.logstash.logback.argument.StructuredArguments.kv
+import no.nav.helse.RefusjonstypeTag.Arbeidsgiverutbetaling
+import no.nav.helse.RefusjonstypeTag.IngenUtbetaling
+import no.nav.helse.RefusjonstypeTag.Personutbetaling
 import java.util.*
 import javax.sql.DataSource
+
+private enum class RefusjonstypeTag {
+    Arbeidsgiverutbetaling,
+    NegativArbeidsgiverutbetaling,
+    Personutbetaling,
+    NegativPersonutbetaling,
+    IngenUtbetaling,
+}
 
 class GodkjenningLøsningRiver(
     rapid: RapidsConnection,
@@ -44,10 +55,10 @@ class GodkjenningLøsningRiver(
                         "Godkjenning.inntektskilde",
                         "Godkjenning.utbetalingtype",
                         "Godkjenning.behandlingId",
+                        "Godkjenning.tags",
                         "@løsning.Godkjenning.godkjenttidspunkt",
                     )
                     it.interestedIn(
-                        "@løsning.Godkjenning.refusjontype",
                         "@løsning.Godkjenning.saksbehandleroverstyringer",
                     )
                 }
@@ -65,6 +76,22 @@ class GodkjenningLøsningRiver(
         val ident = packet["fødselsnummer"].asText()
         val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asText())
 
+        val refusjonstypeTags = packet["Godkjenning.tags"].mapNotNull {
+            runCatching {
+                enumValueOf<RefusjonstypeTag>(it.asText())
+            }.getOrNull()
+        }
+
+        if (refusjonstypeTags.isEmpty()) error("Mangler tag for refusjonstype")
+
+        val refusjonstype = when {
+            IngenUtbetaling in refusjonstypeTags -> "INGEN_UTBETALING"
+            Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "DELVIS_REFUSJON"
+            Arbeidsgiverutbetaling !in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "INGEN_REFUSJON"
+            Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling !in refusjonstypeTags -> "FULL_REFUSJON"
+            else -> "NEGATIVT_BELØP"
+        }
+
         val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, behandlingId.toString()).getOrThrow() }
 
         val behov =
@@ -75,7 +102,7 @@ class GodkjenningLøsningRiver(
                 periodetype = packet["Godkjenning.periodetype"].asText(),
                 inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
                 utbetalingType = packet["Godkjenning.utbetalingtype"].asText(),
-                refusjonType = packet["@løsning.Godkjenning.refusjontype"].takeIf { !it.isMissingOrNull() }?.asText(),
+                refusjonType = refusjonstype,
                 saksbehandleroverstyringer =
                     packet["@løsning.Godkjenning.saksbehandleroverstyringer"]
                         .takeUnless(JsonNode::isMissingOrNull)

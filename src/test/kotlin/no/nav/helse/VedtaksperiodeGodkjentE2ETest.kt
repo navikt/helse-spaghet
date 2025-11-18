@@ -70,7 +70,7 @@ class VedtaksperiodeGodkjentE2ETest {
     fun `lagrer refusjontype i database`() =
         e2eTest {
             val vedtaksperiodeId = UUID.randomUUID()
-            rapid.sendTestMessage(godkjenning(vedtaksperiodeId))
+            rapid.sendTestMessage(godkjenning(vedtaksperiodeId, tags = setOf("Arbeidsgiverutbetaling")))
             assertEquals("FULL_REFUSJON", finnRefusjonType(vedtaksperiodeId))
         }
 
@@ -195,6 +195,7 @@ class VedtaksperiodeGodkjentE2ETest {
         vedtaksperiodeId: UUID,
         saksbehandleroverstyringer: List<UUID> = emptyList(),
         behandlingId: UUID = UUID.randomUUID(),
+        tags: Set<String> = setOf("IngenUtbetaling"),
     ) = """{
   "@behov": [
     "Godkjenning"
@@ -210,11 +211,11 @@ class VedtaksperiodeGodkjentE2ETest {
       "begrunnelser": null,
       "kommentar": null,
       "makstidOppnådd": false,
-      "refusjontype": "FULL_REFUSJON",
       "saksbehandleroverstyringer": [${saksbehandleroverstyringer.joinToString { """"$it"""" }}]
     }
   },
   "Godkjenning": {
+    "tags": [${tags.joinToString { """"$it"""" }}],
     "periodetype": "INFOTRYGDFORLENGELSE",
     "inntektskilde": "EN_ARBEIDSGIVER",
     "utbetalingtype": "UTBETALING",

@@ -22,6 +22,7 @@ fun behovNyttFormat(
     periodetype: String,
     id: UUID = UUID.randomUUID(),
     inntektskilde: String = "EN_ARBEIDSGIVER",
+    tags: Set<String> = setOf("IngenUtbetaling"),
 ) = """
         {
           "@event_name": "behov",
@@ -35,6 +36,7 @@ fun behovNyttFormat(
           "tilstand": "AVVENTER_GODKJENNING",
           "Godkjenning": {
             "behandlingId": "${UUID.randomUUID()}",
+            "tags": [${tags.joinToString { """"$it"""" }}],
             "warnings": {
               "aktiviteter": [
                 {
@@ -61,32 +63,28 @@ fun løsningNyttFormat(
     vedtaksperiodeId: UUID,
     periodetype: String,
     id: UUID = UUID.randomUUID(),
-    refusjonstype: String? = "FULL_REFUSJON",
     automatiskBehandlet: Boolean = false,
     saksbehandlerIdent: String = "Z999999",
-) = objectMapper
-    .readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id))
-    .apply {
-        set<ObjectNode>(
-            "@løsning",
-            objectMapper.readTree(
-                """ {
-                "Godkjenning": {
-                    "godkjent": true,
-                    "saksbehandlerIdent": "$saksbehandlerIdent",
-                    "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
-                    "automatiskBehandling": $automatiskBehandlet,
-                    "begrunnelser": [
-                            "Arbeidsgiverperiode beregnet feil"
-                    ],
-                  "refusjontype": ${refusjonstype?.let { "\"$it\"" }}
-            }
-          },
-                }
-            }""",
-            ),
-        ).put("@besvart", "2020-06-02T13:00:00.000000")
-    }.toString()
+): String {
+    @Language("JSON")
+    val løsningJson = """{
+      "Godkjenning": {
+        "godkjent": true,
+        "saksbehandlerIdent": "$saksbehandlerIdent",
+        "godkjenttidspunkt": "2020-06-02T13:00:00.000000",
+        "automatiskBehandling": $automatiskBehandlet,
+        "begrunnelser": [
+          "Arbeidsgiverperiode beregnet feil"
+        ]
+      }
+    }"""
+    return objectMapper
+        .readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id))
+        .apply {
+            set<ObjectNode>("@løsning", objectMapper.readTree(løsningJson))
+                .put("@besvart", "2020-06-02T13:00:00.000000")
+        }.toString()
+}
 
 @Language("JSON")
 fun vedtaksperiodeEndret(

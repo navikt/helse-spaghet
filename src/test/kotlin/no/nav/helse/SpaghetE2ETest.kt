@@ -110,7 +110,7 @@ class SpaghetE2ETest {
             val vedtaksperiodeId = UUID.randomUUID()
             val id = UUID.randomUUID()
             rapid.sendTestMessage(behovNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
-            rapid.sendTestMessage(løsningNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id, refusjonstype = null))
+            rapid.sendTestMessage(løsningNyttFormat(fødselsnummer, vedtaksperiodeId, "FORLENGELSE", id))
 
             assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsning(id))
             assertEquals(listOf(id.toString()), finnGodkjenningsbehovLøsningBegrunnelse(id))
