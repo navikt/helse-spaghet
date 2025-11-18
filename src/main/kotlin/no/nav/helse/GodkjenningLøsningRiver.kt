@@ -76,21 +76,23 @@ class GodkjenningLøsningRiver(
         val ident = packet["fødselsnummer"].asText()
         val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asText())
 
-        val refusjonstypeTags = packet["Godkjenning.tags"].mapNotNull {
-            runCatching {
-                enumValueOf<RefusjonstypeTag>(it.asText())
-            }.getOrNull()
-        }
+        val refusjonstypeTags =
+            packet["Godkjenning.tags"].mapNotNull {
+                runCatching {
+                    enumValueOf<RefusjonstypeTag>(it.asText())
+                }.getOrNull()
+            }
 
         if (refusjonstypeTags.isEmpty()) error("Mangler tag for refusjonstype")
 
-        val refusjonstype = when {
-            IngenUtbetaling in refusjonstypeTags -> "INGEN_UTBETALING"
-            Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "DELVIS_REFUSJON"
-            Arbeidsgiverutbetaling !in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "INGEN_REFUSJON"
-            Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling !in refusjonstypeTags -> "FULL_REFUSJON"
-            else -> "NEGATIVT_BELØP"
-        }
+        val refusjonstype =
+            when {
+                IngenUtbetaling in refusjonstypeTags -> "INGEN_UTBETALING"
+                Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "DELVIS_REFUSJON"
+                Arbeidsgiverutbetaling !in refusjonstypeTags && Personutbetaling in refusjonstypeTags -> "INGEN_REFUSJON"
+                Arbeidsgiverutbetaling in refusjonstypeTags && Personutbetaling !in refusjonstypeTags -> "FULL_REFUSJON"
+                else -> "NEGATIVT_BELØP"
+            }
 
         val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, behandlingId.toString()).getOrThrow() }
 
