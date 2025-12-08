@@ -111,7 +111,7 @@ internal class VedtaksperiodeVentetilstandDao(
             WHERE tidsstempel < now() - INTERVAL '5 MINUTES'
             AND (
                 -- Om vi venter på en av disse tingene skal det alltid være alarm
-                (venterPaHva in ('BEREGNING', 'UTBETALING', 'HJELP'))
+                (venterPaHva in ('BEREGNING', 'UTBETALING', 'VILKÅRSPRØVING', 'HJELP'))
                 -- Om hvorfor er satt til noe skal det være alarm så fremt det ikke er på grunn av overstyring igangsatt
                     OR
                 (venterPaHvorfor IS NOT NULL AND venterPaHvorfor != 'OVERSTYRING_IGANGSATT')
