@@ -175,8 +175,8 @@ internal class IdentifiserStuckVedtaksperioder(
         }
 
         private val VenterPå.kibanaUrl get() =
-            "https://logs.adeo.no/app/kibana#/discover?_a=(index:'tjenestekall-*',query:(language:lucene,query:'%22$vedtaksperiodeId%22'))&_g=(time:(from:'${LocalDateTime.now().minusDays(1)}',mode:absolute,to:now))".let { url ->
-                "<$url|Kibana>"
+            "https://console.cloud.google.com/logs/query;query=resource.labels.container_name:%22spleis%22%0AjsonPayload.message:%22$vedtaksperiodeId%22;duration=P1D?project=tbd-prod-eacd".let { url ->
+                "<$url|Google Logging>"
             }
     }
 }
