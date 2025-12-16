@@ -1,0 +1,1 @@
+ALTER TABLE inntektsmelding_haandtert ADD CONSTRAINT unik_vedtak_im_opprettet UNIQUE (vedtaksperiode_id, inntektsmelding_id, opprettet);
