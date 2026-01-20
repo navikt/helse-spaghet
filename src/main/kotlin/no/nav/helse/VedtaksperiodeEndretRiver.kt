@@ -101,10 +101,11 @@ private fun lagreVedtaksperiodedata(
     val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
     val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
 
-    val yrkesaktivitet = when (val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()) {
-        "ARBEIDSTAKER" -> packet["organisasjonsnummer"].asText()
-        else -> yrkesaktivitetstype
-    }
+    val yrkesaktivitet =
+        when (val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()) {
+            "ARBEIDSTAKER" -> packet["organisasjonsnummer"].asText()
+            else -> yrkesaktivitetstype
+        }
 
     val fom = packet["fom"].asLocalDate()
     val tom = packet["tom"].asLocalDate()
