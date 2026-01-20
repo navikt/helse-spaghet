@@ -66,7 +66,7 @@ class VedtaksperiodeDataE2ETest {
         }
 
     @Test
-    fun `send samme periode igjen, men annen data` () =
+    fun `send samme periode igjen, men annen data`() =
         e2eTest {
             val id = UUID.randomUUID()
             rapid.sendTestMessage(
