@@ -31,13 +31,14 @@ class VedtaksperiodeEndretRiver(
                     it.requireKey(
                         "@id",
                         "fødselsnummer",
-                        "organisasjonsnummer",
+                        "yrkesaktivitetstype",
                         "vedtaksperiodeId",
                         "gjeldendeTilstand",
                         "fom",
                         "tom",
                         "skjæringstidspunkt",
                     )
+                    it.interestedIn("organisasjonsnummer")
                 }
             }.register(this)
     }
@@ -65,12 +66,13 @@ class VedtaksperiodeOpprettetRiver(
                     it.requireKey(
                         "@id",
                         "fødselsnummer",
-                        "organisasjonsnummer",
+                        "yrkesaktivitetstype",
                         "vedtaksperiodeId",
                         "skjæringstidspunkt",
                         "fom",
                         "tom",
                     )
+                    it.interestedIn("organisasjonsnummer")
                 }
             }.register(this)
     }
@@ -99,7 +101,11 @@ private fun lagreVedtaksperiodedata(
     val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
     val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
 
-    val yrkesaktivitet = packet["organisasjonsnummer"].asText()
+    val yrkesaktivitet = when (val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()) {
+        "ARBEIDSTAKER" -> packet["organisasjonsnummer"].asText()
+        else -> yrkesaktivitetstype
+    }
+
     val fom = packet["fom"].asLocalDate()
     val tom = packet["tom"].asLocalDate()
     val skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate().coerceAtLeast(minsteDato)

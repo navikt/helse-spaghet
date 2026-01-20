@@ -11,17 +11,18 @@ import java.util.*
 
 class VedtaksperiodeDataE2ETest {
     @Test
-    fun `send en enkel melding, lagre en enkelt periode`() =
+    fun `send en enkel melding, lagre en enkelt periode for arbeidstaker`() =
         e2eTest {
             val id = UUID.randomUUID()
             rapid.sendTestMessage(
                 vedtakOpprettet(
-                    id,
-                    "01010112345",
-                    "et organisasjonsnummer",
-                    LocalDate.of(2020, 1, 1),
-                    LocalDate.of(2020, 1, 31),
-                    LocalDate.of(2020, 1, 1),
+                    vedtaksperiodeId = id,
+                    fnr = "01010112345",
+                    yrkesaktivitet = "ARBEIDSTAKER",
+                    orgnr = "et organisasjonsnummer",
+                    fom = LocalDate.of(2020, 1, 1),
+                    tom = LocalDate.of(2020, 1, 31),
+                    skjæringstidspunkt = LocalDate.of(2020, 1, 1),
                 ),
             )
 
@@ -38,19 +39,59 @@ class VedtaksperiodeDataE2ETest {
         }
 
     @Test
-    fun `send samme periode igjen, men annen data`() =
+    fun `send en enkel melding, lagre en enkelt periode for selvstendig`() =
         e2eTest {
             val id = UUID.randomUUID()
             rapid.sendTestMessage(
                 vedtakOpprettet(
                     vedtaksperiodeId = id,
                     fnr = "01010112345",
-                    yrkesaktivitet = "et organisasjonsnummer",
+                    yrkesaktivitet = "SELVSTENDIG",
                     fom = LocalDate.of(2020, 1, 1),
                     tom = LocalDate.of(2020, 1, 31),
                     skjæringstidspunkt = LocalDate.of(2020, 1, 1),
                 ),
             )
+
+            assertFelt(
+                id,
+                forventetFnr = "01010112345",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "SELVSTENDIG",
+                forventetFom = LocalDate.of(2020, 1, 1),
+                forventetTom = LocalDate.of(2020, 1, 31),
+                forventetSkjæringstidspunkt = LocalDate.of(2020, 1, 1),
+                forventetTilstand = "START",
+            )
+        }
+
+    @Test
+    fun `send samme periode igjen, men annen data` () =
+        e2eTest {
+            val id = UUID.randomUUID()
+            rapid.sendTestMessage(
+                vedtakOpprettet(
+                    vedtaksperiodeId = id,
+                    fnr = "01010112345",
+                    yrkesaktivitet = "ARBEIDSTAKER",
+                    orgnr = "et organisasjonsnummer",
+                    fom = LocalDate.of(2020, 1, 1),
+                    tom = LocalDate.of(2020, 1, 31),
+                    skjæringstidspunkt = LocalDate.of(2020, 1, 1),
+                ),
+            )
+
+            assertFelt(
+                vedtaksperiodeId = id,
+                forventetFnr = "01010112345",
+                forventetAktørId = standardAktørId,
+                forventetYrkesaktivitet = "et organisasjonsnummer",
+                forventetFom = LocalDate.of(2020, 1, 1),
+                forventetTom = LocalDate.of(2020, 1, 31),
+                forventetSkjæringstidspunkt = LocalDate.of(2020, 1, 1),
+                forventetTilstand = "START",
+            )
+
             rapid.sendTestMessage(
                 vedtakEndret(
                     vedtaksperiodeId = id,
@@ -118,6 +159,7 @@ class VedtaksperiodeDataE2ETest {
         vedtaksperiodeId: UUID,
         fnr: String,
         yrkesaktivitet: String,
+        orgnr: String? = null,
         fom: LocalDate,
         tom: LocalDate,
         skjæringstidspunkt: LocalDate,
@@ -126,7 +168,8 @@ class VedtaksperiodeDataE2ETest {
             "@event_name": "vedtaksperiode_opprettet",
             "vedtaksperiodeId": "$vedtaksperiodeId",
             "fødselsnummer": "$fnr",
-            "organisasjonsnummer": "$yrkesaktivitet",
+            "yrkesaktivitetstype": "$yrkesaktivitet",
+            ${if (orgnr != null) "\"organisasjonsnummer\": \"$orgnr\"," else ""}
             "fom": "$fom",
             "tom": "$tom",
             "skjæringstidspunkt": "$skjæringstidspunkt"
@@ -137,6 +180,7 @@ class VedtaksperiodeDataE2ETest {
         vedtaksperiodeId: UUID,
         fnr: String,
         yrkesaktivitet: String,
+        orgnr: String? = null,
         fom: LocalDate,
         tom: LocalDate,
         skjæringstidspunkt: LocalDate,
@@ -146,7 +190,8 @@ class VedtaksperiodeDataE2ETest {
             "@event_name": "vedtaksperiode_endret",
             "vedtaksperiodeId": "$vedtaksperiodeId",
             "fødselsnummer": "$fnr",
-            "organisasjonsnummer": "$yrkesaktivitet",
+            "yrkesaktivitetstype": "$yrkesaktivitet",
+            ${if (orgnr != null) "\"organisasjonsnummer\": \"$orgnr\"," else ""}
             "fom": "$fom",
             "tom": "$tom",
             "skjæringstidspunkt": "$skjæringstidspunkt",
