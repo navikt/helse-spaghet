@@ -23,7 +23,7 @@ repositories {
 private val tbdLibsVersion = "2025.11.04-10.54-c831038e"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.8")
-    implementation("com.github.navikt:rapids-and-rivers:2025080710011754553680.051be9b54ef9")
+    implementation("com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
