@@ -23,7 +23,7 @@ repositories {
 private val tbdLibsVersion = "2025.11.04-10.54-c831038e"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.9")
-    implementation("com.github.navikt:rapids-and-rivers:2025080710011754553680.051be9b54ef9")
+    implementation("com.github.navikt:rapids-and-rivers:2026012209581769072337.e89ef2934ea6")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
@@ -34,7 +34,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:11.20.2")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("io.mockk:mockk:1.14.7")
