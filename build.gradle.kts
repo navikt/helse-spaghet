@@ -37,7 +37,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    testImplementation("io.mockk:mockk:1.14.7")
+    testImplementation("io.mockk:mockk:1.14.9")
     testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:$tbdLibsVersion")
     testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
 }
