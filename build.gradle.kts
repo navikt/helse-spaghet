@@ -34,7 +34,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("io.mockk:mockk:1.14.9")
