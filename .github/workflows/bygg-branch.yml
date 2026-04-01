@@ -28,7 +28,7 @@ jobs:
           distribution: "temurin"
           java-version: "21"
       - name: Sett opp Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
       - name: Bygg med Gradle
         run: ./gradlew build
         env:
