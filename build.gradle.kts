@@ -3,13 +3,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
-private val tbdLibsVersion = "2026.02.18-09.29-bac0edc4"
+private val tbdLibsVersion = "2026.04.14-17.02-3f7000fd"
 dependencies {
-    implementation(platform("tools.jackson:jackson-bom:3.1.2"))
-    implementation(platform("com.fasterxml.jackson:jackson-bom:2.21.2"))
-
     implementation("org.postgresql:postgresql:42.7.10")
-    implementation("com.github.navikt:rapids-and-rivers:2026021809281771403330.8bdda3e27fff")
+    implementation("com.github.navikt:rapids-and-rivers:2026031213281773318507.0cbb5b6ccab4")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
