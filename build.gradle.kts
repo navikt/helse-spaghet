@@ -2,10 +2,10 @@ plugins {
     kotlin("jvm") version "2.3.20"
 }
 
-private val tbdLibsVersion = "2026.04.14-17.02-3f7000fd"
+private val tbdLibsVersion = "2026.04.14-17.50-10c5b8c1"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.10")
-    implementation("com.github.navikt:rapids-and-rivers:2026031213281773318507.0cbb5b6ccab4")
+    implementation("com.github.navikt:rapids-and-rivers:2026031212461773315969.b17173a21e7b")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
