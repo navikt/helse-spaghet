@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm") version "2.3.20"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
 private val tbdLibsVersion = "2026.04.14-17.02-3f7000fd"
@@ -30,22 +29,6 @@ kotlin {
 }
 
 tasks {
-    build {
-        doLast {
-            val erLokaltBygg = !System.getenv().containsKey("GITHUB_ACTION")
-            val manglerPreCommitHook = !File(".git/hooks/pre-commit").isFile
-            if (erLokaltBygg && manglerPreCommitHook) {
-                println(
-                    """
-                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ¯\_(⊙︿⊙)_/¯ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    !            Hei du! Det ser ut til at du mangler en pre-commit-hook :/         !
-                    ! Du kan installere den ved å kjøre './gradlew addKtlintFormatGitPreCommitHook' !
-                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    """.trimIndent(),
-                )
-            }
-        }
-    }
     test {
         useJUnitPlatform()
         testLogging {
