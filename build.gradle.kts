@@ -22,6 +22,9 @@ repositories {
 
 private val tbdLibsVersion = "2026.02.18-09.29-bac0edc4"
 dependencies {
+    implementation(platform("tools.jackson:jackson-bom:3.1.2"))
+    implementation(platform("com.fasterxml.jackson:jackson-bom:2.21.2"))
+
     implementation("org.postgresql:postgresql:42.7.10")
     implementation("com.github.navikt:rapids-and-rivers:2026021809281771403330.8bdda3e27fff")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
