@@ -17,7 +17,6 @@ import io.mockk.mockk
 import no.nav.helse.TestData.toJson
 import no.nav.helse.TestData.toJsonUtenNotatTekst
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import java.util.*
 
 private val tables = "annullering,annullering_arsak,begrunnelse,flyway_schema_history,funksjonell_feil,godkjenning,godkjenning_overstyringer,godkjenningsbehov,godkjenningsbehov_losning,godkjenningsbehov_losning_begrunnelse,hendelse_ikke_håndtert_årsak,oppgave,oppgave_endret,regelverksvarsel,revurdering,revurdering_vedtaksperiode,schedule,skatteinntekter_lagt_til_grunn,soknad,soknad_haandtert,utkast_til_vedtak,varsel,vedtaksperiode_aktivitet,vedtaksperiode_data,vedtaksperiode_tilstandsendring,vedtaksperiode_venter,warning_for_godkjenning,lagt_paa_vent"
@@ -52,7 +51,6 @@ class E2eTestApp {
                     fnr = "99999999999",
                     internDokumentId = UUID.randomUUID(),
                     eksternDokumentId = UUID.randomUUID(),
-                    rapportertDato = LocalDateTime.now(),
                     duplikatkontroll = "test_duplikatkontroll",
                     jsonBody = "{}",
                 ).ok()
