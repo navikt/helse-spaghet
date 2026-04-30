@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.20"
+    kotlin("jvm") version "2.3.21"
 }
 
 private val tbdLibsVersion = "20260423.1246"
