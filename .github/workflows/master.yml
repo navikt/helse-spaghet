@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
   schedule:
     - cron: '9 9 * * 3'
       timezone: 'Europe/Oslo'
@@ -11,6 +14,7 @@ on:
 
 jobs:
   build:
+    name: Build docker image
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -21,11 +25,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21.x'
           cache: 'gradle'
-      - name: test and build
+      - name: Test and build
         run: ./gradlew build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: build docker image
+      - name: Build container image
+        if: ${{ github.ref_name == 'master' }}
         uses: nais/docker-build-push@v0
         id: docker-build-push
         with:
@@ -35,8 +40,9 @@ jobs:
 
   deployDev:
     name: Deploy to dev
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'master' }}
     permissions:
       id-token: write
     steps:
