@@ -5,7 +5,7 @@ plugins {
 private val tbdLibsVersion = "20260512.2035"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.11")
-    implementation("com.github.navikt:rapids-and-rivers:2026042008201776666058")
+    implementation("com.github.navikt:rapids-and-rivers:2026043009341777534451")
     implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
     implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
