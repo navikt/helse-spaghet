@@ -290,4 +290,40 @@ object TestData {
     val nyAktivitet = NyAktivitet()
     val nyOppgave = NyOppgave()
     val aktivitet = Aktivitet()
+
+    data class AnmodningOmForkastingMelding(
+        val vedtaksperiodeId: UUID = randomUUID(),
+        val fødselsnummer: String = "12345678910",
+        val organisasjonsnummer: String = "987654321",
+        val yrkesaktivitetstype: String = "ARBEIDSTAKER",
+        val saksbehandlerIdent: String? = null,
+        val avsenderNavIdent: String? = null,
+        val årsaker: List<String> = listOf("Forkastet manuelt av utvikler"),
+        val kommentar: String? = null,
+        val opprettet: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
+    ) {
+        fun beggeAvsendere(saksbehandler: String, avsender: String) = copy(saksbehandlerIdent = saksbehandler, avsenderNavIdent = avsender)
+        fun ingenAvsender() = copy(saksbehandlerIdent = null, avsenderNavIdent = null)
+
+        fun toJson(): String {
+            val saksbehandlerIdentJson = saksbehandlerIdent?.let { """"saksbehandlerIdent": "$it",""" } ?: ""
+            val avsenderJson = avsenderNavIdent?.let { """"@avsender": {"navn": "Nav Navesen", "NAVIdent": "$it"},""" } ?: ""
+            val kommentarJson = kommentar?.let { """"kommentar": "$it",""" } ?: ""
+            return """{
+                "@event_name": "anmodning_om_forkasting",
+                "vedtaksperiodeId": "$vedtaksperiodeId",
+                "fødselsnummer": "$fødselsnummer",
+                "organisasjonsnummer": "$organisasjonsnummer",
+                "yrkesaktivitetstype": "$yrkesaktivitetstype",
+                $saksbehandlerIdentJson
+                $avsenderJson
+                $kommentarJson
+                "årsaker": ${årsaker.toJson()},
+                "@opprettet": "$opprettet"
+            }""".trimIndent()
+        }
+    }
+
+    val anmodningMedSaksbehandlerIdent = AnmodningOmForkastingMelding(saksbehandlerIdent = "NB111111")
+    val anmodningMedAvsender = AnmodningOmForkastingMelding(avsenderNavIdent = "NB222222")
 }
