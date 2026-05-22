@@ -6,6 +6,34 @@ import no.nav.helse.Util.withSession
 import java.util.*
 import javax.sql.DataSource
 
+data class AnnulleringBerortVedtaksperiode(
+    val vedtaksperiodeId: UUID,
+    val utløsendeVedtaksperiodeId: UUID,
+    val organisasjonsnummer: String,
+    val yrkesaktivitetstype: String,
+)
+
+fun DataSource.annulleringBerorteVedtaksperioder(): List<AnnulleringBerortVedtaksperiode> =
+    this.withSession {
+        this.run(
+            queryOf(
+                """
+                SELECT vedtaksperiode_id, utløsende_vedtaksperiode_id,
+                       organisasjonsnummer, yrkesaktivitetstype
+                FROM annullering_berorte_vedtaksperioder
+                ORDER BY vedtaksperiode_id
+                """,
+            ).map { row ->
+                AnnulleringBerortVedtaksperiode(
+                    vedtaksperiodeId = row.uuid("vedtaksperiode_id"),
+                    utløsendeVedtaksperiodeId = row.uuid("utløsende_vedtaksperiode_id"),
+                    organisasjonsnummer = row.string("organisasjonsnummer"),
+                    yrkesaktivitetstype = row.string("yrkesaktivitetstype"),
+                )
+            }.asList,
+        )
+    }
+
 fun DataSource.annulleringer(): List<Annullering> =
     this.withSession {
         this.run(

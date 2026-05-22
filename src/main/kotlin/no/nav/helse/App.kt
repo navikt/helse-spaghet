@@ -87,6 +87,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     spurteDuClient: SpurteDuClient = spurteDuClient(),
 ) = apply {
     AnnulleringRiver(this, dataSource)
+    PlanlagtAnnulleringRiver(this, dataSource)
     GodkjenningLøsningRiver(this, dataSource, speedClient)
     VedtaksperiodeTilGodkjenningRiver(this, dataSource)
     VedtaksperiodeBehandletRiver(this, dataSource)
