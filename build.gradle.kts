@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.3.21"
 }
 
-private val tbdLibsVersion = "20260526.1135"
+private val tbdLibsVersion = "20260526.1506"
 dependencies {
     implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.github.navikt:rapids-and-rivers:2026042008201776666058")
