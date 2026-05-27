@@ -2,6 +2,7 @@ package no.nav.helse
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
@@ -23,7 +24,8 @@ class PlanlagtAnnulleringRiver(
                 precondition { it.requireValue("@event_name", "planlagt_annullering") }
                 validate {
                     it.requireArray("vedtaksperioder")
-                    it.requireKey("organisasjonsnummer", "yrkesaktivitetstype", "@id")
+                    it.requireKey("yrkesaktivitetstype", "@id")
+                    it.interestedIn("organisasjonsnummer")
                 }
             }.register(this)
     }
@@ -44,8 +46,8 @@ class PlanlagtAnnulleringRiver(
     ) {
         val hendelseId = UUID.fromString(packet["@id"].asText())
         val vedtaksperioder = packet["vedtaksperioder"].map { UUID.fromString(it.asText()) }
-        val organisasjonsnummer = packet["organisasjonsnummer"].asText()
         val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()
+        val organisasjonsnummer = packet["organisasjonsnummer"].takeUnless { it.isMissingOrNull() }?.asText() ?: yrkesaktivitetstype
 
         val lagredeBerørteVedtaksperioder = sessionOf(dataSource).use { session ->
             session.transaction { tx ->
