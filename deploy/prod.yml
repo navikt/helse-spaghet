@@ -61,7 +61,6 @@ spec:
           - name: spaghet
             envVarPrefix: DATABASE
             users:
-              - name: spaghetti
               - name: bigquery_datastream
               - name: bigquery_connection_user
         flags:

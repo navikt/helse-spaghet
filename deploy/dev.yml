@@ -55,7 +55,6 @@ spec:
           - name: spaghet
             envVarPrefix: DATABASE
             users:
-              - name: spaghetti
               - name: bigquery_datastream
         flags:
           - name: cloudsql.logical_decoding
