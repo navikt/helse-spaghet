@@ -1,0 +1,1 @@
+ALTER TABLE oppgave_endret RENAME COLUMN løpenummer TO lopenummer;
