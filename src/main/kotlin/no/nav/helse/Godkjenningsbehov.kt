@@ -22,5 +22,6 @@ class Godkjenningsbehov(
         val årsak: String?,
         val begrunnelser: List<String>?,
         val kommentar: String?,
+        val automatiskBehandling: Boolean,
     )
 }

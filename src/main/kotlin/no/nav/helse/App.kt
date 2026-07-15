@@ -97,7 +97,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     VarselEndretRiver(this, dataSource)
     HendelseIkkeHåndtertRiver(this, dataSource)
     RevurderingIgangsattRiver(this, dataSource)
-    RevurderingFerdigstiltRiver(this, dataSource)
+    RevurderingGodkjentRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
     IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, spurteDuClient)
     OppsummerVedtaksperiodeVenter(this, oppsummeringDao)

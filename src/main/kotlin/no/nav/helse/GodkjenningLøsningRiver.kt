@@ -161,6 +161,7 @@ class GodkjenningLøsningRiver(
             årsak = jsonNode.getIfNotNull("årsak")?.asText(),
             begrunnelser = jsonNode.getIfNotNull("begrunnelser")?.map(JsonNode::asText),
             kommentar = jsonNode.getIfNotNull("kommentar")?.asText()?.takeIf { it.isNotBlank() },
+            automatiskBehandling = jsonNode["automatiskBehandling"].asBoolean(),
         )
 
     private fun JsonNode.getIfNotNull(name: String) = takeIf { hasNonNull(name) }?.get(name)

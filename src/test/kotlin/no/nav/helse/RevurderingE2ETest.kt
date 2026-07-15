@@ -15,10 +15,18 @@ class RevurderingE2ETest {
     fun `lagrer i databasen`() =
         e2eTest {
             val revurderingId = UUID.randomUUID()
-            rapid.sendTestMessage(revurderingIgangsatt(revurderingId))
-            rapid.sendTestMessage(revurderingFerdigstilt(revurderingId))
+            val vedtaksperiodeId = UUID.randomUUID()
+            val vedtaksperiodeId2 = UUID.randomUUID()
+
+            rapid.sendTestMessage(revurderingIgangsatt(revurderingId, vedtaksperiodeId, vedtaksperiodeId2))
             assertEquals(1, tellRevurdering())
+
+            rapid.sendTestMessage(Godkjenningsløsning(vedtaksperiodeId))
+            assertEquals("IKKE_FERDIG", statusForRevurdering(revurderingId))
+
+            rapid.sendTestMessage(Godkjenningsløsning(vedtaksperiodeId2))
             assertEquals("FERDIGSTILT_AUTOMATISK", statusForRevurdering(revurderingId))
+
             val vedtaksperioder = revurderingVedtaksperioder()
             assertEquals(
                 setOf(
@@ -86,6 +94,8 @@ class RevurderingE2ETest {
     @Language("JSON")
     fun revurderingIgangsatt(
         revurderingId: UUID,
+        vedtaksperiodeId: UUID,
+        vedtaksperiodeId2: UUID,
         kilde: UUID = UUID.randomUUID(),
         årsak: String = "KORRIGERT_SØKNAD",
     ) = """{
@@ -100,7 +110,7 @@ class RevurderingE2ETest {
         "typeEndring": "REVURDERING",
         "berørtePerioder":[
             {
-                "vedtaksperiodeId":"c0f78b58-4687-4191-adf8-6588c5982abb",
+                "vedtaksperiodeId": "$vedtaksperiodeId",
                 "skjæringstidspunkt":"2022-10-03",
                 "periodeFom":"2022-11-07",
                 "periodeTom":"2022-11-29",
@@ -108,7 +118,7 @@ class RevurderingE2ETest {
                 "typeEndring": "REVURDERING"
             },            
             {
-                "vedtaksperiodeId":"c0c78b58-4687-4191-adf8-6588c5982abb",
+                "vedtaksperiodeId":"$vedtaksperiodeId2",
                 "skjæringstidspunkt":"2022-10-03",
                 "periodeFom":"2022-11-30",
                 "periodeTom":"2022-12-15",
@@ -122,23 +132,26 @@ class RevurderingE2ETest {
     """
 
     @Language("JSON")
-    fun revurderingFerdigstilt(
-        revurderingId: UUID,
-        status: String = "FERDIGSTILT_AUTOMATISK",
+    fun Godkjenningsløsning(
+        vedtaksperiodeId: UUID,
     ) = """{
-        "@event_name":"revurdering_ferdigstilt",
-        "revurderingId": "$revurderingId",
-        "status": "$status",
-        "berørtePerioder":[
-            {
-                "vedtaksperiodeId":"c0f78b58-4687-4191-adf8-6588c5982abb",
-                "status": "$status"
-            },            
-            {
-                "vedtaksperiodeId":"c0c78b58-4687-4191-adf8-6588c5982abb",
-                "status": "$status"
+        "@event_name":"behov",
+        "@behov": ["Godkjenning"],
+        "Godkjenning": {
+            "tags": ["Revurdering"]
+        },
+        "@løsning": {
+            "Godkjenning": {
+                "godkjent": true,
+                "saksbehandlerIdent": "Z123456",
+                "godkjentTidspunkt": "${LocalDateTime.now()}",
+                "automatiskBehandling": true,
+                "årsak": null,
+                "begrunnelser": null,
+                "kommentar": null
             }
-          ],
+        },
+        "vedtaksperiodeId": "$vedtaksperiodeId",
         "@id": "${UUID.randomUUID()}",
         "@opprettet":"${LocalDateTime.now()}"
     }
