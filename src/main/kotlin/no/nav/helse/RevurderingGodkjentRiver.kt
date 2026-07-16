@@ -9,11 +9,11 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
+import java.util.*
+import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.intellij.lang.annotations.Language
-import java.util.*
-import javax.sql.DataSource
 
 class RevurderingGodkjentRiver(
     rapidApplication: RapidsConnection,
@@ -25,7 +25,7 @@ class RevurderingGodkjentRiver(
                 precondition {
                     it.requireAll("@behov", listOf("Godkjenning"))
                     it.requireContains("Godkjenning.tags", "Revurdering")
-                    it.forbid("@final")
+                    it.requireValue("@final", true)
                 }
                 validate {
                     it.require("@løsning.Godkjenning", ::tilLøsning)
