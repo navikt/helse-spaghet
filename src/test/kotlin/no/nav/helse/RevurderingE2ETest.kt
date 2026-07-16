@@ -144,7 +144,7 @@ class RevurderingE2ETest {
             "Godkjenning": {
                 "godkjent": true,
                 "saksbehandlerIdent": "Z123456",
-                "godkjentTidspunkt": "${LocalDateTime.now()}",
+                "godkjenttidspunkt": "${LocalDateTime.now()}",
                 "automatiskBehandling": true,
                 "årsak": null,
                 "begrunnelser": null,

@@ -95,7 +95,7 @@ class RevurderingGodkjentRiver(
         Godkjenningsbehov.Løsning(
             godkjent = jsonNode["godkjent"].asBoolean(),
             saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asText(),
-            godkjentTidspunkt = jsonNode["godkjentTidspunkt"].asLocalDateTime(),
+            godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
             automatiskBehandling = jsonNode["automatiskBehandling"].asBoolean(),
             årsak = null,
             begrunnelser = null,
