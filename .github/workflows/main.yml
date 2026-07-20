@@ -3,10 +3,10 @@ name: Bygg og deploy
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
   schedule:
     - cron: '9 9 * * 3'
       timezone: 'Europe/Oslo'
@@ -30,7 +30,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build container image
-        if: ${{ github.ref_name == 'master' }}
+        if: ${{ github.ref_name == 'main' }}
         uses: nais/docker-build-push@v0
         id: docker-build-push
         with:
@@ -42,7 +42,7 @@ jobs:
     name: Deploy to dev
     needs: [build]
     runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'master' }}
+    if: ${{ github.ref_name == 'main' }}
     permissions:
       id-token: write
     steps:
