@@ -10,6 +10,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -71,7 +72,7 @@ class AktivitetRiver(
                     )
                 }
         } catch (e: Exception) {
-            logg.error("Feilet ved inserting av aktiviteter for id=${packet["@id"].asText()}", e)
+            loggError("Feilet ved inserting av aktiviteter", e, "id" to packet["@id"].asText())
         }
     }
 

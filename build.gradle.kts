@@ -15,6 +15,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
     implementation("com.github.seratch:kotliquery:1.9.1")
+    implementation("no.nav.sykepenger.libs:logging:20260829.1737")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -25,7 +26,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 tasks {

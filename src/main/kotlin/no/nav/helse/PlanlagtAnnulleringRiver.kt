@@ -10,6 +10,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource
@@ -35,7 +37,7 @@ class PlanlagtAnnulleringRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error("Klarte ikke å lese planlagt_annullering event! ${problems.toExtendedReport()}")
+        loggError("Klarte ikke å lese planlagt_annullering event", "problemer" to problems.toExtendedReport())
     }
 
     override fun onPacket(
@@ -60,7 +62,11 @@ class PlanlagtAnnulleringRiver(
                     ) != null
                 }
                 if (utløsendeVedtaksperiodeId == null) {
-                    sikkerlogg.error("Ignorerer planlagt_annullering for hendelse $hendelseId fordi utløsende vedtaksperiode ikke finnes i annullering. Packet dump: ${packet.toJson()}")
+                    loggError(
+                        "Ignorerer planlagt_annullering fordi utløsende vedtaksperiode ikke finnes i annullering",
+                        "hendelseId" to hendelseId.toString(),
+                        "packet" to packet.toJson(),
+                    )
                     return@transaction 0
                 }
 
@@ -86,7 +92,11 @@ class PlanlagtAnnulleringRiver(
             }
         }
         if (lagredeBerørteVedtaksperioder > 0) {
-            logg.info("Lagret $lagredeBerørteVedtaksperioder berørte vedtaksperioder fra planlagt_annullering for hendelse $hendelseId")
+            loggInfo(
+                "Lagret berørte vedtaksperioder fra planlagt_annullering",
+                "antall" to lagredeBerørteVedtaksperioder.toString(),
+                "hendelseId" to hendelseId.toString(),
+            )
         }
     }
 }

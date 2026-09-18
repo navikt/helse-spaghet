@@ -11,6 +11,7 @@ import no.nav.helse.Annullering.Companion.parseAnnullering
 import no.nav.helse.Util.asUuid
 import no.nav.helse.Util.jsonNode
 import no.nav.helse.Util.withSession
+import no.nav.sykepenger.libs.logging.loggInfo
 import javax.sql.DataSource
 
 class AnnulleringRiver(
@@ -41,6 +42,6 @@ class AnnulleringRiver(
         dataSource.withSession {
             this.insertAnnullering(annullering)
         }
-        logg.info("Lagret annullering for vedtaksperiodeId=${annullering.vedtaksperiodeId}")
+        loggInfo("Lagret annullering", "vedtaksperiodeId" to annullering.vedtaksperiodeId.toString())
     }
 }

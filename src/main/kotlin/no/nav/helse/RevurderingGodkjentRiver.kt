@@ -13,6 +13,8 @@ import java.util.*
 import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 
 class RevurderingGodkjentRiver(
@@ -35,7 +37,7 @@ class RevurderingGodkjentRiver(
     }
 
     override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
-        logg.error(problems.toString())
+        loggError("Feil ved lesing av godkjenningsbehov for revurdering", "problemer" to problems.toString())
         super.onError(problems, context, metadata)
     }
 
@@ -59,7 +61,7 @@ class RevurderingGodkjentRiver(
         val erRevurderingFerdig = revurdering.second.filterNot { it.first == vedtaksperiodeId }
             .all { it.second in listOf("FERDIGSTILT_AUTOMATISK", "FERDIGSTILT_MANUELT", "AVVIST_AUTOMATISK", "AVVIST_MANUELT") }
 
-        logg.info("Legger inn data fra godkjenningsbehov i databasen")
+        loggInfo("Legger inn data fra godkjenningsbehov i databasen")
 
         sessionOf(dataSource).use {
             it.transaction { session ->

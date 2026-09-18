@@ -12,6 +12,8 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.helse.Util.withSession
+import no.nav.sykepenger.libs.logging.loggInfo
+import no.nav.sykepenger.libs.logging.loggWarn
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -45,14 +47,14 @@ class HendelseIkkeHåndtertRiver(
                 .takeUnless(JsonNode::isMissingOrNull)
                 ?.map { it.asText() } ?: emptyList()
 
-        if (årsaker.isEmpty()) logg.warn("Mangler årsaker i hendelse_ikke_håndtert")
+        if (årsaker.isEmpty()) loggWarn("Mangler årsaker i hendelse_ikke_håndtert")
 
         dataSource.withSession {
             årsaker.forEach { årsak ->
                 this.insertHendelseIkkeHåndtertÅrsak(hendelseId, opprettet, årsak)
             }
         }
-        logg.info("Lagret hendelse_ikke_håndtert for hendelseId=$hendelseId")
+        loggInfo("Lagret hendelse_ikke_håndtert", "hendelseId" to hendelseId.toString())
     }
 
     fun Session.insertHendelseIkkeHåndtertÅrsak(

@@ -15,6 +15,8 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.jsonNode
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -94,7 +96,7 @@ class AnalytiskDatapakkeRiver(
             behandlingId,
             datapakke,
         )
-        logg.info("Lagret Analytisk Datapakke for vedtaksperiodeId=$vedtaksperiodeId")
+        loggInfo("Lagret Analytisk Datapakke", "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }
 
     override fun onError(
@@ -102,7 +104,7 @@ class AnalytiskDatapakkeRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error("Klarte ikke å lese analytisk_datapakke event! ${problems.toExtendedReport()}")
+        loggError("Klarte ikke å lese analytisk_datapakke event", "problemer" to problems.toExtendedReport())
     }
 
     private fun insertAnalytiskDatapakke(

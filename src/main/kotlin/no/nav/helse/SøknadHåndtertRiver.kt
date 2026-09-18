@@ -9,6 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -39,7 +40,7 @@ class SøknadHåndtertRiver(
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         insertSøknadHåndtert(søknadHendelseId, vedtaksperiodeId, opprettet)
-        logg.info("Lagrer kobling mellom søknad $søknadHendelseId og vedtaksperiode $vedtaksperiodeId")
+        loggInfo("Lagrer kobling mellom søknad og vedtaksperiode", "søknadHendelseId" to søknadHendelseId.toString(), "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }
 
     private fun insertSøknadHåndtert(

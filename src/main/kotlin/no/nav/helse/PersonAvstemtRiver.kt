@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
+import no.nav.sykepenger.libs.logging.navngittLogger
 import org.postgresql.util.PSQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -83,6 +84,8 @@ private data class VedtaksperiodeData(
     val oppdatert: LocalDateTime,
 )
 
+private val logger = navngittLogger("no.nav.helse.PersonAvstemtRiver")
+
 private fun lagreVedtaksperiodedata(
     data: VedtaksperiodeData,
     dataSource: DataSource,
@@ -121,6 +124,6 @@ private fun lagreVedtaksperiodedata(
             )
         }
     } catch (err: PSQLException) {
-        logg.warn("klarte ikke oppdatere vedtaksdata fra person_avstemt", err)
+        logger.warn("klarte ikke oppdatere vedtaksdata fra person_avstemt", err)
     }
 }

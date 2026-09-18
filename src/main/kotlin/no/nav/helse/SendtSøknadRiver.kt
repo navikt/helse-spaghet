@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource
@@ -76,6 +77,6 @@ class SendtSøknadRiver(
                 ).asExecute,
             )
         }
-        logg.info("Lagrer søknad med dokumentId $dokumentId og hendelseId $hendelseId")
+        loggInfo("Lagrer søknad", "dokumentId" to dokumentId.toString(), "hendelseId" to hendelseId.toString())
     }
 }

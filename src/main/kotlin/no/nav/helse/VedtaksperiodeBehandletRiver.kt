@@ -11,7 +11,8 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.sykepenger.libs.logging.loggInfo
+import no.nav.sykepenger.libs.logging.loggWarn
 import org.intellij.lang.annotations.Language
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
@@ -53,9 +54,13 @@ class VedtaksperiodeBehandletRiver(
                     insertBegrunnelser(session, behovId, løsning)
                 }
             }
-            logg.info("Lagret løsning for godkjenningsbehov for vedtaksperiodeId=$vedtaksperiodeId")
+            loggInfo("Lagret løsning for godkjenningsbehov", "vedtaksperiodeId" to vedtaksperiodeId.toString())
         } catch (err: PSQLException) {
-            logg.warn("Klarte ikke lagre løsning for godkjenningsbehov {}, mest sannsynlig fordi opprinnelig behov ikke er lagret (eller at vi inserter løsning med feil foreign key): {}", keyValue("behovId", behovId), err.message, err)
+            loggWarn(
+                "Klarte ikke lagre løsning for godkjenningsbehov, mest sannsynlig fordi opprinnelig behov ikke er lagret (eller at vi inserter løsning med feil foreign key)",
+                err,
+                "behovId" to behovId.toString(),
+            )
         }
     }
 

@@ -10,7 +10,8 @@ import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.objectMapper
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.slf4j.event.Level.ERROR
 import org.slf4j.event.Level.INFO
 import java.time.DayOfWeek.MONDAY
@@ -88,13 +89,12 @@ internal class IdentifiserStuckVedtaksperioder(
 
             context.sendPåSlack(packet, ERROR, melding)
         } catch (exception: Exception) {
-            sikkerlogg.error("Feil ved identifisering av stuck vedtaksperioder", exception)
+            loggError("Feil ved identifisering av stuck vedtaksperioder", exception)
         }
     }
 
     private companion object {
         private val Maks = 50
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val VenterPå.snygg get() = (if (hvorfor == null) hva else "$hva fordi $hvorfor").lowercase().replace("_", " ")
 
         private val VedtaksperiodeVenterMedMetadata.prefix get() =
@@ -121,7 +121,7 @@ internal class IdentifiserStuckVedtaksperioder(
             tidsbruk: Duration,
         ) {
             if (packet.eventname == "identifiser_stuck_vedtaksperioder") return context.sendPåSlack(packet, INFO, "\n\nBrukte ${tidsbruk.snygg} på å finne ut at du kan bare ta det helt :musical_keyboard:! Ingenting er stuck! Gå tilbake til det du egentlig skulle gjøre :heart:")
-            sikkerlogg.info("Ingen vedtaksperioder er stuck per ${LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)}")
+            loggInfo("Ingen vedtaksperioder er stuck", "tidspunkt" to LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
         }
 
         private val Int.personer get() = if (this == 1) "én person" else "$this personer"

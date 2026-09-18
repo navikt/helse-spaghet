@@ -7,7 +7,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.ventetilstand.OppsummeringDao.VentegruppeExternal
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.loggError
 
 internal class OppsummerVedtaksperiodeVenterExternal(
     rapidsConnection: RapidsConnection,
@@ -59,13 +59,11 @@ internal class OppsummerVedtaksperiodeVenterExternal(
                     ).toJson()
             context.publish(slackmelding)
         } catch (exception: Exception) {
-            sikkerlogg.error("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
+            loggError("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
         }
     }
 
     private companion object {
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-
         private fun String.emoji() =
             when (this) {
                 "UNDER 30 DAGER" -> ":large_green_circle:"

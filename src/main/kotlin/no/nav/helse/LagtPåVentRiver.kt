@@ -7,11 +7,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
-import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.LagtPåVent.Companion.lagreLagtPåVent
 import no.nav.helse.LagtPåVent.Companion.parseLeggPåVent
 import no.nav.helse.Util.jsonNode
 import no.nav.helse.Util.withSessionAndReturnGeneratedKey
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import javax.sql.DataSource
 
 class LagtPåVentRiver(
@@ -42,7 +43,7 @@ class LagtPåVentRiver(
         dataSource.withSessionAndReturnGeneratedKey {
             this.lagreLagtPåVent(lagtPåVent)
         }
-        sikkerlogg.info("Leser inn hendelse {}", kv("lagt_på_vent", packet.toJson()))
+        loggInfo("Leser inn hendelse lagt_på_vent", "packet" to packet.toJson())
     }
 
     override fun onError(
@@ -50,6 +51,6 @@ class LagtPåVentRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error("Klarte ikke å lese lagt_på_vent event! ${problems.toExtendedReport()}")
+        loggError("Klarte ikke å lese lagt_på_vent event", "problemer" to problems.toExtendedReport())
     }
 }
