@@ -19,8 +19,6 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.ventetilstand.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.http.HttpClient
 import javax.sql.DataSource
 
@@ -28,8 +26,6 @@ internal val objectMapper: ObjectMapper =
     jacksonObjectMapper()
         .registerModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-internal val logg: Logger = LoggerFactory.getLogger("spaghet")
-internal val sikkerlogg: Logger = LoggerFactory.getLogger("tjenestekall")
 
 private fun spurteDuClient() =
     SpurteDuClient(

@@ -12,6 +12,7 @@ import com.github.navikt.tbd_libs.speed.SpeedClient
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.navngittLogger
 import org.postgresql.util.PSQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -88,6 +89,7 @@ class VedtaksperiodeOpprettetRiver(
 }
 
 private val minsteDato = LocalDate.of(-4500, 1, 1)
+private val logger = navngittLogger("no.nav.helse.VedtaksperiodeEndretRiver")
 
 private fun lagreVedtaksperiodedata(
     speedClient: SpeedClient,
@@ -144,7 +146,6 @@ private fun lagreVedtaksperiodedata(
             )
         }
     } catch (err: PSQLException) {
-        logg.warn("klarte ikke oppdatere vedtaksdata fra dump")
-        sikkerlogg.warn("klarte ikke oppdatere vedtaksdata fra dump; Error: $err \nPacket dump: ${packet.toJson()}")
+        logger.warn("Klarte ikke oppdatere vedtaksdata fra dump", err, "packet" to packet.toJson())
     }
 }

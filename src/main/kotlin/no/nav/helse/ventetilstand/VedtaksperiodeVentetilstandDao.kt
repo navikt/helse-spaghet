@@ -1,8 +1,7 @@
 package no.nav.helse.ventetilstand
 
 import kotliquery.*
-import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.nav.helse.sikkerlogg
+import no.nav.sykepenger.libs.logging.loggInfo
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
 import org.intellij.lang.annotations.Language
@@ -30,7 +29,13 @@ internal class VedtaksperiodeVentetilstandDao(
                 when (listOf(antallVentetFør, antallVenterNå, antallNyInformasjon).all { it == 0 }) {
                     true -> { /* Skulle ønske vi kunne returne her, men da rollbacket transactionen 🤔 */ }
                     false -> {
-                        sikkerlogg.info("Personen med {} venter i systemet. VentetFør=$antallVentetFør, VenterNå=$antallVenterNå, NyInformasjon=$antallNyInformasjon", keyValue("fødselsnummer", fødselsnummer))
+                        loggInfo(
+                            "Personen venter i systemet",
+                            "ventetFør" to antallVentetFør.toString(),
+                            "venterNå" to antallVenterNå.toString(),
+                            "nyInformasjon" to antallNyInformasjon.toString(),
+                            "fødselsnummer" to fødselsnummer,
+                        )
                     }
                 }
             }

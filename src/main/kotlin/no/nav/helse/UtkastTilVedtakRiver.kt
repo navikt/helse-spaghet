@@ -10,6 +10,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -42,7 +44,7 @@ class UtkastTilVedtakRiver(
         val id = UUID.fromString(packet["@id"].asText())
         val tags = packet["tags"].map { it.asText() }
         insertUtkastTilVedtak(id, opprettet, vedtaksperiodeId, behandlingId, tags)
-        logg.info("Lagret utkast_til_vedtak for vedtaksperiodeId=$vedtaksperiodeId")
+        loggInfo("Lagret utkast_til_vedtak", "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }
 
     override fun onError(
@@ -50,7 +52,7 @@ class UtkastTilVedtakRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error("Klarte ikke å lese utkast_til_vedtak event! ${problems.toExtendedReport()}")
+        loggError("Klarte ikke å lese utkast_til_vedtak event", "problemer" to problems.toExtendedReport())
     }
 
     private fun insertUtkastTilVedtak(

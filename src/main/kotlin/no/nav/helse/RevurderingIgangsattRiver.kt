@@ -11,6 +11,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.util.*
 import javax.sql.DataSource
@@ -60,7 +61,7 @@ class RevurderingIgangsattRiver(
         val periodeForEndringTom = packet["periodeForEndringTom"].asLocalDate()
         val berørtePerioder = packet["berørtePerioder"]
 
-        logg.info("Legger inn data fra revurdering_igangsatt i databasen")
+        loggInfo("Legger inn data fra revurdering_igangsatt i databasen", "revurderingId" to revurderingId.toString())
 
         sessionOf(dataSource).use {
             it.transaction { session ->

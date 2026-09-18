@@ -13,10 +13,10 @@ import com.github.navikt.tbd_libs.retry.retryBlocking
 import com.github.navikt.tbd_libs.speed.SpeedClient
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.RefusjonstypeTag.Arbeidsgiverutbetaling
 import no.nav.helse.RefusjonstypeTag.IngenUtbetaling
 import no.nav.helse.RefusjonstypeTag.Personutbetaling
+import no.nav.sykepenger.libs.logging.loggInfo
 import java.util.*
 import javax.sql.DataSource
 
@@ -115,7 +115,7 @@ class GodkjenningLøsningRiver(
                 behandlingId = behandlingId,
             )
 
-        logg.info("Lagrer godkjenning for {}", kv("vedtaksperiodeId", behov.vedtaksperiodeId))
+        loggInfo("Lagrer godkjenning", "vedtaksperiodeId" to behov.vedtaksperiodeId.toString())
 
         if (behov.løsning.godkjent) {
             godkjentCounter.increment()

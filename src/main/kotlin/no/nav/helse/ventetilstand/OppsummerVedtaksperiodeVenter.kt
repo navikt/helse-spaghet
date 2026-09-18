@@ -8,7 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.ventetilstand.OppsummeringDao.Ventegruppe
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
-import org.slf4j.LoggerFactory
+import no.nav.sykepenger.libs.logging.loggError
 import org.slf4j.event.Level.INFO
 import kotlin.random.Random.Default.nextInt
 
@@ -52,12 +52,11 @@ internal class OppsummerVedtaksperiodeVenter(
             val melding = lagMelding(oppsummering, antallPersoner)
             context.sendPåSlack(packet, INFO, melding)
         } catch (exception: Exception) {
-            sikkerlogg.error("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
+            loggError("Feil ved generering av oppsummering for vedtaksperioder som venter", exception)
         }
     }
 
     private companion object {
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
         private val Int.fintAntall get() = "$this".padStart(10, ' ')
         private val String.skummel get() = setOf("hjelp", "utbetaling", "beregning").any { this.startsWith(it) }
         private val String.stuck get() = this.endsWith("måneder")

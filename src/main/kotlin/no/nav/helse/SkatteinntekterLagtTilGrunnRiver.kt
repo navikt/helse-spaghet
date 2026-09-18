@@ -9,6 +9,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.postgresql.util.PSQLException
 import java.util.*
 import javax.sql.DataSource
@@ -33,7 +35,7 @@ class SkatteinntekterLagtTilGrunnRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        sikkerlogg.info("Leste melding: ${packet.toJson()}")
+        loggInfo("Leste skatteinntekter_lagt_til_grunn melding", "packet" to packet.toJson())
         val vedtaksperiodeId = packet["vedtaksperiodeId"].asText().let { UUID.fromString(it) }
         val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
         val hendelseId = packet["@id"].asText().let { UUID.fromString(it) }
@@ -62,7 +64,7 @@ class SkatteinntekterLagtTilGrunnRiver(
                 )
             }
         } catch (error: PSQLException) {
-            logg.error("Klarte ikke lagre skatteinntekter lagt til grunn for hendelseId $hendelseId")
+            loggError("Klarte ikke lagre skatteinntekter lagt til grunn", "hendelseId" to hendelseId.toString())
         }
     }
 
@@ -71,6 +73,6 @@ class SkatteinntekterLagtTilGrunnRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error(problems.toExtendedReport())
+        loggError("Klarte ikke å lese skatteinntekter_lagt_til_grunn event", "problemer" to problems.toExtendedReport())
     }
 }

@@ -11,6 +11,7 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.helse.Util.asUuid
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -75,7 +76,7 @@ class VarselEndretRiver(
 
         sessionOf(dataSource).use { session ->
             session.insertVarsel(varsel, meldingOpprettet, behandlingId)
-            logg.info("Lagret varsel for behandlingId=$behandlingId, vedtaksperiode=$vedtaksperiodeId")
+            loggInfo("Lagret varsel", "behandlingId" to behandlingId?.toString(), "vedtaksperiodeId" to vedtaksperiodeId.toString())
         }
     }
 

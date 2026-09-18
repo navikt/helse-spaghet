@@ -12,9 +12,9 @@ import com.github.navikt.tbd_libs.spedisjon.SpedisjonClient
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -24,10 +24,6 @@ internal class InntektsmeldingHåndtertRiver(
     private val dataSource: DataSource,
     private val spedisjonClient: SpedisjonClient,
 ) : River.PacketListener {
-    private companion object {
-        private val logg: Logger = LoggerFactory.getLogger(InntektsmeldingHåndtertRiver::class.java)
-    }
-
     init {
         River(rapidsConnection)
             .apply {
@@ -62,8 +58,7 @@ internal class InntektsmeldingHåndtertRiver(
                 if (System.getenv("NAIS_CLUSTER_NAME") == "dev-gcp") {
                     UUID.randomUUID()
                 } else {
-                    sikkerlogg.error("Kunne ikke hente ekstern dokument ID for inntektsmelding $hendelseId", exception)
-                    logg.error("Feil ved henting av ekstern dokument ID for inntektsmelding $hendelseId", exception)
+                    loggError("Feil ved henting av ekstern dokument ID for inntektsmelding", exception, "hendelseId" to hendelseId.toString())
                     throw exception
                 }
             }
@@ -92,6 +87,6 @@ internal class InntektsmeldingHåndtertRiver(
                 ).asExecute,
             )
         }
-        logg.info("Lagrer inntektsmelding håndtert for vedtaksperiode $vedtaksperiodeId og inntektsmelding $hendelseId")
+        loggInfo("Lagrer inntektsmelding håndtert", "vedtaksperiodeId" to vedtaksperiodeId.toString(), "hendelseId" to hendelseId.toString())
     }
 }

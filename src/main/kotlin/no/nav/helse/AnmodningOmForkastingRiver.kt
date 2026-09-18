@@ -11,6 +11,9 @@ import no.nav.helse.AnmodningOmForkasting.Companion.insertAnmodningOmForkasting
 import no.nav.helse.AnmodningOmForkasting.Companion.parseAnmodningOmForkasting
 import no.nav.helse.Util.jsonNode
 import no.nav.helse.Util.withSession
+import no.nav.sykepenger.libs.logging.loggError
+import no.nav.sykepenger.libs.logging.loggInfo
+import no.nav.sykepenger.libs.logging.loggWarn
 import javax.sql.DataSource
 
 class AnmodningOmForkastingRiver(
@@ -33,7 +36,7 @@ class AnmodningOmForkastingRiver(
         context: MessageContext,
         metadata: MessageMetadata,
     ) {
-        sikkerlogg.error("Klarte ikke å lese AnmodningOmForkasting event! ${problems.toExtendedReport()}")
+        loggError("Klarte ikke å lese AnmodningOmForkasting event", "problemer" to problems.toExtendedReport())
     }
 
     override fun onPacket(
@@ -44,12 +47,12 @@ class AnmodningOmForkastingRiver(
     ) {
         val jsonNode = packet.jsonNode()
         val anmodning = jsonNode.parseAnmodningOmForkasting() ?: run {
-            logg.warn("Forkaster anmodning_om_forkasting: verken saksbehandlerIdent eller @avsender.NAVIdent er tilstede")
+            loggWarn("Forkaster anmodning_om_forkasting: verken saksbehandlerIdent eller @avsender.NAVIdent er tilstede")
             return
         }
         dataSource.withSession {
             this.insertAnmodningOmForkasting(anmodning)
         }
-        logg.info("Lagret anmodning_om_forkasting for vedtaksperiodeId=${anmodning.vedtaksperiodeId}")
+        loggInfo("Lagret anmodning_om_forkasting", "vedtaksperiodeId" to anmodning.vedtaksperiodeId.toString())
     }
 }

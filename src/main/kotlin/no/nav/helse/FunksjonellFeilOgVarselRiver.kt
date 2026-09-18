@@ -10,7 +10,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.util.*
@@ -43,7 +43,7 @@ class FunksjonellFeilOgVarselRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        sikkerlogg.info("Leser inn {}", keyValue("hendelse", packet.toJson()))
+        loggInfo("Leser inn hendelse", "hendelse" to packet.toJson())
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
             .filter { it["nivå"].asText() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
@@ -52,7 +52,7 @@ class FunksjonellFeilOgVarselRiver(
                 val vedtaksperiodeId =
                     aktivitet
                         .finnVedtaksperiodeId()
-                        ?: return@forEach sikkerlogg.info("Fant ingen vedtaksperiodeId knyttet til funksjonell feil på {}", keyValue("hendelse", packet.toJson()))
+                        ?: return@forEach loggInfo("Fant ingen vedtaksperiodeId knyttet til funksjonell feil", "hendelse" to packet.toJson())
 
                 val nivå = aktivitet.path("nivå").asText()
                 val melding = aktivitet.path("melding").asText()
@@ -96,6 +96,6 @@ class FunksjonellFeilOgVarselRiver(
                 ).asExecute,
             )
         }
-        logg.info("Lagret $tabellNavn på vedtaksperiode $vedtaksperiodeId")
+        loggInfo("Lagret varsel/feil på vedtaksperiode", "tabellNavn" to tabellNavn, "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }
 }
