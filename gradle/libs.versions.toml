@@ -12,7 +12,7 @@ mockk = "io.mockk:mockk:1.14.11"
 
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2026042008201776666058"
 
-sykepengerLibs-logging = "no.nav.sykepenger.libs:logging:20260829.1737"
+sykepengerLibs-logging = "no.nav.sykepenger.libs:logging:20261001.1823"
 
 tbdLibs-azureTokenClientDefault = { module = "com.github.navikt.tbd-libs:azure-token-client-default", version.ref = "tbdLibs" }
 tbdLibs-retry = { module = "com.github.navikt.tbd-libs:retry", version.ref = "tbdLibs" }
