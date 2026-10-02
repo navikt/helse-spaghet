@@ -1,6 +1,6 @@
 # Spaghet
 
-![Bygg og deploy](https://github.com/navikt/helse-spaghet/workflows/Bygg%20og%20deploy/badge.svg)
+![Bygg og deploy](https://github.com/navikt/helse-spaghet/actions/workflows/main.yml/badge.svg)
 
 ## Beskrivelse
 

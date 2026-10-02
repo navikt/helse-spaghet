@@ -1,57 +1,26 @@
 plugins {
-    kotlin("jvm") version "2.4.20"
+    alias(libs.plugins.sykepenger.deployable)
 }
 
-private val tbdLibsVersion = "20260821.0852"
+sykepengerDeployable {
+    mainClass = "no.nav.helse.AppKt"
+}
+
 dependencies {
-    implementation("org.postgresql:postgresql:42.7.13")
-    implementation("com.github.navikt:rapids-and-rivers:2026042008201776666058")
-    implementation("com.github.navikt.tbd-libs:spurtedu-client:$tbdLibsVersion")
-    implementation("com.github.navikt.tbd-libs:azure-token-client-default:$tbdLibsVersion")
-    implementation("com.github.navikt.tbd-libs:retry:$tbdLibsVersion")
-    implementation("com.github.navikt.tbd-libs:speed-client:$tbdLibsVersion")
-    implementation("com.github.navikt.tbd-libs:spedisjon-client:$tbdLibsVersion")
+    implementation(libs.postgresql)
+    implementation(libs.rapidsAndRivers)
+    implementation(libs.tbdLibs.spurteduClient)
+    implementation(libs.tbdLibs.azureTokenClientDefault)
+    implementation(libs.tbdLibs.retry)
+    implementation(libs.tbdLibs.speedClient)
+    implementation(libs.tbdLibs.spedisjonClient)
 
-    implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.20.3")
-    implementation("com.github.seratch:kotliquery:1.9.1")
-    implementation("no.nav.sykepenger.libs:logging:20260829.1737")
+    implementation(libs.hikari)
+    implementation(libs.flyway.postgresql)
+    implementation(libs.kotliquery)
+    implementation(libs.sykepengerLibs.logging)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    testImplementation("io.mockk:mockk:1.14.11")
-    testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:$tbdLibsVersion")
-    testImplementation("com.github.navikt.tbd-libs:postgres-testdatabaser:$tbdLibsVersion")
-}
-
-kotlin {
-    jvmToolchain(25)
-}
-
-tasks {
-    test {
-        useJUnitPlatform()
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-    }
-    named<Jar>("jar") {
-        archiveBaseName.set("app")
-
-        manifest {
-            attributes["Main-Class"] = "no.nav.helse.AppKt"
-            attributes["Class-Path"] =
-                configurations.runtimeClasspath.get().joinToString(separator = " ") {
-                    it.name
-                }
-        }
-
-        doLast {
-            configurations.runtimeClasspath.get().forEach {
-                val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
-                if (!file.exists()) it.copyTo(file)
-            }
-        }
-    }
+    testImplementation(libs.mockk)
+    testImplementation(libs.tbdLibs.rapidsAndRiversTest)
+    testImplementation(libs.tbdLibs.postgresTestdatabaser)
 }

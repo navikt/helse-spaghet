@@ -1,19 +1,4 @@
-apiVersion: nais.io/v1alpha1
-kind: Application
-metadata:
-  name: spaghet
-  namespace: tbd
-  labels:
-    team: tbd
 spec:
-  image: {{image}}
-  port: 8080
-  liveness:
-    path: isalive
-    initialDelay: 5
-  readiness:
-    path: isready
-    initialDelay: 5
   preStopHook:
     http:
       path: /stop
@@ -21,32 +6,13 @@ spec:
     limits:
       memory: 2048Mi
     requests:
-      cpu: 50m
       memory: 512Mi
   replicas:
-    min: 1
     max: 12
-    scalingStrategy:
-      kafka:
-        topic: tbd.rapid.v1
-        consumerGroup: tbd-spaghet-v1
-        threshold: 200
   kafka:
     pool: nav-prod
-  prometheus:
-    enabled: true
-    path: /metrics
-  accessPolicy:
-    outbound:
-      rules:
-        - application: logging
-          namespace: nais-system
-        - application: spurtedu
-        - application: speed-api
-        - application: spedisjon
   azure:
     application:
-      enabled: true
       tenant: nav.no
   gcp:
     sqlInstances:
@@ -74,15 +40,3 @@ spec:
             value: "on"
           - name: pgaudit.log_relation
             value: "on"
-  env:
-    - name: KAFKA_RAPID_TOPIC
-      value: tbd.rapid.v1
-    - name: KAFKA_CONSUMER_GROUP_ID
-      value: tbd-spaghet-v1
-    - name: KAFKA_RESET_POLICY
-      value: earliest
-  observability:
-    logging:
-      destinations:
-        - id: elastic
-        - id: loki

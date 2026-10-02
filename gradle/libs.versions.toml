@@ -1,0 +1,26 @@
+[versions]
+tbdLibs = "20260821.0852"
+sykepengerGradlePlugins = "20261001.1830"
+
+[libraries]
+flyway-postgresql = "org.flywaydb:flyway-database-postgresql:11.20.3"
+hikari = "com.zaxxer:HikariCP:7.1.0"
+kotliquery = "com.github.seratch:kotliquery:1.9.1"
+postgresql = "org.postgresql:postgresql:42.7.13"
+
+mockk = "io.mockk:mockk:1.14.11"
+
+rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2026042008201776666058"
+
+sykepengerLibs-logging = "no.nav.sykepenger.libs:logging:20260829.1737"
+
+tbdLibs-azureTokenClientDefault = { module = "com.github.navikt.tbd-libs:azure-token-client-default", version.ref = "tbdLibs" }
+tbdLibs-retry = { module = "com.github.navikt.tbd-libs:retry", version.ref = "tbdLibs" }
+tbdLibs-speedClient = { module = "com.github.navikt.tbd-libs:speed-client", version.ref = "tbdLibs" }
+tbdLibs-spedisjonClient = { module = "com.github.navikt.tbd-libs:spedisjon-client", version.ref = "tbdLibs" }
+tbdLibs-spurteduClient = { module = "com.github.navikt.tbd-libs:spurtedu-client", version.ref = "tbdLibs" }
+tbdLibs-postgresTestdatabaser = { module = "com.github.navikt.tbd-libs:postgres-testdatabaser", version.ref = "tbdLibs" }
+tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
+
+[plugins]
+sykepenger-deployable = { id = "no.nav.sykepenger.deployable", version.ref = "sykepengerGradlePlugins" }
