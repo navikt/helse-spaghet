@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -12,6 +11,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -46,17 +46,17 @@ class FunksjonellFeilOgVarselRiver(
         loggInfo("Leser inn hendelse", "hendelse" to packet.toJson())
         val opprettet = packet["@opprettet"].asLocalDateTime()
         packet["aktiviteter"]
-            .filter { it["nivå"].asText() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
-            .distinctBy { Triple(it["nivå"].asText(), it.finnVedtaksperiodeId(), it["varselkode"].asText()) }
+            .filter { it["nivå"].asString() in listOf("FUNKSJONELL_FEIL", "VARSEL") }
+            .distinctBy { Triple(it["nivå"].asString(), it.finnVedtaksperiodeId(), it["varselkode"].asString()) }
             .forEach { aktivitet ->
                 val vedtaksperiodeId =
                     aktivitet
                         .finnVedtaksperiodeId()
                         ?: return@forEach loggInfo("Fant ingen vedtaksperiodeId knyttet til funksjonell feil", "hendelse" to packet.toJson())
 
-                val nivå = aktivitet.path("nivå").asText()
-                val melding = aktivitet.path("melding").asText()
-                val varselkode = aktivitet.path("varselkode").asText()
+                val nivå = aktivitet.path("nivå").asString()
+                val melding = aktivitet.path("melding").asString()
+                val varselkode = aktivitet.path("varselkode").asString()
                 when (nivå) {
                     "FUNKSJONELL_FEIL" -> insert(vedtaksperiodeId, varselkode, nivå, melding, "funksjonell_feil", opprettet)
                     "VARSEL" -> insert(vedtaksperiodeId, varselkode, nivå, melding, "regelverksvarsel", opprettet)
@@ -66,10 +66,10 @@ class FunksjonellFeilOgVarselRiver(
 
     private fun JsonNode.finnVedtaksperiodeId() =
         this["kontekster"]
-            .firstOrNull { kontektst -> kontektst["konteksttype"].asText() == "Vedtaksperiode" }
+            .firstOrNull { kontektst -> kontektst["konteksttype"].asString() == "Vedtaksperiode" }
             ?.get("kontekstmap")
             ?.get("vedtaksperiodeId")
-            ?.let { UUID.fromString(it.asText()) }
+            ?.let { UUID.fromString(it.asString()) }
 
     private fun insert(
         vedtaksperiodeId: UUID,

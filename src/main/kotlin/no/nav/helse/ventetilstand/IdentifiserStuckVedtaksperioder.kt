@@ -113,7 +113,7 @@ internal class IdentifiserStuckVedtaksperioder(
             spurteDuClient: SpurteDuClient,
         ) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (utvikler)", TBD_GRUPPE_PROD)}/${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (saksbehandler)", TBD_SPANNER_PROD)}/$kibanaUrl]"
 
-        private val JsonMessage.eventname get() = get("@event_name").asText()
+        private val JsonMessage.eventname get() = get("@event_name").asString()
 
         private fun ingentingStuck(
             packet: JsonMessage,

@@ -1,9 +1,12 @@
 package no.nav.helse.ventetilstand
 
-import kotliquery.*
-import no.nav.sykepenger.libs.logging.loggInfo
+import kotliquery.Query
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenter
 import no.nav.helse.ventetilstand.VedtaksperiodeVenter.Companion.vedtaksperiodeVenterMedMetadata
+import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 

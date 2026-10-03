@@ -8,7 +8,6 @@ import java.time.LocalDate
 import java.util.*
 
 class PlanlagtAnnulleringE2ETest {
-
     @Test
     fun `Utløsende vedtaksperiode lagres som berørt vedtaksperiode`() {
         e2eTest {
@@ -92,17 +91,17 @@ class PlanlagtAnnulleringE2ETest {
         organisasjonsnummer: String = "974016370",
         yrkesaktivitetstype: String = "ARBEIDSTAKER",
     ) = """
-            {
-              "@event_name": "planlagt_annullering",
-              "yrkesaktivitetstype": "$yrkesaktivitetstype",
-              "organisasjonsnummer": "$organisasjonsnummer",
-              "vedtaksperioder": [${vedtaksperioder.joinToString {""""$it""""}}],
-              "fom": "$fom",
-              "tom": "$tom",
-              "@id": "${UUID.randomUUID()}",
-              "@opprettet": "2026-05-21T10:32:27.796819"
-            }
-            """.trimIndent()
+        {
+          "@event_name": "planlagt_annullering",
+          "yrkesaktivitetstype": "$yrkesaktivitetstype",
+          "organisasjonsnummer": "$organisasjonsnummer",
+          "vedtaksperioder": [${vedtaksperioder.joinToString {""""$it""""}}],
+          "fom": "$fom",
+          "tom": "$tom",
+          "@id": "${UUID.randomUUID()}",
+          "@opprettet": "2026-05-21T10:32:27.796819"
+        }
+        """.trimIndent()
 
     private fun planlagtAnnulleringSelvstendig(
         vedtaksperioder: List<UUID>,
@@ -110,15 +109,14 @@ class PlanlagtAnnulleringE2ETest {
         tom: LocalDate = LocalDate.of(2025, 12, 12),
         yrkesaktivitetstype: String = "SELVSTENDIG",
     ) = """
-            {
-              "@event_name": "planlagt_annullering",
-              "yrkesaktivitetstype": "$yrkesaktivitetstype",
-              "vedtaksperioder": [${vedtaksperioder.joinToString {""""$it""""}}],
-              "fom": "$fom",
-              "tom": "$tom",
-              "@id": "${UUID.randomUUID()}",
-              "@opprettet": "2026-05-21T10:32:27.796819"
-            }
-            """.trimIndent()
+        {
+          "@event_name": "planlagt_annullering",
+          "yrkesaktivitetstype": "$yrkesaktivitetstype",
+          "vedtaksperioder": [${vedtaksperioder.joinToString {""""$it""""}}],
+          "fom": "$fom",
+          "tom": "$tom",
+          "@id": "${UUID.randomUUID()}",
+          "@opprettet": "2026-05-21T10:32:27.796819"
+        }
+        """.trimIndent()
 }
-

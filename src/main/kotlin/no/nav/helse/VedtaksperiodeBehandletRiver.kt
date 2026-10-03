@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -15,6 +14,7 @@ import no.nav.sykepenger.libs.logging.loggInfo
 import no.nav.sykepenger.libs.logging.loggWarn
 import org.intellij.lang.annotations.Language
 import org.postgresql.util.PSQLException
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -43,8 +43,8 @@ class VedtaksperiodeBehandletRiver(
         meterRegistry: MeterRegistry,
     ) {
         val json = objectMapper.readTree(packet.toJson())
-        val behovId = UUID.fromString(json["@behovId"].asText())
-        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val behovId = UUID.fromString(json["@behovId"].asString())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asString())
         val løsning = løsning(json)
         val saksbehandlerIdentitet = finnIdentitet(løsning)
         try {
@@ -72,7 +72,7 @@ class VedtaksperiodeBehandletRiver(
     private fun finnIdentitet(løsning: JsonNode) =
         when {
             løsning.valueOrNull("automatiskBehandling")?.asBoolean() == true -> SPESIALIST_OID
-            else -> løsning["saksbehandlerIdent"].asText()
+            else -> løsning["saksbehandlerIdent"].asString()
         }
 
     private fun løsning(json: JsonNode): JsonNode = json["@løsning"]["Godkjenning"]
@@ -94,7 +94,7 @@ class VedtaksperiodeBehandletRiver(
                     "id" to id,
                     "godkjent" to løsning["godkjent"].asBoolean(),
                     "automatisk_behandling" to (løsning["automatiskBehandling"]?.asBoolean(false) ?: false),
-                    "arsak" to løsning.valueOrNull("årsak")?.asText(),
+                    "arsak" to løsning.valueOrNull("årsak")?.asString(),
                     "godkjent_av" to saksbehandlerIdentitet,
                     "godkjenttidspunkt" to godkjentTidspunkt,
                 ),
@@ -117,7 +117,7 @@ class VedtaksperiodeBehandletRiver(
                     begrunnelseInsert,
                     mapOf(
                         "id" to id,
-                        "begrunnelse" to begrunnelse.asText(),
+                        "begrunnelse" to begrunnelse.asString(),
                     ),
                 ).asUpdate,
             )

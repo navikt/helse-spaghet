@@ -46,39 +46,41 @@ class PlanlagtAnnulleringRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val hendelseId = UUID.fromString(packet["@id"].asText())
-        val vedtaksperioder = packet["vedtaksperioder"].map { UUID.fromString(it.asText()) }
-        val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()
-        val organisasjonsnummer = packet["organisasjonsnummer"].takeUnless { it.isMissingOrNull() }?.asText() ?: yrkesaktivitetstype
+        val hendelseId = UUID.fromString(packet["@id"].asString())
+        val vedtaksperioder = packet["vedtaksperioder"].values().map { UUID.fromString(it.asString()) }
+        val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asString()
+        val organisasjonsnummer = packet["organisasjonsnummer"].takeUnless { it.isMissingOrNull() }?.asString() ?: yrkesaktivitetstype
 
-        val lagredeBerørteVedtaksperioder = sessionOf(dataSource).use { session ->
-            session.transaction { tx ->
-                val utløsendeVedtaksperiodeId = vedtaksperioder.firstOrNull { vedtaksperiodeId ->
-                    tx.run(
-                        queryOf(
-                            "SELECT 1 FROM annullering WHERE id = ?",
-                            vedtaksperiodeId.toString(),
-                        ).map { it.int(1) }.asSingle,
-                    ) != null
-                }
-                if (utløsendeVedtaksperiodeId == null) {
-                    loggError(
-                        "Ignorerer planlagt_annullering fordi utløsende vedtaksperiode ikke finnes i annullering",
-                        "hendelseId" to hendelseId.toString(),
-                        "packet" to packet.toJson(),
-                    )
-                    return@transaction 0
-                }
+        val lagredeBerørteVedtaksperioder =
+            sessionOf(dataSource).use { session ->
+                session.transaction { tx ->
+                    val utløsendeVedtaksperiodeId =
+                        vedtaksperioder.firstOrNull { vedtaksperiodeId ->
+                            tx.run(
+                                queryOf(
+                                    "SELECT 1 FROM annullering WHERE id = ?",
+                                    vedtaksperiodeId.toString(),
+                                ).map { it.int(1) }.asSingle,
+                            ) != null
+                        }
+                    if (utløsendeVedtaksperiodeId == null) {
+                        loggError(
+                            "Ignorerer planlagt_annullering fordi utløsende vedtaksperiode ikke finnes i annullering",
+                            "hendelseId" to hendelseId.toString(),
+                            "packet" to packet.toJson(),
+                        )
+                        return@transaction 0
+                    }
 
-                @Language("PostgreSQL")
-                val statement = """
+                    @Language("PostgreSQL")
+                    val statement = """
                     INSERT INTO annullering_berorte_vedtaksperioder(
                         vedtaksperiode_id, utløsende_vedtaksperiode_id,
                         organisasjonsnummer, yrkesaktivitetstype
                     ) VALUES (?, ?, ?, ?)
                     ON CONFLICT DO NOTHING
                 """
-                vedtaksperioder.sumOf { vedtaksperiodeId ->
+                    vedtaksperioder.sumOf { vedtaksperiodeId ->
                         tx.run(
                             queryOf(
                                 statement,
@@ -89,8 +91,8 @@ class PlanlagtAnnulleringRiver(
                             ).asUpdate,
                         )
                     }
+                }
             }
-        }
         if (lagredeBerørteVedtaksperioder > 0) {
             loggInfo(
                 "Lagret berørte vedtaksperioder fra planlagt_annullering",

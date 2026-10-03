@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -9,13 +8,14 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
-import java.util.*
-import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.sykepenger.libs.logging.loggError
 import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
+import java.util.*
+import javax.sql.DataSource
 
 class RevurderingGodkjentRiver(
     rapidApplication: RapidsConnection,
@@ -36,7 +36,11 @@ class RevurderingGodkjentRiver(
             }.register(this)
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         loggError("Feil ved lesing av godkjenningsbehov for revurdering", "problemer" to problems.toString())
         super.onError(problems, context, metadata)
     }
@@ -49,17 +53,20 @@ class RevurderingGodkjentRiver(
     ) {
         val opprettet = packet["@opprettet"].asLocalDateTime()
         val løsning = tilLøsning(packet["@løsning.Godkjenning"])
-        val status = when {
-            løsning.godkjent && løsning.automatiskBehandling -> "FERDIGSTILT_AUTOMATISK"
-            løsning.godkjent && !løsning.automatiskBehandling -> "FERDIGSTILT_MANUELT"
-            !løsning.godkjent && løsning.automatiskBehandling -> "AVVIST_AUTOMATISK"
-            else -> "AVVIST_MANUELT"
-        }
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+        val status =
+            when {
+                løsning.godkjent && løsning.automatiskBehandling -> "FERDIGSTILT_AUTOMATISK"
+                løsning.godkjent && !løsning.automatiskBehandling -> "FERDIGSTILT_MANUELT"
+                !løsning.godkjent && løsning.automatiskBehandling -> "AVVIST_AUTOMATISK"
+                else -> "AVVIST_MANUELT"
+            }
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
         val revurdering = hentRevurdering(vedtaksperiodeId)
 
-        val erRevurderingFerdig = revurdering.second.filterNot { it.first == vedtaksperiodeId }
-            .all { it.second in listOf("FERDIGSTILT_AUTOMATISK", "FERDIGSTILT_MANUELT", "AVVIST_AUTOMATISK", "AVVIST_MANUELT") }
+        val erRevurderingFerdig =
+            revurdering.second
+                .filterNot { it.first == vedtaksperiodeId }
+                .all { it.second in listOf("FERDIGSTILT_AUTOMATISK", "FERDIGSTILT_MANUELT", "AVVIST_AUTOMATISK", "AVVIST_MANUELT") }
 
         loggInfo("Legger inn data fra godkjenningsbehov i databasen")
 
@@ -96,7 +103,7 @@ class RevurderingGodkjentRiver(
     private fun tilLøsning(jsonNode: JsonNode) =
         Godkjenningsbehov.Løsning(
             godkjent = jsonNode["godkjent"].asBoolean(),
-            saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asText(),
+            saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asString(),
             godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
             automatiskBehandling = jsonNode["automatiskBehandling"].asBoolean(),
             årsak = null,
@@ -108,9 +115,10 @@ class RevurderingGodkjentRiver(
         sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = """SELECT revurdering_id FROM revurdering_vedtaksperiode where vedtaksperiode_id='$vedtaksperiodeId' LIMIT 1;"""
-            val revurderingId = requireNotNull(
-                session.run(queryOf(query).map { row -> row.uuid("revurdering_id") }.asSingle),
-            )
+            val revurderingId =
+                requireNotNull(
+                    session.run(queryOf(query).map { row -> row.uuid("revurdering_id") }.asSingle),
+                )
 
             @Language("PostgreSQL")
             val query2 = """SELECT vedtaksperiode_id, status FROM revurdering_vedtaksperiode WHERE revurdering_id='$revurderingId';"""

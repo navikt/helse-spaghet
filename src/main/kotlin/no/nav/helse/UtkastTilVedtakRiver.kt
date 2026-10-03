@@ -38,11 +38,11 @@ class UtkastTilVedtakRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val behandlingId = UUID.fromString(packet["behandlingId"].asText())
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
+        val behandlingId = UUID.fromString(packet["behandlingId"].asString())
         val opprettet = packet["@opprettet"].asLocalDateTime()
-        val id = UUID.fromString(packet["@id"].asText())
-        val tags = packet["tags"].map { it.asText() }
+        val id = UUID.fromString(packet["@id"].asString())
+        val tags = packet["tags"].values().map { it.asString() }
         insertUtkastTilVedtak(id, opprettet, vedtaksperiodeId, behandlingId, tags)
         loggInfo("Lagret utkast_til_vedtak", "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }

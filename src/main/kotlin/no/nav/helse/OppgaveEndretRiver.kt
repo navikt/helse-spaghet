@@ -43,10 +43,10 @@ class OppgaveEndretRiver(
         val oppgaveEndret =
             OppgaveEndret(
                 id = packet["oppgaveId"].asLong(),
-                fødselsnummer = packet["fødselsnummer"].asText(),
+                fødselsnummer = packet["fødselsnummer"].asString(),
                 behandlingId = packet["behandlingId"].asUuid(),
-                tilstand = packet["tilstand"].asText(),
-                egenskaper = packet["egenskaper"].map { it.asText() },
+                tilstand = packet["tilstand"].asString(),
+                egenskaper = packet["egenskaper"].values().map { it.asString() },
                 tildelt = !packet["saksbehandler"].isMissingOrNull(),
                 opprettet = packet["@opprettet"].asLocalDateTime(),
             )

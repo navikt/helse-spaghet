@@ -49,13 +49,13 @@ class VarselEndretRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiode_id"].asText())
-        val tittel = packet["varseltittel"].asText()
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiode_id"].asString())
+        val tittel = packet["varseltittel"].asString()
         val meldingOpprettet = packet["@opprettet"].asLocalDateTime()
-        val status = packet["gjeldende_status"].asText()
-        val behandlingId = packet["behandling_id"].textValue()?.let { UUID.fromString(it) }
+        val status = packet["gjeldende_status"].asString()
+        val behandlingId = packet["behandling_id"].stringValue(null)?.let { UUID.fromString(it) }
         val varselId = packet["varsel_id"].asUuid()
-        val varselkode = packet["varselkode"].asText()
+        val varselkode = packet["varselkode"].asString()
         val kilde =
             with(varselkode) {
                 when {

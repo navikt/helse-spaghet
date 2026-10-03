@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -17,6 +16,7 @@ import no.nav.helse.RefusjonstypeTag.Arbeidsgiverutbetaling
 import no.nav.helse.RefusjonstypeTag.IngenUtbetaling
 import no.nav.helse.RefusjonstypeTag.Personutbetaling
 import no.nav.sykepenger.libs.logging.loggInfo
+import tools.jackson.databind.JsonNode
 import java.util.*
 import javax.sql.DataSource
 
@@ -73,13 +73,13 @@ class GodkjenningLøsningRiver(
     ) {
         if (godkjenningAlleredeLagret(packet)) return
 
-        val ident = packet["fødselsnummer"].asText()
-        val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asText())
+        val ident = packet["fødselsnummer"].asString()
+        val behandlingId = UUID.fromString(packet["Godkjenning.behandlingId"].asString())
 
         val refusjonstypeTags =
             packet["Godkjenning.tags"].mapNotNull {
                 runCatching {
-                    enumValueOf<RefusjonstypeTag>(it.asText())
+                    enumValueOf<RefusjonstypeTag>(it.asString())
                 }.getOrNull()
             }
 
@@ -98,18 +98,19 @@ class GodkjenningLøsningRiver(
 
         val behov =
             Godkjenningsbehov(
-                vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText()),
+                vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString()),
                 fødselsnummer = identer.fødselsnummer,
                 aktørId = identer.aktørId,
-                periodetype = packet["Godkjenning.periodetype"].asText(),
-                inntektskilde = packet["Godkjenning.inntektskilde"].asText(),
-                utbetalingType = packet["Godkjenning.utbetalingtype"].asText(),
+                periodetype = packet["Godkjenning.periodetype"].asString(),
+                inntektskilde = packet["Godkjenning.inntektskilde"].asString(),
+                utbetalingType = packet["Godkjenning.utbetalingtype"].asString(),
                 refusjonType = refusjonstype,
                 saksbehandleroverstyringer =
                     packet["@løsning.Godkjenning.saksbehandleroverstyringer"]
                         .takeUnless(JsonNode::isMissingOrNull)
+                        ?.values()
                         ?.map {
-                            UUID.fromString(it.asText())
+                            UUID.fromString(it.asString())
                         } ?: emptyList(),
                 løsning = tilLøsning(packet["@løsning.Godkjenning"]),
                 behandlingId = behandlingId,
@@ -149,18 +150,18 @@ class GodkjenningLøsningRiver(
 
     private fun godkjenningAlleredeLagret(packet: JsonMessage) =
         dataSource.godkjenningAlleredeLagret(
-            UUID.fromString(packet["vedtaksperiodeId"].asText()),
+            UUID.fromString(packet["vedtaksperiodeId"].asString()),
             packet["@løsning.Godkjenning.godkjenttidspunkt"].asLocalDateTime(),
         )
 
     private fun tilLøsning(jsonNode: JsonNode) =
         Godkjenningsbehov.Løsning(
             godkjent = jsonNode["godkjent"].asBoolean(),
-            saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asText(),
+            saksbehandlerIdent = jsonNode["saksbehandlerIdent"].asString(),
             godkjentTidspunkt = jsonNode["godkjenttidspunkt"].asLocalDateTime(),
-            årsak = jsonNode.getIfNotNull("årsak")?.asText(),
-            begrunnelser = jsonNode.getIfNotNull("begrunnelser")?.map(JsonNode::asText),
-            kommentar = jsonNode.getIfNotNull("kommentar")?.asText()?.takeIf { it.isNotBlank() },
+            årsak = jsonNode.getIfNotNull("årsak")?.asString(),
+            begrunnelser = jsonNode.getIfNotNull("begrunnelser")?.values()?.map(JsonNode::asString),
+            kommentar = jsonNode.getIfNotNull("kommentar")?.asString()?.takeIf { it.isNotBlank() },
             automatiskBehandling = jsonNode["automatiskBehandling"].asBoolean(),
         )
 

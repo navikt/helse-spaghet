@@ -46,10 +46,11 @@ class AnmodningOmForkastingRiver(
         meterRegistry: MeterRegistry,
     ) {
         val jsonNode = packet.jsonNode()
-        val anmodning = jsonNode.parseAnmodningOmForkasting() ?: run {
-            loggWarn("Forkaster anmodning_om_forkasting: verken saksbehandlerIdent eller @avsender.NAVIdent er tilstede")
-            return
-        }
+        val anmodning =
+            jsonNode.parseAnmodningOmForkasting() ?: run {
+                loggWarn("Forkaster anmodning_om_forkasting: verken saksbehandlerIdent eller @avsender.NAVIdent er tilstede")
+                return
+            }
         dataSource.withSession {
             this.insertAnmodningOmForkasting(anmodning)
         }

@@ -47,9 +47,9 @@ class SendtSøknadRiver(
     ) {
         val dokumentId = packet["id"].asUuid()
         val hendelseId = packet["@id"].asUuid()
-        val eventName = packet["@event_name"].asText()
-        val soknadstype = packet["type"].asText()
-        val arbeidssituasjon = packet["arbeidssituasjon"].asText()
+        val eventName = packet["@event_name"].asString()
+        val soknadstype = packet["type"].asString()
+        val arbeidssituasjon = packet["arbeidssituasjon"].asString()
         insertSøknad(dokumentId, hendelseId, eventName, soknadstype, arbeidssituasjon)
     }
 

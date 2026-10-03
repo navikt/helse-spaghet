@@ -82,4 +82,5 @@ fun Row.annulleringÅrsak(): AnnulleringArsak =
 fun Row.stringList(column: String) =
     objectMapper
         .readTree(string(column))
-        .map { it.asText()!! }
+        .values()
+        .map { it.asString()!! }

@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -11,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -47,7 +47,7 @@ class TidFraGodkjenningTilUtbetalingRiver(
         meterRegistry: MeterRegistry,
     ) {
         val json = objectMapper.readTree(packet.toJson())
-        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asString())
 
         finnUtbetalingsTidspunkt(json)?.let { utbetalingsTidspunkt ->
             finnGodkjenninger(vedtaksperiodeId)?.also { godkjentTidspunkt ->
@@ -66,7 +66,7 @@ class TidFraGodkjenningTilUtbetalingRiver(
         json
             .valueOrNull("aktivitetslogg")
             ?.valueOrNull("aktiviteter")
-            ?.find { node -> "OK fra Oppdragssystemet".equals(node.valueOrNull("melding")?.textValue()) }
+            ?.find { node -> "OK fra Oppdragssystemet".equals(node.valueOrNull("melding")?.stringValue(null)) }
             ?.valueOrNull("tidsstempel")
             ?.fromDate()
 
@@ -84,6 +84,6 @@ class TidFraGodkjenningTilUtbetalingRiver(
         try {
             this.asLocalDateTime()
         } catch (_: DateTimeParseException) {
-            LocalDateTime.from(legacyDateFormat.parse(this.asText()))
+            LocalDateTime.from(legacyDateFormat.parse(this.asString()))
         }
 }

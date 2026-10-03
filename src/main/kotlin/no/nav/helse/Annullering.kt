@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import kotliquery.Session
 import kotliquery.queryOf
@@ -8,6 +7,7 @@ import no.nav.helse.Util.asNullableText
 import no.nav.helse.Util.asUuid
 import no.nav.helse.Util.toJson
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 
@@ -25,15 +25,15 @@ data class Annullering(
                 saksbehandler = this["saksbehandler"]["oid"].asUuid(),
                 vedtaksperiodeId = this["vedtaksperiodeId"].asUuid(),
                 begrunnelser =
-                    this["arsaker"]?.takeUnless { it.isEmpty }?.let { it.map { arsak -> arsak["arsak"].asText() } }
-                        ?: this["begrunnelser"].map { it.asText() },
+                    this["arsaker"]?.takeUnless { it.isEmpty }?.let { it.values().map { arsak -> arsak["arsak"].asString() } }
+                        ?: this["begrunnelser"].values().map { it.asString() },
                 kommentar = this["kommentar"].asNullableText(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
                 arsaker =
-                    this["arsaker"]?.map {
+                    this["arsaker"]?.values()?.map {
                         AnnulleringArsak(
-                            key = it["key"].asText(),
-                            arsak = it["arsak"].asText(),
+                            key = it["key"].asString(),
+                            arsak = it["arsak"].asString(),
                         )
                     } ?: emptyList(),
             )

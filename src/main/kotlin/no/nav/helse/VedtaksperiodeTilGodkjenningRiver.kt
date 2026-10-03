@@ -39,11 +39,11 @@ class VedtaksperiodeTilGodkjenningRiver(
         meterRegistry: MeterRegistry,
     ) {
         val json = objectMapper.readTree(packet.toJson())
-        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asText())
+        val vedtaksperiodeId = UUID.fromString(json["vedtaksperiodeId"].asString())
         val behovOpprettet = json["@opprettet"].asLocalDateTime()
-        val periodetype = json["Godkjenning"]["periodetype"].asText()
-        val inntektskilde = json["Godkjenning"]["inntektskilde"].asText()
-        val id = UUID.fromString(json["@behovId"].asText())
+        val periodetype = json["Godkjenning"]["periodetype"].asString()
+        val inntektskilde = json["Godkjenning"]["inntektskilde"].asString()
+        val id = UUID.fromString(json["@behovId"].asString())
         insertGodkjenningsbehov(id, periodetype, inntektskilde, vedtaksperiodeId, behovOpprettet)
         loggInfo("Lagret godkjenningsbehov", "vedtaksperiodeId" to vedtaksperiodeId.toString())
     }
