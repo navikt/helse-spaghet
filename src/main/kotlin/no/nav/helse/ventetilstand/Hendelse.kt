@@ -10,6 +10,6 @@ internal class Hendelse(
 
 internal val JsonMessage.hendelse get() =
     Hendelse(
-        id = UUID.fromString(this["@id"].asText()),
+        id = UUID.fromString(this["@id"].asString()),
         hendelse = this.toJson(),
     )

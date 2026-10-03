@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -18,6 +17,7 @@ import no.nav.helse.Util.jsonNode
 import no.nav.sykepenger.libs.logging.loggError
 import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -62,13 +62,13 @@ class AnalytiskDatapakkeRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val behandlingId = UUID.fromString(packet["behandlingId"].asText())
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
+        val behandlingId = UUID.fromString(packet["behandlingId"].asString())
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         // Hent AktørId fra Speed
-        val ident = packet["fødselsnummer"].asText()
-        val callId = packet["@id"].asText()
+        val ident = packet["fødselsnummer"].asString()
+        val callId = packet["@id"].asString()
         val aktorId = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }.aktørId
 
         // Kopier packet, ta vekk doble eller uinteressante felter

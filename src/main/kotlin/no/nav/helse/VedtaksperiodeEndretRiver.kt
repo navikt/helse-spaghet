@@ -50,7 +50,7 @@ class VedtaksperiodeEndretRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        lagreVedtaksperiodedata(speedClient, packet["gjeldendeTilstand"].asText(), packet, dataSource)
+        lagreVedtaksperiodedata(speedClient, packet["gjeldendeTilstand"].asString(), packet, dataSource)
     }
 }
 
@@ -97,15 +97,15 @@ private fun lagreVedtaksperiodedata(
     packet: JsonMessage,
     dataSource: DataSource,
 ) {
-    val ident = packet["fødselsnummer"].asText()
-    val callId = packet["@id"].asText()
+    val ident = packet["fødselsnummer"].asString()
+    val callId = packet["@id"].asString()
 
     val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
-    val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+    val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
 
     val yrkesaktivitet =
-        when (val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asText()) {
-            "ARBEIDSTAKER" -> packet["organisasjonsnummer"].asText()
+        when (val yrkesaktivitetstype = packet["yrkesaktivitetstype"].asString()) {
+            "ARBEIDSTAKER" -> packet["organisasjonsnummer"].asString()
             else -> yrkesaktivitetstype
         }
 

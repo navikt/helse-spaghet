@@ -1,10 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.azure.AzureToken
 import com.github.navikt.tbd_libs.azure.AzureTokenProvider
 import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
@@ -18,14 +13,19 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.helse.rapids_rivers.RapidApplication
-import no.nav.helse.ventetilstand.*
+import no.nav.helse.ventetilstand.IdentifiserStuckVedtaksperioder
+import no.nav.helse.ventetilstand.OppsummerVedtaksperiodeVenter
+import no.nav.helse.ventetilstand.OppsummerVedtaksperiodeVenterExternal
+import no.nav.helse.ventetilstand.OppsummeringDao
+import no.nav.helse.ventetilstand.VedtaksperiodeVenterRiver
+import no.nav.helse.ventetilstand.VedtaksperiodeVentetilstandDao
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.net.http.HttpClient
 import javax.sql.DataSource
 
-internal val objectMapper: ObjectMapper =
-    jacksonObjectMapper()
-        .registerModule(JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+internal val objectMapper: ObjectMapper = jacksonObjectMapper()
 
 private fun spurteDuClient() =
     SpurteDuClient(

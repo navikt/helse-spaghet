@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import kotliquery.Session
@@ -9,8 +8,9 @@ import no.nav.helse.Util.asNullableText
 import no.nav.helse.Util.asUuid
 import no.nav.helse.Util.toJson
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class AnmodningOmForkasting(
     val vedtaksperiodeId: UUID,
@@ -24,16 +24,16 @@ data class AnmodningOmForkasting(
 ) {
     companion object {
         fun JsonNode.parseAnmodningOmForkasting(): AnmodningOmForkasting? {
-            val saksbehandlerIdent = this["saksbehandlerIdent"]?.takeUnless { it.isMissingOrNull() }?.asText()
-            val avsenderNavIdent = this["@avsender"]?.get("NAVIdent")?.asText()
+            val saksbehandlerIdent = this["saksbehandlerIdent"]?.takeUnless { it.isMissingOrNull() }?.asString()
+            val avsenderNavIdent = this["@avsender"]?.get("NAVIdent")?.asString()
             val avsender = saksbehandlerIdent ?: avsenderNavIdent ?: return null
             return AnmodningOmForkasting(
                 vedtaksperiodeId = this["vedtaksperiodeId"].asUuid(),
-                fødselsnummer = this["fødselsnummer"].asText(),
-                organisasjonsnummer = this["organisasjonsnummer"].asText(),
-                yrkesaktivitetstype = this["yrkesaktivitetstype"].asText(),
+                fødselsnummer = this["fødselsnummer"].asString(),
+                organisasjonsnummer = this["organisasjonsnummer"].asString(),
+                yrkesaktivitetstype = this["yrkesaktivitetstype"].asString(),
                 avsender = avsender,
-                årsaker = this["årsaker"].map { it.asText() },
+                årsaker = this["årsaker"].values().map { it.asString() },
                 kommentar = this["kommentar"].asNullableText(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
             )

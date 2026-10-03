@@ -44,8 +44,8 @@ internal class InntektsmeldingHåndtertRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val vedtaksperiodeId = packet["vedtaksperiodeId"].asText().toUUID()
-        val hendelseId = packet["inntektsmeldingId"].asText().toUUID()
+        val vedtaksperiodeId = packet["vedtaksperiodeId"].asString().toUUID()
+        val hendelseId = packet["inntektsmeldingId"].asString().toUUID()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         // Hent ekstern dokument ID fra spedisjon

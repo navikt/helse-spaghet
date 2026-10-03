@@ -1,19 +1,14 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.node.ObjectNode
+import tools.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDateTime
 import java.util.*
 
-private val objectMapper: ObjectMapper =
-    jacksonObjectMapper()
-        .registerModule(JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+private val objectMapper: ObjectMapper = jacksonObjectMapper()
 
 @Language("JSON")
 fun behovNyttFormat(
@@ -81,7 +76,7 @@ fun løsningNyttFormat(
     return objectMapper
         .readValue<ObjectNode>(behovNyttFormat(fødselsnummer, vedtaksperiodeId, periodetype, id))
         .apply {
-            set<ObjectNode>("@løsning", objectMapper.readTree(løsningJson))
+            set("@løsning", objectMapper.readTree(løsningJson))
                 .put("@besvart", "2020-06-02T13:00:00.000000")
         }.toString()
 }

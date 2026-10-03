@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -15,6 +14,7 @@ import no.nav.helse.Util.withSession
 import no.nav.sykepenger.libs.logging.loggInfo
 import no.nav.sykepenger.libs.logging.loggWarn
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -40,12 +40,13 @@ class HendelseIkkeHåndtertRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val hendelseId = UUID.fromString(packet["hendelseId"].asText())
+        val hendelseId = UUID.fromString(packet["hendelseId"].asString())
         val opprettet = packet["@opprettet"].asLocalDateTime()
         val årsaker =
             packet["årsaker"]
                 .takeUnless(JsonNode::isMissingOrNull)
-                ?.map { it.asText() } ?: emptyList()
+                ?.values()
+                ?.map { it.asString() } ?: emptyList()
 
         if (årsaker.isEmpty()) loggWarn("Mangler årsaker i hendelse_ikke_håndtert")
 

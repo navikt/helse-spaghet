@@ -1,13 +1,14 @@
 package no.nav.helse.ventetilstand
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.github.navikt.tbd_libs.rapids_and_rivers.*
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.helse.objectMapper
+import tools.jackson.module.kotlin.convertValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -42,9 +43,10 @@ internal class VedtaksperiodeVenterRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val fødselsnummer = packet["fødselsnummer"].asText()
+        val fødselsnummer = packet["fødselsnummer"].asString()
         val vedtaksperiodeVenter =
             packet["vedtaksperioder"]
+                .values()
                 .map { json -> objectMapper.convertValue<VedtaksperiodeVenterDto>(json) }
                 .map { dto ->
                     VedtaksperiodeVenter.opprett(

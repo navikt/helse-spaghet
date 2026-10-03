@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -11,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -26,7 +26,7 @@ class TilstandendringRiver(
                     it.requireValue("@event_name", "vedtaksperiode_endret")
                     it.requireKey("gjeldendeTilstand")
                     it.require("forrigeTilstand") { forrigeTilstand ->
-                        require(forrigeTilstand.textValue() != it["gjeldendeTilstand"].textValue())
+                        require(forrigeTilstand.stringValue(null) != it["gjeldendeTilstand"].stringValue(null))
                     }
                 }
                 validate {
@@ -44,17 +44,17 @@ class TilstandendringRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
-        val behandlingId = UUID.fromString(packet["behandlingId"].asText())
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
+        val behandlingId = UUID.fromString(packet["behandlingId"].asString())
         insertTilstandsendring(
-            id = UUID.fromString(packet["@id"].asText()),
+            id = UUID.fromString(packet["@id"].asString()),
             vedtaksperiodeId = vedtaksperiodeId,
             behandlingId = behandlingId,
             tidsstempel = packet["@opprettet"].asLocalDateTime(),
-            tilstandFra = packet["forrigeTilstand"].asText(),
-            tilstandTil = packet["gjeldendeTilstand"].asText(),
-            kilde = UUID.fromString(packet["@forårsaket_av.id"].asText()),
-            kildeType = packet["@forårsaket_av.event_name"].asText(),
+            tilstandFra = packet["forrigeTilstand"].asString(),
+            tilstandTil = packet["gjeldendeTilstand"].asString(),
+            kilde = UUID.fromString(packet["@forårsaket_av.id"].asString()),
+            kildeType = packet["@forårsaket_av.event_name"].asString(),
         )
     }
 

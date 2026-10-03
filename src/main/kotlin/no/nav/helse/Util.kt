@@ -1,23 +1,23 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.sessionOf
+import tools.jackson.databind.JsonNode
 import java.util.*
 import javax.sql.DataSource
 
 object Util {
     fun JsonNode?.asNullableText(): String? {
-        return if (this != null && this.isValueNode && this.isTextual) {
-            return this.asText()
+        return if (this != null && this.isValueNode && this.isString) {
+            return this.asString()
         } else {
             null
         }
     }
 
-    fun JsonNode.asUuid() = UUID.fromString(this.asText())
+    fun JsonNode.asUuid() = UUID.fromString(this.asString())
 
     fun JsonMessage.jsonNode() = objectMapper.readTree(toJson())
 

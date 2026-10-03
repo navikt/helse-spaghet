@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class AnmodningOmForkastingE2ETest {
-
     @Test
     fun `lagrer anmodning om forkasting med kun saksbehandlerIdent`() {
         e2eTest {

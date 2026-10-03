@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -12,6 +11,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.sykepenger.libs.logging.loggError
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -44,35 +44,35 @@ class AktivitetRiver(
         meterRegistry: MeterRegistry,
     ) {
         try {
-            // log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asText()}")
+            // log.info("Inserter aktiviteter for vedtaksperiodeId: ${json["vedtaksperiodeId"].asString()}")
             packet["aktiviteter"]
                 .filter { aktivitet ->
-                    aktivitet["nivå"].asText() in Nivå.values().map(Enum<*>::name)
+                    aktivitet["nivå"].asString() in Nivå.values().map(Enum<*>::name)
                 }.forEach { aktivitet ->
                     val vedtaksperiodeId =
                         aktivitet.path("kontekster").firstNotNullOfOrNull { kontekst ->
-                            if (kontekst.path("konteksttype").asText() == "Vedtaksperiode") {
+                            if (kontekst.path("konteksttype").asString() == "Vedtaksperiode") {
                                 kontekst
                                     .path("kontekstmap")
                                     .path("vedtaksperiodeId")
-                                    .takeIf { it.isTextual }
-                                    ?.asText()
+                                    .takeIf { it.isString }
+                                    ?.asString()
                                     ?.let { UUID.fromString(it) }
                             } else {
                                 null
                             }
                         } ?: return@forEach
                     insertAktivitet(
-                        id = UUID.fromString(packet["@id"].asText()),
+                        id = UUID.fromString(packet["@id"].asString()),
                         vedtaksperiodeId = vedtaksperiodeId,
-                        melding = aktivitet["melding"].asText(),
-                        level = Nivå.valueOf(aktivitet["nivå"].asText()).gammeltNavn,
+                        melding = aktivitet["melding"].asString(),
+                        level = Nivå.valueOf(aktivitet["nivå"].asString()).gammeltNavn,
                         tidsstempel = aktivitet["tidsstempel"].asLocalDateTime(),
-                        kilde = UUID.fromString(packet["@forårsaket_av.id"].asText()),
+                        kilde = UUID.fromString(packet["@forårsaket_av.id"].asString()),
                     )
                 }
         } catch (e: Exception) {
-            loggError("Feilet ved inserting av aktiviteter", e, "id" to packet["@id"].asText())
+            loggError("Feilet ved inserting av aktiviteter", e, "id" to packet["@id"].asString())
         }
     }
 

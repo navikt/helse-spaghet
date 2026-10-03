@@ -1,12 +1,12 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import kotliquery.Session
 import kotliquery.queryOf
 import no.nav.helse.Util.asUuid
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -36,13 +36,13 @@ data class LagtPåVent(
                 frist = this["frist"].asLocalDate(),
                 opprettet = this["@opprettet"].asLocalDateTime(),
                 saksbehandlerOid = this["saksbehandlerOid"].asUuid(),
-                saksbehandlerIdent = this["saksbehandlerIdent"].asText(),
-                notatTekst = this["notatTekst"]?.asText(),
+                saksbehandlerIdent = this["saksbehandlerIdent"].asString(),
+                notatTekst = this["notatTekst"]?.asString(),
                 årsaker =
-                    this["årsaker"].map {
+                    this["årsaker"].values().map {
                         LagtPåVentÅrsak(
-                            key = it["key"].asText(),
-                            årsak = it["årsak"].asText(),
+                            key = it["key"].asString(),
+                            årsak = it["årsak"].asString(),
                         )
                     },
             )

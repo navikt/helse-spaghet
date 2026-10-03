@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
@@ -13,6 +12,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.sykepenger.libs.logging.loggInfo
 import org.intellij.lang.annotations.Language
+import tools.jackson.databind.JsonNode
 import java.util.*
 import javax.sql.DataSource
 
@@ -28,15 +28,15 @@ class RevurderingIgangsattRiver(
                     it.requireValue("typeEndring", "REVURDERING")
                 }
                 validate {
-                    it.require("revurderingId") { id -> UUID.fromString(id.asText()) }
+                    it.require("revurderingId") { id -> UUID.fromString(id.asString()) }
                     it.require("@opprettet", JsonNode::asLocalDateTime)
                     it.require("skjæringstidspunkt", JsonNode::asLocalDate)
                     it.require("periodeForEndringFom", JsonNode::asLocalDate)
                     it.require("periodeForEndringTom", JsonNode::asLocalDate)
-                    it.require("kilde") { kilde -> UUID.fromString(kilde.asText()) }
+                    it.require("kilde") { kilde -> UUID.fromString(kilde.asString()) }
                     it.requireKey("årsak")
                     it.requireArray("berørtePerioder") {
-                        require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asText()) }
+                        require("vedtaksperiodeId") { vedtaksperiodeId -> UUID.fromString(vedtaksperiodeId.asString()) }
                         require("periodeFom", JsonNode::asLocalDate)
                         require("periodeTom", JsonNode::asLocalDate)
                         require("skjæringstidspunkt", JsonNode::asLocalDate)
@@ -52,11 +52,11 @@ class RevurderingIgangsattRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val revurderingId = packet["revurderingId"].let { UUID.fromString(it.asText()) }
-        val årsak = packet["årsak"].asText()
+        val revurderingId = packet["revurderingId"].let { UUID.fromString(it.asString()) }
+        val årsak = packet["årsak"].asString()
         val opprettet = packet["@opprettet"].asLocalDateTime()
         val skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate()
-        val kilde = packet["kilde"].let { UUID.fromString(it.asText()) }
+        val kilde = packet["kilde"].let { UUID.fromString(it.asString()) }
         val periodeForEndringFom = packet["periodeForEndringFom"].asLocalDate()
         val periodeForEndringTom = packet["periodeForEndringTom"].asLocalDate()
         val berørtePerioder = packet["berørtePerioder"]
@@ -101,11 +101,11 @@ class RevurderingIgangsattRiver(
                             .flatMap { periode ->
                                 listOf(
                                     revurderingId,
-                                    periode.path("vedtaksperiodeId").let { UUID.fromString(it.asText()) },
+                                    periode.path("vedtaksperiodeId").let { UUID.fromString(it.asString()) },
                                     periode.path("periodeFom").asLocalDate(),
                                     periode.path("periodeTom").asLocalDate(),
                                     periode.path("skjæringstidspunkt").asLocalDate(),
-                                    periode.path("orgnummer").asText(),
+                                    periode.path("orgnummer").asString(),
                                 )
                             }.toTypedArray(),
                     ).asExecute,

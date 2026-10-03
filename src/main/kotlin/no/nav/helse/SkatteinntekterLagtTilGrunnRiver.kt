@@ -36,11 +36,11 @@ class SkatteinntekterLagtTilGrunnRiver(
         meterRegistry: MeterRegistry,
     ) {
         loggInfo("Leste skatteinntekter_lagt_til_grunn melding", "packet" to packet.toJson())
-        val vedtaksperiodeId = packet["vedtaksperiodeId"].asText().let { UUID.fromString(it) }
-        val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
-        val hendelseId = packet["@id"].asText().let { UUID.fromString(it) }
-        val orgnummer = packet["organisasjonsnummer"].asText()
-        val fnr = packet["fødselsnummer"].asText()
+        val vedtaksperiodeId = packet["vedtaksperiodeId"].asString().let { UUID.fromString(it) }
+        val behandlingId = packet["behandlingId"].asString().let { UUID.fromString(it) }
+        val hendelseId = packet["@id"].asString().let { UUID.fromString(it) }
+        val orgnummer = packet["organisasjonsnummer"].asString()
+        val fnr = packet["fødselsnummer"].asString()
 
         try {
             sessionOf(dataSource).use { session ->

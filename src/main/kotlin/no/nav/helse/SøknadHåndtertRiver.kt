@@ -35,8 +35,8 @@ class SøknadHåndtertRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadHendelseId = UUID.fromString(packet["søknadId"].asText())
-        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asText())
+        val søknadHendelseId = UUID.fromString(packet["søknadId"].asString())
+        val vedtaksperiodeId = UUID.fromString(packet["vedtaksperiodeId"].asString())
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         insertSøknadHåndtert(søknadHendelseId, vedtaksperiodeId, opprettet)

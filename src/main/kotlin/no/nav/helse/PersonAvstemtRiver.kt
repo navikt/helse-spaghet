@@ -48,19 +48,19 @@ class PersonAvstemtRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["fødselsnummer"].asText()
-        val callId = packet["@id"].asText()
+        val ident = packet["fødselsnummer"].asString()
+        val callId = packet["@id"].asString()
         val identer = retryBlocking { speedClient.hentFødselsnummerOgAktørId(ident, callId).getOrThrow() }
         val data: List<VedtaksperiodeData> =
             packet["arbeidsgivere"].flatMap { arbeidsgiver ->
-                val orgnr = arbeidsgiver["organisasjonsnummer"].asText()
-                arbeidsgiver["vedtaksperioder"].map { vedtaksperiode ->
+                val orgnr = arbeidsgiver["organisasjonsnummer"].asString()
+                arbeidsgiver["vedtaksperioder"].values().map { vedtaksperiode ->
                     VedtaksperiodeData(
                         id = vedtaksperiode["id"].asUuid(),
                         fnr = identer.fødselsnummer,
                         aktørId = identer.aktørId,
                         yrkesaktivitet = orgnr,
-                        tilstand = vedtaksperiode["tilstand"].asText(),
+                        tilstand = vedtaksperiode["tilstand"].asString(),
                         fom = vedtaksperiode["fom"].asLocalDate(),
                         tom = vedtaksperiode["tom"].asLocalDate(),
                         skjæringstidspunkt = vedtaksperiode["skjæringstidspunkt"].asLocalDate(),
