@@ -3,6 +3,9 @@ package no.nav.helse
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
+import com.github.navikt.tbd_libs.personpseudoid.Identitetsnummer
+import com.github.navikt.tbd_libs.personpseudoid.PersonPseudoId
+import com.github.navikt.tbd_libs.personpseudoid.PersonPseudoIdProvider
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.result_object.ok
 import com.github.navikt.tbd_libs.spedisjon.HentMeldingResponse
@@ -57,10 +60,17 @@ class E2eTestApp {
             }
         }
 
+    val personPseudoIdProvider =
+        object : PersonPseudoIdProvider {
+            override fun nyPersonPseudoId(identitetsnummer: Identitetsnummer) = PersonPseudoId(UUID.randomUUID())
+
+            override fun finnIdentitetsnummer(personPseudoId: PersonPseudoId): Identitetsnummer? = null
+        }
+
     private fun start() {
         mockLog()
         testDataSource = databaseContainer.nyTilkobling()
-        rapid.setupRivers(dataSource, speedClient, spedisjonClient)
+        rapid.setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider)
     }
 
     fun LagtPåVent.sendTilRapid(medNotat: Boolean) {

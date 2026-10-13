@@ -9,7 +9,7 @@ sykepengerDeployable {
 dependencies {
     implementation(libs.postgresql)
     implementation(libs.rapidsAndRivers)
-    implementation(libs.tbdLibs.spurteduClient)
+    implementation(libs.tbdLibs.personPseudoId)
     implementation(libs.tbdLibs.azureTokenClientDefault)
     implementation(libs.tbdLibs.retry)
     implementation(libs.tbdLibs.speedClient)

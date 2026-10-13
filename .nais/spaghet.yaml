@@ -31,12 +31,14 @@ spec:
       rules:
         - application: logging
           namespace: nais-system
-        - application: spurtedu
         - application: speed-api
         - application: spedisjon
   azure:
     application:
       enabled: true
+  valkey:
+    - instance: personpseudoid
+      access: readwrite
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1

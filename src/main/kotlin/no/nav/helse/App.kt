@@ -1,13 +1,11 @@
 package no.nav.helse
 
-import com.github.navikt.tbd_libs.azure.AzureToken
-import com.github.navikt.tbd_libs.azure.AzureTokenProvider
 import com.github.navikt.tbd_libs.azure.createAzureTokenClientFromEnvironment
+import com.github.navikt.tbd_libs.personpseudoid.PersonPseudoIdProvider
+import com.github.navikt.tbd_libs.personpseudoid.ValkeyPersonPseudoIdProvider
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
-import com.github.navikt.tbd_libs.result_object.Result
 import com.github.navikt.tbd_libs.spedisjon.SpedisjonClient
 import com.github.navikt.tbd_libs.speed.SpeedClient
-import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -26,25 +24,6 @@ import java.net.http.HttpClient
 import javax.sql.DataSource
 
 internal val objectMapper: ObjectMapper = jacksonObjectMapper()
-
-private fun spurteDuClient() =
-    SpurteDuClient(
-        objectMapper = objectMapper,
-        // har ikke behov for token provider fordi spaghet kun skjuler ting, og henter det ikke frem
-        tokenProvider =
-            object : AzureTokenProvider {
-                override fun bearerToken(scope: String): Result<AzureToken> {
-                    TODO("Not yet implemented")
-                }
-
-                override fun onBehalfOfToken(
-                    scope: String,
-                    token: String,
-                ): Result<AzureToken> {
-                    TODO("Not yet implemented")
-                }
-            },
-    )
 
 val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
 
@@ -67,9 +46,10 @@ fun main() {
             objectMapper = objectMapper,
             tokenProvider = azureClient,
         )
+    val personPseudoIdProvider = ValkeyPersonPseudoIdProvider.fraEnv(instansNavn = "personpseudoid", env = env.raw)
     RapidApplication
         .create(env.raw, meterRegistry = meterRegistry)
-        .setupRivers(dataSource, speedClient, spedisjonClient)
+        .setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider)
         .setupMigration(dataSourceBuilder)
         .start()
 }
@@ -78,9 +58,9 @@ internal fun <T : RapidsConnection> T.setupRivers(
     dataSource: DataSource,
     speedClient: SpeedClient,
     spedisjonClient: SpedisjonClient,
+    personPseudoIdProvider: PersonPseudoIdProvider,
     vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource),
     oppsummeringDao: OppsummeringDao = OppsummeringDao(dataSource),
-    spurteDuClient: SpurteDuClient = spurteDuClient(),
 ) = apply {
     AnnulleringRiver(this, dataSource)
     PlanlagtAnnulleringRiver(this, dataSource)
@@ -95,7 +75,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     RevurderingIgangsattRiver(this, dataSource)
     RevurderingGodkjentRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
-    IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, spurteDuClient)
+    IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, personPseudoIdProvider)
     OppsummerVedtaksperiodeVenter(this, oppsummeringDao)
     OppsummerVedtaksperiodeVenterExternal(this, oppsummeringDao)
     SøknadHåndtertRiver(this, dataSource)

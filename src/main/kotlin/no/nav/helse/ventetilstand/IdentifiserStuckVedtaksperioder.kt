@@ -1,14 +1,13 @@
 package no.nav.helse.ventetilstand
 
+import com.github.navikt.tbd_libs.personpseudoid.Identitetsnummer
+import com.github.navikt.tbd_libs.personpseudoid.PersonPseudoIdProvider
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
-import com.github.navikt.tbd_libs.spurtedu.SkjulRequest
-import com.github.navikt.tbd_libs.spurtedu.SpurteDuClient
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.helse.objectMapper
 import no.nav.helse.ventetilstand.Slack.sendPåSlack
 import no.nav.sykepenger.libs.logging.loggError
 import no.nav.sykepenger.libs.logging.loggInfo
@@ -27,7 +26,7 @@ import kotlin.time.toJavaDuration
 internal class IdentifiserStuckVedtaksperioder(
     rapidsConnection: RapidsConnection,
     private val dao: VedtaksperiodeVentetilstandDao,
-    private val spurteDuClient: SpurteDuClient,
+    private val personPseudoIdProvider: PersonPseudoIdProvider,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -82,7 +81,7 @@ internal class IdentifiserStuckVedtaksperioder(
                 ventetLengstPerPerson.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiodeVenterMedMetadata) ->
                     val vedtaksperiodeVenter = vedtaksperiodeVenterMedMetadata.vedtaksperiodeVenter
                     val venterPå = vedtaksperiodeVenter.venterPå
-                    "\t${vedtaksperiodeVenterMedMetadata.prefix} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, spurteDuClient)}"
+                    "\t${vedtaksperiodeVenterMedMetadata.prefix} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, personPseudoIdProvider)}"
                 }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -110,8 +109,8 @@ internal class IdentifiserStuckVedtaksperioder(
         private fun VenterPå.suffix(
             fnr: String,
             vedtaksperiodeId: UUID,
-            spurteDuClient: SpurteDuClient,
-        ) = "[${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (utvikler)", TBD_GRUPPE_PROD)}/${spurteDuClient.spannerUrl(fnr, vedtaksperiodeId, "Spanner (saksbehandler)", TBD_SPANNER_PROD)}/$kibanaUrl]"
+            personPseudoIdProvider: PersonPseudoIdProvider,
+        ) = "[${personPseudoIdProvider.spannerUrl(fnr, vedtaksperiodeId)}/$kibanaUrl]"
 
         private val JsonMessage.eventname get() = get("@event_name").asString()
 
@@ -148,30 +147,13 @@ internal class IdentifiserStuckVedtaksperioder(
                 }
             }
 
-        private const val TBD_GRUPPE_PROD = "c0227409-2085-4eb2-b487-c4ba270986a3"
-        private const val TBD_SPANNER_PROD = "382f42f4-f46b-40c1-849b-38d6b5a1f639"
-
-        private fun SpurteDuClient.spannerUrl(
+        private fun PersonPseudoIdProvider.spannerUrl(
             fnr: String,
             vedtaksperiodeId: UUID,
-            linktext: String,
-            tilgang: String,
         ): String {
-            val payload =
-                SkjulRequest.SkjulTekstRequest(
-                    tekst =
-                        objectMapper.writeValueAsString(
-                            mapOf(
-                                "ident" to fnr,
-                                "identtype" to "FNR",
-                            ),
-                        ),
-                    påkrevdTilgang = tilgang,
-                )
-
-            val spurteDuLink = skjul(payload)
-            val spannerLink = "https://spanner.ansatt.nav.no/person/${spurteDuLink.id}?vedtaksperiodeId=$vedtaksperiodeId"
-            return "<$spannerLink|$linktext>"
+            val personPseudoId = nyPersonPseudoId(Identitetsnummer(fnr))
+            val spannerLink = "https://spanner.ansatt.nav.no/person/$personPseudoId?vedtaksperiodeId=$vedtaksperiodeId"
+            return "<$spannerLink|Spanner>"
         }
 
         private val VenterPå.kibanaUrl get() =
