@@ -47,6 +47,9 @@ spec:
     - name: KAFKA_RESET_POLICY
       value: earliest
   observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
     logging:
       destinations:
         - id: elastic
