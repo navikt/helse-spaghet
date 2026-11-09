@@ -3,7 +3,7 @@ tbdLibs = "20261029.1843"
 sykepengerGradlePlugins = "20261029.1945"
 
 [libraries]
-flyway-postgresql = "org.flywaydb:flyway-database-postgresql:13.11.1"
+flyway-postgresql = "org.flywaydb:flyway-database-postgresql:13.12.0"
 hikari = "com.zaxxer:HikariCP:7.1.0"
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 postgresql = "org.postgresql:postgresql:42.7.14"
@@ -12,7 +12,7 @@ mockk = "io.mockk:mockk:1.14.11"
 
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2026091610031789545782"
 
-sykepengerLibs-logging = "no.nav.sykepenger.libs:logging:20261105.1956"
+sykepengerLibs-logging = "no.nav.sykepenger.libs:logging:20261106.1049"
 
 tbdLibs-azureTokenClientDefault = { module = "com.github.navikt.tbd-libs:azure-token-client-default", version.ref = "tbdLibs" }
 tbdLibs-retry = { module = "com.github.navikt.tbd-libs:retry", version.ref = "tbdLibs" }
