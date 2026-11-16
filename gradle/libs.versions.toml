@@ -8,7 +8,7 @@ hikari = "com.zaxxer:HikariCP:7.1.0"
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 postgresql = "org.postgresql:postgresql:42.7.14"
 
-mockk = "io.mockk:mockk:1.14.11"
+mockk = "io.mockk:mockk:1.14.12"
 
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2026110308421793691732"
 
