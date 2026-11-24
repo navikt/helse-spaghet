@@ -165,6 +165,17 @@ internal class VedtaksperiodeVentetilstandTest {
         }
 
     @Test
+    fun `slackmeldingen om stuck vedtaksperioder lenker til vedtaksperioden i speil`() =
+        e2eTest {
+            val venterPåVedtaksperiodeId = UUID.randomUUID()
+            rapid.sendTestMessage(vedtaksperiodeVenter(UUID.randomUUID(), venterPåVedtaksperiodeId, "HJELP", UUID.randomUUID(), venterPåHvorfor = "VIL_UTBETALES"))
+            stuck()
+            rapid.sendTestMessage("""{"@event_name": "identifiser_stuck_vedtaksperioder", "system_participating_services": []}""")
+            val melding = rapid.inspektør.message(rapid.inspektør.size - 1)["melding"].asString()
+            assertTrue(melding.contains("<https://speil.ansatt.nav.no/vedtaksperiode/$venterPåVedtaksperiodeId|Speil>"))
+        }
+
+    @Test
     fun `ingen alarm når vi er stuck pga inntektsmelding UTEN hvorfor satt - vi får ikke gjort noe med dem uansett`() =
         e2eTest {
             assertEquals(emptyList<VedtaksperiodeVenter>(), stuck())

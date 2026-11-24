@@ -27,6 +27,7 @@ internal class IdentifiserStuckVedtaksperioder(
     rapidsConnection: RapidsConnection,
     private val dao: VedtaksperiodeVentetilstandDao,
     private val personPseudoIdProvider: PersonPseudoIdProvider,
+    private val speilUrl: String,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -81,7 +82,7 @@ internal class IdentifiserStuckVedtaksperioder(
                 ventetLengstPerPerson.take(Maks).joinToString(separator = "\n") { (fnr, vedtaksperiodeVenterMedMetadata) ->
                     val vedtaksperiodeVenter = vedtaksperiodeVenterMedMetadata.vedtaksperiodeVenter
                     val venterPå = vedtaksperiodeVenter.venterPå
-                    "\t${vedtaksperiodeVenterMedMetadata.prefix} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, personPseudoIdProvider)}"
+                    "\t${vedtaksperiodeVenterMedMetadata.prefix} venter på ${venterPå.snygg} ${venterPå.suffix(fnr, venterPå.vedtaksperiodeId, personPseudoIdProvider, speilUrl)}"
                 }
 
             if (antall > Maks) melding += "\n\t... og ${antall - Maks} til.. :melting_face:"
@@ -110,7 +111,8 @@ internal class IdentifiserStuckVedtaksperioder(
             fnr: String,
             vedtaksperiodeId: UUID,
             personPseudoIdProvider: PersonPseudoIdProvider,
-        ) = "[${personPseudoIdProvider.spannerUrl(fnr, vedtaksperiodeId)}/$kibanaUrl]"
+            speilUrl: String,
+        ) = "[${speilUrl(speilUrl, vedtaksperiodeId)}/${personPseudoIdProvider.spannerUrl(fnr, vedtaksperiodeId)}/$kibanaUrl]"
 
         private val JsonMessage.eventname get() = get("@event_name").asString()
 
@@ -155,6 +157,11 @@ internal class IdentifiserStuckVedtaksperioder(
             val spannerLink = "https://spanner.ansatt.nav.no/person/$personPseudoId?vedtaksperiodeId=$vedtaksperiodeId"
             return "<$spannerLink|Spanner>"
         }
+
+        private fun speilUrl(
+            speilUrl: String,
+            vedtaksperiodeId: UUID,
+        ) = "<$speilUrl/vedtaksperiode/$vedtaksperiodeId|Speil>"
 
         private val VenterPå.kibanaUrl get() =
             "https://console.cloud.google.com/logs/query;query=resource.labels.container_name:%22spleis%22%0AjsonPayload.message:%22$vedtaksperiodeId%22;duration=P1D?project=tbd-prod-eacd".let { url ->

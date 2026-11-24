@@ -49,7 +49,7 @@ fun main() {
     val personPseudoIdProvider = ValkeyPersonPseudoIdProvider.fraEnv(instansNavn = "personpseudoid", env = env.raw)
     RapidApplication
         .create(env.raw, meterRegistry = meterRegistry)
-        .setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider)
+        .setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider, env.raw.getValue("SPEIL_URL"))
         .setupMigration(dataSourceBuilder)
         .start()
 }
@@ -59,6 +59,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     speedClient: SpeedClient,
     spedisjonClient: SpedisjonClient,
     personPseudoIdProvider: PersonPseudoIdProvider,
+    speilUrl: String,
     vedtaksperiodeVentetilstandDao: VedtaksperiodeVentetilstandDao = VedtaksperiodeVentetilstandDao(dataSource),
     oppsummeringDao: OppsummeringDao = OppsummeringDao(dataSource),
 ) = apply {
@@ -73,7 +74,7 @@ internal fun <T : RapidsConnection> T.setupRivers(
     VarselEndretRiver(this, dataSource)
     HendelseIkkeHåndtertRiver(this, dataSource)
     VedtaksperiodeVenterRiver(this, vedtaksperiodeVentetilstandDao)
-    IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, personPseudoIdProvider)
+    IdentifiserStuckVedtaksperioder(this, vedtaksperiodeVentetilstandDao, personPseudoIdProvider, speilUrl)
     OppsummerVedtaksperiodeVenter(this, oppsummeringDao)
     OppsummerVedtaksperiodeVenterExternal(this, oppsummeringDao)
     SøknadHåndtertRiver(this, dataSource)

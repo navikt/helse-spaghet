@@ -40,3 +40,6 @@ spec:
             value: "on"
           - name: pgaudit.log_relation
             value: "on"
+  env:
+    - name: SPEIL_URL
+      value: https://speil.ansatt.nav.no

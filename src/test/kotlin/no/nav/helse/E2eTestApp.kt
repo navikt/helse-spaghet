@@ -70,7 +70,7 @@ class E2eTestApp {
     private fun start() {
         mockLog()
         testDataSource = databaseContainer.nyTilkobling()
-        rapid.setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider)
+        rapid.setupRivers(dataSource, speedClient, spedisjonClient, personPseudoIdProvider, "https://speil.ansatt.nav.no")
     }
 
     fun LagtPåVent.sendTilRapid(medNotat: Boolean) {

@@ -25,3 +25,6 @@ spec:
         flags:
           - name: cloudsql.logical_decoding
             value: 'on'
+  env:
+    - name: SPEIL_URL
+      value: https://speil.ansatt.dev.nav.no
